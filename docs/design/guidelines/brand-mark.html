@@ -1,0 +1,51 @@
+<!-- @keelCard group="Brand" name="The mark" subtitle="A ledger, and one cell outside it" height="360" -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../../../skills/keel/design/tokens.css" />
+<link rel="stylesheet" href="../../../skills/keel/design/keel.css" />
+<style>
+  body { padding: var(--k-space-6); }
+  .row { display: flex; align-items: center; gap: var(--k-space-8); flex-wrap: wrap; margin-bottom: var(--k-space-6); }
+  .spec { display: flex; flex-direction: column; gap: var(--k-space-2); align-items: flex-start; }
+  .spec img { display: block; }
+  .spec b { font-family: var(--k-font-mono); font-size: var(--k-fs-micro); font-weight: var(--k-fw-regular); color: var(--k-ink-2); }
+  /* The paper variant has to be shown on actual paper. The canvas tokens are
+     all dark, so these two are literal by necessity. */
+  .paper { background: #ffffff; padding: var(--k-space-4); border-radius: var(--k-r-lg); } /* audit-ok: paper bg */
+  .paper b { color: #626a74; } /* audit-ok: paper ink-2 */
+  .note { font-size: var(--k-fs-xs); color: var(--k-ink-2); max-width: none; }
+  .no { color: var(--k-self-referential); }
+</style></head>
+<body>
+
+  <div class="row">
+    <div class="spec"><img src="../../../skills/keel/design/lockup.svg" height="44" alt="Keel lockup" /><b>lockup.svg</b></div>
+    <div class="spec"><img src="../../../skills/keel/design/mark.svg" height="56" alt="Keel mark" /><b>mark.svg &middot; &ge;24px</b></div>
+    <div class="spec"><img src="../../../skills/keel/design/mark-compact.svg" width="32" alt="" /><b>compact &middot; 32</b></div>
+    <div class="spec"><img src="../../../skills/keel/design/mark-compact.svg" width="16" alt="" /><b>compact &middot; 16</b></div>
+    <div class="spec"><img src="../../../skills/keel/design/icon.svg" width="52" alt="" /><b>icon.svg</b></div>
+    <div class="spec paper"><img src="../../../skills/keel/design/mark-on-light.svg" height="40" alt="" /><b>on paper</b></div>
+  </div>
+
+  <p class="note">
+    A block of ledger cells and one cell outside it. The outsider is the same size
+    and shape as every cell in the block because it is the same kind of thing — a
+    verification node. Only its position differs, and position is the whole
+    argument: a signal counts when its producer sits outside the boundary of the
+    thing being checked. The empty slot between block and outsider is exactly one
+    cell wide; it is the cell that would have been inside, left empty on purpose.
+  </p>
+
+  <p class="note" style="margin-top: var(--k-space-4)">
+    <strong style="color: var(--k-ink-1)">Rules.</strong>
+    Below 24px use <span class="k-mono">mark-compact.svg</span> — it is a redraw, not
+    a scale, because the 3&times;3 block stops resolving. Clear space is one cell on
+    every side. On paper use the <span class="k-mono">-on-light</span> variants, which
+    <span class="k-mono">make design-sync</span> derives from the originals so the
+    geometry has one source. Never recolor the outsider to a verdict hue: it is the
+    accent, and the accent is Keel's own voice, not data.
+    <span class="no">Never</span> stretch, rotate, outline, add a gradient, or place
+    the mark on a busy photograph.
+  </p>
+
+</body></html>

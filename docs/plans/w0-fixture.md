@@ -16,8 +16,14 @@ Read `skills/keel/references/grounding-classes.md`.
 
 ## Steps
 
-1. `cd skills/keel && bun scripts/gather.ts ~/broomva/apps/maestro --json > /tmp/nodes.json`
-   (~69 edges).
+1. `cd skills/keel && bun scripts/gather.ts ../.. --json > /tmp/nodes.json`
+
+   The target is **this repository**. It is the portable choice — every
+   contributor has it, so the fixture is reproducible off a bare clone — and it
+   is the honest one, since a tool that measures grounding should survive being
+   pointed at itself. Any local repo works if you want more edges; a larger
+   private target was used during the build night (~69 edges), but a fixture
+   nobody else can regenerate is not a fixture.
 2. Pick **~15 nodes spanning all four classes**. Required coverage:
    - ≥4 `anchored` (a real test run, a typecheck)
    - ≥4 `self_referential` (an LLM review step, a doc-vs-doc check, a self-set status)

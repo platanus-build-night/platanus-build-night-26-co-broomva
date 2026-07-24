@@ -4,11 +4,16 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keel — instructions for agents</title>
+<link rel="icon" type="image/svg+xml" href="../mark-compact.svg" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../keel.css" />
 <style>
-  body{margin:0;background:#07090c;color:#e8edf2;
-    font:14px/1.7 ui-monospace,"SF Mono",Menlo,monospace}
-  pre{max-width:860px;margin:0 auto;padding:56px 24px 120px;white-space:pre-wrap;word-wrap:break-word}
-  a{color:#7dd3fc}
+  /* Deliberately plain text: this page is agent-readable, so the format is a
+     terminal transcript rather than a designed surface. It takes the tokens
+     for canvas, ink, and accent, and nothing else. */
+  body { font-family: var(--k-font-mono); font-size: var(--k-fs-sm); line-height: var(--k-lh-body); }
+  pre { max-width: var(--k-measure-report); margin: 0 auto; padding: var(--k-space-12) var(--k-space-6) var(--k-space-24); white-space: pre-wrap; word-wrap: break-word; }
+  a { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -32,6 +37,11 @@ The single question it asks of every verification edge:
 If the producer is outside the actor's write boundary, the edge is ANCHORED.
 If it is inside, the edge is SELF_REFERENTIAL. If you cannot trace the fork
 point, it is UNKNOWN — and unknown fails closed. It counts against the score.
+
+A fourth class, NOT_A_CHECK, is for surfaced nodes that assert nothing. It is
+excluded from the denominator, so it is the one class that is worth shopping
+into: filing a real check there shrinks the denominator and inflates the score.
+Reaching for it because a node is hard is wrong. The honest answer is UNKNOWN.
 
     grounding ratio = anchored / (anchored + self_referential + unknown)
 

@@ -63,10 +63,20 @@ if [ "$SCOPE" = "current" ]; then
         exit 2
     fi
 elif [ "$SCOPE" = "workspace" ]; then
-    BROOMVA="${BROOMVA:-$HOME/broomva}"
+    # Portability: a public checkout has no implied multi-repo root, and
+    # defaulting to $HOME would walk the whole home directory looking for things
+    # to delete. Require the root explicitly and refuse otherwise — guessing is
+    # the wrong failure mode for a tool that removes branches.
+    WS_ROOT="${BSTACK_WORKSPACE_ROOT:-${BROOMVA:-}}"
+    if [ -z "$WS_ROOT" ] || [ ! -d "$WS_ROOT" ]; then
+        echo "p8-janitor: --scope=workspace needs a repo root." >&2
+        echo "  set BSTACK_WORKSPACE_ROOT=/path/to/dir-containing-your-repos" >&2
+        echo "  (or omit --scope to operate on the current repo only)" >&2
+        exit 2
+    fi
     while IFS= read -r d; do
         REPOS+=("$d")
-    done < <(find "$BROOMVA" -maxdepth 4 -name ".git" -type d 2>/dev/null | xargs -I{} dirname {})
+    done < <(find "$WS_ROOT" -maxdepth 4 -name ".git" -type d 2>/dev/null | xargs -I{} dirname {})
 else
     echo "p8-janitor: bad --scope ($SCOPE); use current or workspace" >&2; exit 2
 fi

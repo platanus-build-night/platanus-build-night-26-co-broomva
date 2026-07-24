@@ -64,9 +64,10 @@ layer; the pure-agentic path is the product.
 
 ```bash
 cd skills/keel
-bun scripts/gather.ts ~/broomva/apps/maestro --json > /tmp/nodes.json
+# Target this repo — portable, so the acceptance run reproduces off a bare clone.
+bun scripts/gather.ts ../.. --json > /tmp/nodes.json
 bun scripts/classify.ts /tmp/nodes.json --json | head -40
-# with an empty probe library: decided=0, pending=69, exit 0
+# with an empty probe library: decided=0, pending=<node count>, exit 0
 # then add a deliberately-throwing probe to ~/.config/keel/probes/ and confirm
 # it is skipped WITH a warning and the run still completes
 # then add a probe whose match() is `while(true){}` and confirm the batch is

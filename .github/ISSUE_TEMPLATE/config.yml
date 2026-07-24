@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/broomva/keel/security/advisories/new
+    about: Report privately via a security advisory, not a public issue.
+  - name: Contributing a probe
+    url: https://github.com/broomva/keel/blob/main/CONTRIBUTING.md
+    about: Probes are the highest-value contribution. Read this first.

@@ -7,13 +7,28 @@ A run with no visual is not demonstrable. This unit is the demo.
 Read `docs/handoffs/2026-07-24-keel-build-night.md` §4.
 Read `skills/keel/schemas/keel.ts` (frozen) — `Report`, `GroundingRatio`, `RunEconomics`.
 Consume `tests/fixtures/report.sample.json`. **You never need the engine.**
-Match the visual language of `site/index.html` (dark, `#07090c`, accent
-`#7dd3fc`, anchored `#4ade80`, self-referential `#f87171`, unknown `#fbbf24`).
+
+**Read `skills/keel/design/README.md` before writing markup.** The design
+system is frozen the same way the schema is: `design/tokens.css` and
+`design/keel.css` are orchestrator-owned, and you consume them rather than
+editing them. Do not author a palette, a verdict chip, a ratio block, or a node
+mark — they exist, with the invariants already encoded (`not_a_check` outside
+the denominator, the confidence-smell ring, the missing-argument defect state).
+
+Inline both stylesheets verbatim into one `<style>` block. They are written to
+be inlined: no `@import`, no webfont, no external reference — which is what
+makes the zero-external-request requirement below achievable at all.
+
+`make design-audit` gates your output surface. It fails on a raw hex or px, on
+a `data-class` outside the frozen `GroundingClass`, on a ratio without its
+counts or scope note, and on a verdict without its argument.
 
 ## You own (write only these)
 
 - `skills/keel/scripts/render.ts`
 - `skills/keel/templates/**`
+
+Not yours: `skills/keel/design/**` (consume it; propose changes in the PR body).
 
 ## Deliverable
 
@@ -61,7 +76,12 @@ cd skills/keel
 bun scripts/render.ts ../../tests/fixtures/report.sample.json -o /tmp/keel-report.html
 open /tmp/keel-report.html   # ratio, graph, every argument visible
 grep -c "http://\|https://\|cdn\." /tmp/keel-report.html   # expect 0 external refs
+cd ../.. && make design-audit                              # adherence gate
 ```
+
+Also print it (⌘P → PDF). The stylesheet carries a print theme that inverts the
+canvas and darkens the verdict hues; the report is expected to be emailed, and
+an emailed artifact gets printed.
 
 Also render a synthetic 200-node report to prove it does not break.
 

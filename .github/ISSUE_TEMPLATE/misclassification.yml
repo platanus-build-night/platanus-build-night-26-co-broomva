@@ -1,0 +1,82 @@
+name: Misclassification
+description: Keel assigned the wrong grounding class to a verification edge
+title: "[misclassification] "
+labels: ["misclassification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful bug report Keel can receive. Keel's whole claim
+        is that it can tell where a signal comes from — a case where it cannot
+        is either a gap in the reasoning or a probe that has drifted.
+
+        Please include the **write boundary you traced**, not only the class you
+        expected. The causal path is the evidence; the class is the conclusion.
+
+  - type: input
+    id: target
+    attributes:
+      label: Target
+      description: The repository or path Keel was run against. A public URL is ideal.
+      placeholder: https://github.com/owner/repo
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: The node
+      description: Name and source as they appear in report.json.
+      placeholder: .github/workflows/test.yml :: bun test
+    validations:
+      required: true
+
+  - type: dropdown
+    id: assigned
+    attributes:
+      label: Class Keel assigned
+      options: [anchored, self_referential, unknown, not_a_check]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: expected
+    attributes:
+      label: Class you believe is correct
+      options: [anchored, self_referential, unknown, not_a_check]
+    validations:
+      required: true
+
+  - type: textarea
+    id: boundary
+    attributes:
+      label: The write boundary you traced
+      description: >
+        What produces this signal, and can the actor being verified write to
+        that producer? Name the producer and the fork point.
+      placeholder: >
+        The signal is a status field on the deploy record. The deploy job sets
+        that field itself, so the producer is inside the write boundary — this
+        should be self_referential, not anchored.
+    validations:
+      required: true
+
+  - type: textarea
+    id: decided_by
+    attributes:
+      label: Decided by probe or by agent?
+      description: >
+        From report.json — if a probe decided it, give the probe id. A drifting
+        probe is retired differently from a reasoning gap.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: ack
+    attributes:
+      label: Before filing
+      options:
+        - label: >
+            I have read `skills/keel/references/grounding-classes.md`, including
+            the cases that look anchored and are not.
+          required: true
