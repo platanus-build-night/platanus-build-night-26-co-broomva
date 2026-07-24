@@ -166,6 +166,31 @@ This is Gap-1 applied to our own headline metric.
 
 ---
 
+## Pre-dispatch corrections (AUTHORITATIVE — these override your unit plan)
+
+Two independent audits found the unit plans internally inconsistent. Where a
+unit plan disagrees with this section, **this section wins.** Read it before
+writing code; do not "resolve the ambiguity" yourself.
+
+| # | Defect | Ruling |
+|---|---|---|
+| 1 | W1·A told to emit `pending` as *"payloads batched 10–20 nodes"*; `ClassifyOutput.pending` is a flat `Node[]` | **The wire shape is flat `Node[]`.** Batching is a *caller* concern at judgment time, not a wire format. Do not invent a `PendingBatch` type. |
+| 2 | W1·A needs `probe-sandbox.ts` (W1·C owns it) and is told "a thin stub is fine" with no location | **Stub goes to `/tmp/probe-sandbox-stub.ts` and is NEVER committed.** Do not create `skills/keel/scripts/probe-sandbox.ts` — that file is C's, and a stub in the repo is a guaranteed merge conflict. |
+| 3 | W1·D's acceptance runs A's `classify.ts`, but A and D dispatch concurrently | **D's Wave-1 scope is gather + record + summary only.** Stub the classify step behind a flag; the full `corpus next` path is verified after A merges. D must not block on A. |
+| 4 | W1·B acceptance `grep -c "http://\|https://\|cdn\." … # expect 0` | **Broken twice** — real gathered `raw` legitimately contains URLs (6 on maestro), and `grep -c` exits 1 on zero matches. Replace with: assert no `<script src=`, `<link href=` or `@import` pointing off-origin. Content may contain URLs; the *document* must fetch nothing. |
+| 5 | W1·B spec omits `nodesSampled` and `tokensEstimated` | Both are **required** in the economics footer. Where `tokensEstimated` is true the axis/label MUST read "estimated tokens". Where `nodesSampled ≠ nodesTotal`, say so — that is the no-silent-caps rule applied to our own report. |
+| 6 | `coverageByKind(nodes)` over `Report.nodes` reports coverage-of-*judged*, labelled as coverage-of-*gathered* | Label it **"coverage (judged)"** until a gathered-kind field exists. Do not silently imply full-surface coverage. |
+| 7 | `Verdict.audit` is written by W2·F and rendered by nobody | W2·F's PR must include a **proposed** renderer patch in its body for the orchestrator to apply. F still may not edit `render.ts`. |
+| 8 | W0 fixture told `nodesSampled = nodesTotal` while hand-picking 15 of 69 | **That is a cap.** Set `nodesTotal: 69`, `nodesSampled: 15`. W1·B needs a fixture where they differ, or the disclosure path never gets built. |
+| 9 | W1·I acceptance is "a full timed dry run, twice, one with network off" | Not agent-executable. **W1·I's machine-checkable scope** is the written runbook + assets; the timed rehearsal is a human task and is recorded as such, not as a unit gate. |
+
+Unresolved and **left to the orchestrator on the night** — do not guess:
+`--probe-dir` replace-vs-append semantics, and probe id versioning at a fixed
+path (`ProbeMeta.version` exists; two versions cannot share one filename).
+Neither blocks Wave 1.
+
+---
+
 ## Wave 0 — the unblocker (BLOCKING, do alone, ~30 min)
 
 Nothing parallelizes until a realistic `report.json` exists, because half the
