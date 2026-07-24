@@ -56,6 +56,15 @@ execution.
 telemetry, a self-reported job status. The channel is the actor's output. A
 detector reading the audited channel has an adversary-controlled view.
 
+**A check that cannot fail.** `"test": "echo ok"`, a run step ending in
+`|| true`, `continue-on-error: true`, a target whose body is `exit 0`. The
+runtime honestly produces the exit code — the producer is outside the write
+boundary — but a signal that cannot vary carries no information.
+Falsifiability is a structural property: an edge that cannot fail asserts
+nothing, so it is `not_a_check`, with the vacuousness named in the argument.
+This is still shape, not quality: the question is not whether the check is
+good, but whether it is capable of being a check at all.
+
 ## The deep limit — say this out loud in the report
 
 A test's **execution** is anchored. A test's **oracle** may not be.

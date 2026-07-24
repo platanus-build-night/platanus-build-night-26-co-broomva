@@ -44,7 +44,7 @@ that producer?**
 | `anchored` | The producer is outside the actor's write boundary | a test process exit code, a type checker, a payment that settled, a third-party API, a customer action, an independent prober |
 | `self_referential` | The producer is inside it | an LLM judging output, a doc checked against a doc, a self-set status field, an agent asserting it completed |
 | `unknown` | The fork point could not be established | anything you cannot trace |
-| `not_a_check` | It asserts nothing about correctness | a dev server, a help target, a formatter that only rewrites |
+| `not_a_check` | It asserts nothing about correctness | a dev server, a help target, a formatter that only rewrites, a step that cannot fail (`\|\| true`, `echo ok`) |
 
 `unknown` **fails closed** — it counts against the ratio, exactly like
 `self_referential`. Absence of evidence of dependence is not evidence of
@@ -145,6 +145,12 @@ Write `Report` (see `schemas/keel.ts`) as JSON, then render a self-contained
 HTML report alongside it. The HTML carries the grounding ratio, the node graph
 with each class, the write-boundary argument for every verdict, and — across
 runs — the crystallization curve of cost per node as the probe library grows.
+
+**The ratio never travels alone.** Print the absolute anchored count and the
+gathered-surface coverage (nodes by kind) beside it, always. A 1.0 over one
+edge and a 0.7 over fifty are different claims, and a bare ratio rewards
+*deleting* checks — the pair is the guard. A target with zero gathered nodes
+gets an explicit "nothing gathered" state, never a ratio.
 
 Report `unknown` prominently. It is the most honest number Keel produces.
 

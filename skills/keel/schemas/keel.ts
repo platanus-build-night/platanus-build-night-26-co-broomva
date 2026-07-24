@@ -106,6 +106,27 @@ export interface Verdict {
 }
 
 // ---------------------------------------------------------------------------
+// Classify dispatch — the contract between plumbing and judgment.
+// ---------------------------------------------------------------------------
+
+/**
+ * Output of the probe-dispatch stage. Probe code executes ONLY inside the
+ * sandboxed child process (see docs/plans/00-orchestration.md, "The sandbox
+ * contract") — a synchronous `while(true)` in-process cannot be preempted in
+ * JS, so in-process probe execution is forbidden, not discouraged.
+ *
+ * `pending` carries FULL nodes (including `raw`) — the agent judges over the
+ * literal text. Batch pending nodes 10–20 per judgment call; one node per
+ * call does not survive a 15-repo corpus night.
+ */
+export interface ClassifyOutput {
+  decided: Verdict[];
+  pending: Node[];
+  /** non-fatal problems: skipped probes, load rejections, timeouts. Never silent. */
+  warnings: string[];
+}
+
+// ---------------------------------------------------------------------------
 // Probes — crystallized judgment. Code, because code is reviewable.
 // ---------------------------------------------------------------------------
 
@@ -170,13 +191,40 @@ export interface GroundingRatio {
  */
 export interface RunEconomics {
   nodesTotal: number;
+  /** gathered vs judged — when a cap samples nodes, BOTH are reported. No silent caps. */
+  nodesSampled: number;
   decidedByProbe: number;
   decidedByAgent: number;
   probesMinted: number;
   probeLibrarySize: number;
   tokensIn: number;
   tokensOut: number;
+  /**
+   * TRUE whenever token counts are estimates. A skill running inside an agent
+   * session has no API for its own token usage, so tonight this is always
+   * true: estimate = ceil(chars/4) of judgment payloads + responses. Charts
+   * MUST label the axis "estimated tokens". Wall-clock and probe-decided
+   * share are measured directly and carry the curve on their own if needed.
+   */
+  tokensEstimated: boolean;
   wallClockMs: number;
+}
+
+/**
+ * Coverage — what the gatherer could see, by kind.
+ *
+ * The ratio must NEVER be displayed without (a) the absolute anchored count
+ * and (b) this coverage beside it. A 1.0 over one edge and a 0.7 over fifty
+ * are different claims; a bare ratio rewards *deleting* checks; and surfaces
+ * the gatherer cannot read are silently absent rather than `unknown` — which
+ * makes non-coverage Keel's own shoppable class. A metric must never travel
+ * alone. Including ours.
+ */
+export function coverageByKind(nodes: Node[]): Record<string, number> {
+  return nodes.reduce<Record<string, number>>((a, n) => {
+    a[n.kind] = (a[n.kind] ?? 0) + 1;
+    return a;
+  }, {});
 }
 
 export function groundingRatio(verdicts: Verdict[]): GroundingRatio {

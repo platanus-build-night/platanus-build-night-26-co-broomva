@@ -31,7 +31,12 @@ function walk(dir: string, out: string[] = [], depth = 0): string[] {
     return out;
   }
   for (const e of entries) {
-    if (e.name.startsWith('.') && e.name !== '.github' && e.name !== '.gitlab-ci.yml') {
+    if (
+      e.name.startsWith('.') &&
+      e.name !== '.github' &&
+      e.name !== '.circleci' &&
+      e.name !== '.gitlab-ci.yml'
+    ) {
       if (e.isDirectory()) continue;
     }
     if (e.isDirectory()) {
@@ -185,6 +190,62 @@ function gatherMakefile(path: string, rel: string, nodes: Node[]): void {
 }
 
 // ---------------------------------------------------------------------------
+// pyproject.toml — where modern Python repos declare their verification.
+// Same posture as the workflow gatherer: no TOML parse, locate the sections
+// that declare checks and carry the literal block forward.
+// ---------------------------------------------------------------------------
+
+const PYPROJECT_SECTIONS: Array<[RegExp, NodeKind, string]> = [
+  [/^tool\.pytest(\..*)?$/, 'test_target', 'pytest config'],
+  [/^tool\.tox(\..*)?$/, 'test_target', 'tox config'],
+  [/^tool\.(ruff|mypy|pyright|flake8|isort)(\..*)?$/, 'ci_step', 'linter/type-checker config'],
+  [/^tool\.coverage(\..*)?$/, 'ci_step', 'coverage config'],
+];
+
+function gatherPyproject(path: string, rel: string, nodes: Node[]): void {
+  const lines = readFileSync(path, 'utf8').split('\n');
+  let section = '';
+  let cur: string[] = [];
+  let start = 0;
+  let kind: NodeKind | null = null;
+  let label = '';
+
+  const flush = () => {
+    if (kind && cur.length) {
+      nodes.push({
+        id: mkId(rel, section),
+        kind,
+        name: `${label} ([${section}])`,
+        source: `${rel}:${start}`,
+        raw: cur.join('\n').trimEnd(),
+      });
+    }
+    cur = [];
+    kind = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const h = lines[i].match(/^\[([^\]]+)\]/);
+    if (h) {
+      flush();
+      section = h[1];
+      start = i + 1;
+      for (const [re, k, l] of PYPROJECT_SECTIONS) {
+        if (re.test(section)) {
+          kind = k;
+          label = l;
+          break;
+        }
+      }
+      if (kind) cur.push(lines[i]);
+    } else if (kind) {
+      cur.push(lines[i]);
+    }
+  }
+  flush();
+}
+
+// ---------------------------------------------------------------------------
 // Config files that declare verification (test runners, hooks, linters)
 // ---------------------------------------------------------------------------
 
@@ -197,6 +258,8 @@ const CONFIG_PATTERNS: Array<[RegExp, NodeKind, string]> = [
   [/^codecov\.ya?ml$/, 'ci_step', 'coverage gate'],
   [/^renovate\.json$|^dependabot\.ya?ml$/, 'ci_step', 'dependency automation'],
   [/^CODEOWNERS$/, 'review_gate', 'code owners'],
+  [/^(vercel|now)\.json$|^netlify\.toml$|^fly\.toml$|^wrangler\.(toml|jsonc?)$|^render\.ya?ml$/, 'deploy_gate', 'deploy config'],
+  [/^\.releaserc(\.(json|ya?ml|js|cjs))?$|^release\.config\.[cm]?js$/, 'deploy_gate', 'release automation'],
 ];
 
 function gatherConfig(path: string, rel: string, nodes: Node[]): void {
@@ -226,10 +289,16 @@ export function gather(target: string): Node[] {
     const base = basename(f);
 
     try {
-      if (/^\.github\/workflows\/.+\.ya?ml$/.test(rel) || base === '.gitlab-ci.yml') {
+      if (
+        /^\.github\/workflows\/.+\.ya?ml$/.test(rel) ||
+        base === '.gitlab-ci.yml' ||
+        rel === '.circleci/config.yml'
+      ) {
         gatherWorkflow(f, rel, nodes);
       } else if (base === 'package.json' && !rel.includes('node_modules')) {
         gatherPackageJson(f, rel, nodes);
+      } else if (base === 'pyproject.toml') {
+        gatherPyproject(f, rel, nodes);
       } else if (base === 'Makefile' || base === 'makefile') {
         gatherMakefile(f, rel, nodes);
       } else {
