@@ -22,6 +22,14 @@ const SKIP_DIRS = new Set([
   '__pycache__', '.venv', 'venv', '.next', '.turbo', 'coverage',
 ]);
 
+/**
+ * Dot-directories we descend into anyway. Everything else beginning with `.`
+ * is skipped, so a CI provider that hides its config in one is INVISIBLE until
+ * it is listed here — which is how the whole Ruby ecosystem was being scored
+ * near-zero (`.circleci/`) while its checks sat in plain sight.
+ */
+const DOT_DIRS_ALLOWED = new Set(['.github', '.circleci']);
+
 function walk(dir: string, out: string[] = [], depth = 0): string[] {
   if (depth > 6) return out;
   let entries;
@@ -31,12 +39,7 @@ function walk(dir: string, out: string[] = [], depth = 0): string[] {
     return out;
   }
   for (const e of entries) {
-    if (
-      e.name.startsWith('.') &&
-      e.name !== '.github' &&
-      e.name !== '.circleci' &&
-      e.name !== '.gitlab-ci.yml'
-    ) {
+    if (e.name.startsWith('.') && !DOT_DIRS_ALLOWED.has(e.name)) {
       if (e.isDirectory()) continue;
     }
     if (e.isDirectory()) {
@@ -246,6 +249,88 @@ function gatherPyproject(path: string, rel: string, nodes: Node[]): void {
 }
 
 // ---------------------------------------------------------------------------
+// Rakefile targets — Ruby's Make. Same role, different surface.
+//
+// We take `task :name` only. Task-defining DSLs (RDoc::Task.new and friends)
+// are deliberately NOT matched: guessing at what a gem's DSL declares would be
+// judging, and this file does not judge.
+// ---------------------------------------------------------------------------
+
+function gatherRakefile(path: string, rel: string, nodes: Node[]): void {
+  const lines = readFileSync(path, 'utf8').split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^(\s*)task\s+:?["']?([A-Za-z0-9_]+)/);
+    if (!m) continue;
+
+    const [, indent, name] = m;
+    const start = i + 1;
+    const cur = [lines[i]];
+
+    // A `do` block runs to its matching `end` at the same indentation.
+    // Without one, the task is a single-line declaration (`task default: :spec`).
+    if (/\bdo\b/.test(lines[i])) {
+      const closer = new RegExp(`^${indent}end\\s*$`);
+      for (let j = i + 1; j < lines.length; j++) {
+        cur.push(lines[j]);
+        if (closer.test(lines[j])) {
+          i = j;
+          break;
+        }
+      }
+    }
+
+    nodes.push({
+      id: mkId(rel, name),
+      kind: 'script',
+      name,
+      source: `${rel}:${start}`,
+      raw: cur.join('\n').trimEnd(),
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Travis CI — command keys, scalar or list.
+//
+// Travis does not use `- run:`, so the workflow segmenter cannot see it: the
+// commands hang off well-known top-level keys instead.
+// ---------------------------------------------------------------------------
+
+const TRAVIS_KEYS = ['install', 'before_install', 'before_script', 'script', 'after_script'];
+
+function gatherTravis(path: string, rel: string, nodes: Node[]): void {
+  const lines = readFileSync(path, 'utf8').split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^([a-z_]+)\s*:\s*(.*)$/);
+    if (!m || !TRAVIS_KEYS.includes(m[1])) continue;
+
+    const key = m[1];
+    const start = i + 1;
+    const cur = [lines[i]];
+
+    // Scalar form (`script: bundle exec rspec`) ends on its own line; list form
+    // continues through the indented `- ` items beneath it.
+    if (m[2].trim() === '') {
+      for (let j = i + 1; j < lines.length; j++) {
+        if (!/^\s+\S/.test(lines[j]) && lines[j].trim() !== '') break;
+        cur.push(lines[j]);
+        i = j;
+      }
+    }
+
+    nodes.push({
+      id: mkId(rel, key),
+      kind: 'ci_step',
+      name: key,
+      source: `${rel}:${start}`,
+      raw: cur.join('\n').trimEnd(),
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Config files that declare verification (test runners, hooks, linters)
 // ---------------------------------------------------------------------------
 
@@ -255,6 +340,8 @@ const CONFIG_PATTERNS: Array<[RegExp, NodeKind, string]> = [
   [/^pytest\.ini$|^tox\.ini$|^conftest\.py$/, 'test_target', 'pytest config'],
   [/^(biome|eslint|ruff)\.(json|jsonc|ya?ml|toml)$/, 'ci_step', 'linter config'],
   [/^\.golangci\.ya?ml$/, 'ci_step', 'linter config'],
+  [/^\.rubocop\.ya?ml$/, 'ci_step', 'linter config'],
+  [/^\.rspec$/, 'test_target', 'rspec config'],
   [/^codecov\.ya?ml$/, 'ci_step', 'coverage gate'],
   [/^renovate\.json$|^dependabot\.ya?ml$/, 'ci_step', 'dependency automation'],
   [/^CODEOWNERS$/, 'review_gate', 'code owners'],
@@ -291,16 +378,23 @@ export function gather(target: string): Node[] {
     try {
       if (
         /^\.github\/workflows\/.+\.ya?ml$/.test(rel) ||
-        base === '.gitlab-ci.yml' ||
-        rel === '.circleci/config.yml'
+        /^\.circleci\/.+\.ya?ml$/.test(rel) ||
+        base === '.gitlab-ci.yml'
       ) {
+        // CircleCI segments on `- run:` exactly like Actions does, so the same
+        // literal-carrying segmenter reads both without special-casing.
+        // Glob rather than `config.yml` exactly: .circleci/ can hold more.
         gatherWorkflow(f, rel, nodes);
+      } else if (base === '.travis.yml') {
+        gatherTravis(f, rel, nodes);
       } else if (base === 'package.json' && !rel.includes('node_modules')) {
         gatherPackageJson(f, rel, nodes);
       } else if (base === 'pyproject.toml') {
         gatherPyproject(f, rel, nodes);
       } else if (base === 'Makefile' || base === 'makefile') {
         gatherMakefile(f, rel, nodes);
+      } else if (base === 'Rakefile' || base === 'rakefile') {
+        gatherRakefile(f, rel, nodes);
       } else {
         if (statSync(f).size < 200_000) gatherConfig(f, rel, nodes);
       }
