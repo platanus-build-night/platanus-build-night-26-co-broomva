@@ -95,6 +95,23 @@ Each primitive carries a **short name** for agent prose. When referencing a prim
 
 **Invariant**: `research/entities/` never contains unscored items. All entity pages must pass lint.
 
+**Substrate note — this repo has no local knowledge graph, deliberately.**
+`bookkeeping` resolves to the *operator's* workspace-global graph (`KG_ROOT`,
+defaulting to `~/broomva/research/entities`), not to anything inside this repo.
+Keel's arc belongs in that graph, wired to `evidentiary-independence-
+conservation`, `grounded-vs-ungrounded-improvement`,
+`correlated-verifier-is-no-verifier`, and `loop-engineering`.
+
+Do not point `KG_ROOT` at this repo and run `bookkeeping index`. It would create
+a second, near-empty catalog, and `/kg load` would then route to a three-entity
+graph instead of the real one — fragmenting retrieval to satisfy a checker.
+`bstack doctor` reports a missing `docs/knowledge-index.md` here; that gap is
+**expected and correct**, and closing it locally is the wrong fix.
+
+If you are a contributor with no such graph, you need none: nothing in this
+repo's build, test, or gate path reads it. Repo-local decisions go in
+`docs/decisions/`, which is self-contained and committed.
+
 **Reflexive Trigger Rule**: Bookkeeping — and knowledge capture generally — is a reflex, not a request, **and never a question**. Agents must invoke `bookkeeping.py run` and file graph-worthy material without being prompted in any of these situations:
 
 1. Before committing a feature/page that reads from the graph.

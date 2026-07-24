@@ -16,12 +16,18 @@ set -uo pipefail
 # Try to locate the workspace's bstack scripts
 WORKSPACE="$(git rev-parse --show-toplevel 2>/dev/null || echo "$PWD")"
 BSTACK_REPO=""
+# Candidates are generic install roots only — no personal workspace paths, since
+# this file is committed and runs on every contributor's clone. Override with
+# BSTACK_REPO=/path/to/bstack. Absent bstack, the gate warns and passes (below).
 for candidate in \
-    "$HOME/.agents/skills/bstack" \
+    "${BSTACK_REPO:-}" \
     "$HOME/.claude/skills/bstack" \
+    "$HOME/.agents/skills/bstack" \
+    "$HOME/.local/share/bstack" \
+    "$WORKSPACE/.bstack" \
     "$WORKSPACE/.agents/skills/bstack" \
-    "$HOME/broomva/bstack" \
 ; do
+    [ -n "$candidate" ] || continue
     if [ -x "$candidate/scripts/l3-rate-gate.sh" ]; then
         BSTACK_REPO="$candidate"
         break

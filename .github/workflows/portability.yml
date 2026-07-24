@@ -1,0 +1,82 @@
+name: portability
+
+# Keel is installed by strangers and cloned by contributors, so a committed
+# machine-specific path is a break that is invisible on the machine that
+# introduced it. This lane runs on a clean checkout with none of the
+# maintainer's tooling present — which is the point: the runner is outside the
+# write boundary of anything in this repo, so a pass here is an anchored signal
+# rather than a local assertion.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  paths:
+    name: no machine-specific paths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan committed files for absolute home paths
+        run: bash scripts/portability-check.sh
+
+  hooks:
+    name: hooks resolve on a bare clone
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Every committed hook must run on a machine with no skills installed and
+      # no bstack. They are non-blocking by contract, so a non-zero exit here is
+      # a real failure, not a warning.
+      - name: Run each hook with an empty payload
+        run: |
+          set -euo pipefail
+          for hook in \
+            scripts/skill-freshness-hook.sh \
+            scripts/conversation-bridge-hook.sh \
+            scripts/knowledge-catalog-refresh-hook.sh \
+            scripts/role-x-intake-hook.sh \
+            scripts/role-x-coverage-hook.sh \
+            scripts/auth-preflight-hook.sh \
+          ; do
+            printf '{}' | bash "$hook" >/dev/null 2>&1 \
+              || { echo "FAIL: $hook exited non-zero on a bare clone"; exit 1; }
+            echo "ok: $hook"
+          done
+
+      # The control gate is the one hook that SHOULD refuse. Assert both
+      # directions: a destructive command is blocked, an ordinary one is not.
+      # Asserting only the block would pass against a hook that denies
+      # everything.
+      - name: Control gate blocks and allows correctly
+        run: |
+          set -euo pipefail
+          run_gate() { printf '%s' "$1" | bash scripts/control-gate-hook.sh >/dev/null 2>&1; echo $?; }
+
+          blocked=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"git push --force origin main"}}')
+          [ "$blocked" = "2" ] || { echo "FAIL: force-push not blocked (exit $blocked)"; exit 1; }
+          echo "ok: force-push blocked"
+
+          allowed=$(run_gate '{"tool_name":"Bash","tool_input":{"command":"git push origin main"}}')
+          [ "$allowed" = "0" ] || { echo "FAIL: ordinary push blocked (exit $allowed)"; exit 1; }
+          echo "ok: ordinary push allowed"
+
+  gates:
+    name: repo-local gates need no bstack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # BSTACK is deliberately empty: these targets must work on a clone that
+      # has never heard of bstack.
+      - name: L3 trust gate
+        run: make BSTACK= bstack-l3-trust
+
+      - name: Pre-commit hook degrades without bstack
+        run: bash .githooks/pre-commit

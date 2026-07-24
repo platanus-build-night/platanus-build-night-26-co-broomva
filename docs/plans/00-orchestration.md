@@ -48,7 +48,7 @@ units consume it and would otherwise have to wait for the engine.
 
 | Unit | Deliverable |
 |---|---|
-| **W0** | `tests/fixtures/report.sample.json` — a hand-verified Report for a real target (use `~/broomva/apps/maestro`, 69 edges) |
+| **W0** | `tests/fixtures/report.sample.json` — a hand-verified Report for a real target (use **this repo**; it is the only target every contributor can reproduce from a bare clone) |
 
 Produce it semi-manually: run `gather`, classify ~15 nodes by hand across all
 four classes (including at least two `unknown` and one `not_a_check`), fill

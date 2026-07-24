@@ -2,7 +2,79 @@
 
 ## Identity
 
+**Keel measures whether a codebase's verification actually touches the world, or
+whether it is only checking itself.** One sentence carries the product:
+
+> A check is only a check if the signal it reads comes from somewhere the thing
+> being checked cannot write to.
+
+Every verification edge in a target — CI steps, test targets, review gates,
+deploy conditions, integration signals — is classified `anchored` /
+`self_referential` / `unknown` / `not_a_check`, yielding a **grounding ratio**
+of `anchored / (anchored + self_referential + unknown)`. Novel shapes are judged
+agentically; recurring shapes crystallize into **probes** (small reviewable
+scripts) so cost per node falls as the library grows. Keel audits its own probe
+library and reports the agreement rate as a counter-metric.
+
+Ships as an open agent skill (`npx skills add broomva/keel`) — it runs inside an
+existing harness rather than reimplementing one.
+
+Background, research chain, and rejected alternatives:
+[`docs/handoffs/2026-07-24-keel-build-night.md`](docs/handoffs/2026-07-24-keel-build-night.md).
+Parallelization contract: [`docs/plans/00-orchestration.md`](docs/plans/00-orchestration.md).
+
 This workspace is governed by **bstack** — twenty irreducible primitives (P1–P20) that turn an agent-driven workspace into a self-operating system. The full primitive contract lives in [AGENTS.md](AGENTS.md). Run `bstack doctor` to verify compliance.
+
+## Project invariants (binding, and stronger than convenience)
+
+**The schema is frozen.** No agent modifies `skills/keel/schemas/keel.ts`. It is
+the contract between the engine and every consumer, and a mid-fan-out change
+silently invalidates every parallel unit's work. If you believe the schema is
+wrong: **stop and report.** The orchestrator decides, re-freezes, and
+re-dispatches. Same rule, softer, for `SKILL.md`, `README.md`, and
+`site/index.html` — orchestrator-owned; units propose edits in the PR body.
+
+**`skills/keel/` is the packaging boundary.** It is the *only* directory that
+ships to users. `skills.sh` excludes just `metadata.json`, `.git`, `__pycache__`,
+and `__pypackages__` — so anything else at repo root (`README`, `LICENSE`,
+`.github/`, `site/`, `reports/`, `node_modules/`, and now `CLAUDE.md`,
+`AGENTS.md`, `.control/`, `scripts/`) would ship into every user's skill store
+if the skill were rooted here. Governance lives at root deliberately, and stays
+out of the shipped artifact.
+
+**Judgment is the agent's; scripts are plumbing.** Scripts locate, load, cache,
+render, and sandbox. They do not classify. An agent that finds itself writing a
+lookup table mapping check-name → class has misread the thesis and must stop —
+that table is precisely the ungrounded artifact Keel exists to detect.
+
+**`unknown` fails closed.** It counts against the ratio exactly like
+`self_referential`. Any code path that defaults a node to `anchored` is a bug,
+not a convenience. `not_a_check` is excluded from the ratio and is therefore the
+one **shoppable** class: mis-filing a real check there shrinks the denominator
+and inflates the score, so it carries the same burden of argument as any other
+verdict. Reaching for it because a node is *hard* is wrong; the honest answer
+there is `unknown`.
+
+**Probes abstain, never assert ignorance.** `Probe.assess()` returns `null` to
+abstain and may never return `unknown` — `unknown` is a claim about the world
+and only the agent makes it. This is what keeps the class unshoppable: a lazy
+probe degrades to *ask*, never to *looks fine*.
+
+**Toolchain**: Bun + TypeScript + Biome. No npm/yarn, no ESLint/Prettier. Zero
+runtime dependencies unless a plan names one — `gather.ts` parses YAML-ish text
+without a YAML library on purpose, because carrying the literal snippet forward
+beats half-understanding it.
+
+**Keel's own CI is a verification edge Keel will classify.** Write checks that
+would score `anchored` — executed assertions, not assertions about assertions. A
+test that asserts a constant is `self_referential` by this repo's own definition.
+Publishing a poor grounding ratio for ourselves is a bad look at a pitch about
+grounding ratios, and fixing it by shopping `not_a_check` is worse.
+
+**Scope, stated in the product and repeated here.** Keel measures the *shape* of
+verification, not its quality. A repo can be 100% anchored with terrible tests.
+Anchoring says the signal comes from outside; it does not say the signal is
+sufficient. Never let a high ratio be reported as "well tested".
 
 ## Development Philosophy
 

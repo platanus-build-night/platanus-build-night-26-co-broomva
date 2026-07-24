@@ -231,37 +231,67 @@ gates:
   # Do not add one. If a rule cannot name its enforcer, it is a convention,
   # so file it under `soft:` and say so.
   #
-  # CAUTION — `pattern:` is a *Bash-command* regex, always.
-  # scripts/control-gate-hook.sh merges every `pattern:` line it finds in this
-  # file into its Bash deny-list (the scan is not scoped to this block). A path
-  # or file-content regex placed here therefore becomes a command matcher and
-  # will deny unrelated commands: a bare `credentials` pattern would block
-  # `gh auth status --show-credentials`. Path-scoped rules carry `measurement:`
-  # only — see G4.
+  # CAUTION — the `pattern:` fields below DOCUMENT the rule; they do not enforce
+  # it. Verified by execution on 2026-07-24, not by reading:
+  #
+  #   * scripts/control-gate-hook.sh enforces a hardcoded list embedded in the
+  #     script. That list is what actually blocked all five gates under test —
+  #     every refusal carried the hook's own label, never "policy.yaml gate".
+  #   * The hook also tries to merge extra patterns from this file, but the scan
+  #     is `^\s*pattern:`, which matches mapping-form keys (as used below) and
+  #     NOT `- pattern:` list items. The six content-scanning entries further
+  #     down this file are therefore read by nothing.
+  #   * Worse, a merged value is taken as raw file text with no YAML unescaping,
+  #     so `\\s` reaches `re.search` as an escaped literal backslash. Every
+  #     pattern below is consequently INERT as a matcher — `git\\s+push\\b...`
+  #     does not match `git push --force origin main`.
+  #
+  # Two consequences, both binding on edits here:
+  #
+  #   1. Changing a `pattern:` below changes DOCUMENTATION ONLY. To change what
+  #      is actually blocked, edit the embedded list in the hook — and that file
+  #      is a deployed copy of a bstack-owned script, so fix it upstream.
+  #   2. A backslash-FREE pattern in mapping form is the one case that does
+  #      merge and does match, as a *Bash-command* regex. A bare `credentials`
+  #      would then block `gh auth status --show-credentials`. So never put a
+  #      path or file-content regex here. Path-scoped rules carry `measurement:`
+  #      only — see G4.
   governed:
     - id: G1
       rule: "No force-push (rewrites history other actors have already read)"
       pattern: "git\\s+push\\b.*(--force\\b|--force-with-lease\\b|\\s-f\\b)"
       severity: blocking
-      measurement: "scripts/control-gate-hook.sh (PreToolUse) denies matching Bash commands"
+      measurement: >-
+        scripts/control-gate-hook.sh (PreToolUse) — enforced by the hook's
+        embedded rule list, not by the `pattern:` above. Verified by execution:
+        the command is refused with exit 2.
 
     - id: G2
       rule: "No bypassing pre-commit hooks"
       pattern: "--no-verify\\b"
       severity: blocking
-      measurement: "scripts/control-gate-hook.sh (PreToolUse) denies matching Bash commands"
+      measurement: >-
+        scripts/control-gate-hook.sh (PreToolUse) — enforced by the hook's
+        embedded rule list, not by the `pattern:` above. Verified by execution:
+        the command is refused with exit 2.
 
     - id: G3
       rule: "No catastrophic recursive delete"
       pattern: "\\brm\\s+-rf\\s+(/|~|\\$HOME)(\\s|$)"
       severity: blocking
-      measurement: "scripts/control-gate-hook.sh (PreToolUse) denies matching Bash commands"
+      measurement: >-
+        scripts/control-gate-hook.sh (PreToolUse) — enforced by the hook's
+        embedded rule list, not by the `pattern:` above. Verified by execution:
+        the command is refused with exit 2.
 
     - id: G3b
       rule: "No hard reset onto a remote ref (discards uncommitted work)"
       pattern: "\\bgit\\s+reset\\s+--hard\\b.*origin"
       severity: blocking
-      measurement: "scripts/control-gate-hook.sh (PreToolUse) denies matching Bash commands"
+      measurement: >-
+        scripts/control-gate-hook.sh (PreToolUse) — enforced by the hook's
+        embedded rule list, not by the `pattern:` above. Verified by execution:
+        the command is refused with exit 2.
 
     - id: G4
       rule: "No writing secret material (.env, credentials, id_rsa, *.pem, *.key)"
@@ -372,10 +402,22 @@ auto_merge:
 
 # === Indirect-prompt-injection defense — PreToolUse write gate (2026-05-15) ===
 # Spec: specs/2026-05-15-indirect-prompt-injection-defense.md §4 Tier 1.
-# Consumed by ~/broomva/scripts/check-file-write-safety.py (workspace-side, ships
-# as PR #2 against broomva/workspace). This block defines the schema; the runtime
-# is a separate concern. Schema lands first so the runtime can pin to a stable
-# contract.
+#
+# STATUS IN THIS REPO: schema only. NOTHING READS IT. Stated plainly because the
+# `severity: blocking` lines below otherwise read as protection that is running.
+# Two independent reasons it is inert here, both verified by execution:
+#
+#   * No content scanning exists. scripts/control-gate-hook.sh matches Write and
+#     Edit against `file_path` only; it never inspects content, so a
+#     content_patterns rule has no evaluator.
+#   * The hook's policy merge scans `^\s*pattern:`, which does not match the
+#     `- pattern:` list form used below. Even the merge cannot see these.
+#
+# The consuming runtime is a separate, workspace-side concern that does not ship
+# with Keel. Keeping the schema is deliberate — it is a stable contract an
+# implementation can pin to — but do not count these as gates until something
+# evaluates them. Under this repo's own classification a rule with no evaluator
+# is `self_referential`, not `anchored`.
 #
 # Three sub-blocks:
 #   write_gate.content_patterns: regex refusal on dangerous content substrings.
@@ -385,9 +427,10 @@ auto_merge:
 #                                       (additions are normal; removals enable silent
 #                                       commits of malicious files).
 #
-# Default state: enabled. Override per-workspace by setting
-#   write_gate.enabled: false  in .control/policy.yaml — but the bstack-doctor
-# command will warn loudly when this is off.
+# `enabled: true` below is the schema default for a workspace that HAS a
+# consuming runtime. In this repo it declares intent, not state — see STATUS
+# above. Do not "fix" a security finding by flipping this flag; wire an
+# evaluator, or the flag is just a status field setting itself.
 
 write_gate:
   enabled: true

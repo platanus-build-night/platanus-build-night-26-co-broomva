@@ -1,11 +1,32 @@
 {
+  "_comment": [
+    "Portable hook wiring for the Keel repo. Committed, so it must work on any",
+    "clone on any machine.",
+    "",
+    "Two rules keep it that way:",
+    "  1. Every command resolves via $CLAUDE_PROJECT_DIR (set by Claude Code for",
+    "     all command hooks). Never write an absolute path here — `bstack",
+    "     bootstrap` substitutes real paths by default, which is correct for a",
+    "     private workspace and wrong for a public repo.",
+    "  2. Every command points at a script vendored under this repo's scripts/.",
+    "     Hooks whose implementation lives in a per-user skill install (role-x,",
+    "     bstack's auth-preflight) are wired through a vendored shim that",
+    "     delegates when the skill is present and exits 0 silently when it is",
+    "     not — so a clone without those skills sees a no-op, never a broken",
+    "     path. Anything genuinely machine-specific goes in",
+    "     .claude/settings.local.json, which is gitignored.",
+    "",
+    "All hooks below are non-blocking (exit 0) except the P2 control gate, which",
+    "exits 2 to refuse a destructive action. Every script degrades gracefully",
+    "when its optional dependencies are absent."
+  ],
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/skill-freshness-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/skill-freshness-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P7"
           }
@@ -15,9 +36,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/.agents/skills/role-x/scripts/role-x-coverage-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/role-x-coverage-hook.sh\"",
             "timeout": 5,
-            "_bstack_primitive": "P17"
+            "_bstack_primitive": "P17",
+            "_purpose": "Vendored shim — delegates to the role-x skill if installed, no-op otherwise"
           }
         ]
       },
@@ -25,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/.claude/skills/bstack/scripts/auth-preflight-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/auth-preflight-hook.sh\"",
             "timeout": 8,
             "_bstack_primitive": "auth-preflight",
             "_purpose": "Warn (never block) if gh auth is missing, so an autonomous arc learns it at session start instead of dying on the push/PR step mid-task"
@@ -38,9 +60,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/.agents/skills/role-x/scripts/role-x-intake-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/role-x-intake-hook.sh\"",
             "timeout": 5,
-            "_bstack_primitive": "P17"
+            "_bstack_primitive": "P17",
+            "_purpose": "Vendored shim — delegates to the role-x skill if installed, no-op otherwise"
           }
         ]
       }
@@ -50,7 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/conversation-bridge-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/conversation-bridge-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P1"
           }
@@ -60,7 +83,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/knowledge-catalog-refresh-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/knowledge-catalog-refresh-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P6",
             "_purpose": "Regenerate dense LLM-loadable catalog (LLM-as-index architecture; routes /kg load)"
@@ -73,7 +96,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/conversation-bridge-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/conversation-bridge-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P1"
           }
@@ -85,7 +108,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/control-gate-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P2"
           }
@@ -96,7 +119,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/control-gate-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P2"
           }
@@ -107,7 +130,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "command": "\"$CLAUDE_PROJECT_DIR/scripts/control-gate-hook.sh\"",
             "timeout": 5,
             "_bstack_primitive": "P2"
           }

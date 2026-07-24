@@ -4,5 +4,25 @@ dist/
 *.log
 __pycache__/
 
-# bstack RCS control-loop machine-local telemetry (not committed)
+# bstack RCS control-loop machine-local telemetry (not committed).
+# These are measurements of one operator's sessions on one machine — they embed
+# absolute workspace paths and per-session counters, and they are regenerated on
+# every run. Committing them would publish local telemetry and hand a clone
+# someone else's baseline. `.control/*.yaml` and `.control/*.toml` ARE committed:
+# those are configuration (setpoints, gates, parameters), not measurements.
 .control/audit/*.jsonl
+.control/leverage-state.json
+.control/leverage-ship-state.json
+.control/leverage-metrics.jsonl
+.control/composite-omega-history.jsonl
+
+# Machine-local Claude Code settings — hooks that live in a personal skill
+# install rather than in this repo. Committed hooks must resolve via
+# $CLAUDE_PROJECT_DIR; anything machine-specific belongs here.
+.claude/settings.local.json
+
+# P1 conversation-bridge output — per-machine session transcripts. They embed
+# absolute paths (so committing them fails scripts/portability-check.sh) and
+# they publish local session content, which a public repo should not do. The
+# file still exists locally, which is what the bridge-freshness check reads.
+docs/conversations/
