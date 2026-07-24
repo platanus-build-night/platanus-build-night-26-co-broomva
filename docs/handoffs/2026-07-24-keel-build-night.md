@@ -372,8 +372,19 @@ Frontmatter parses; no silent rejection.
 **`Probe.assess()` returns `null` to ABSTAIN.** A probe may never return
 `unknown` — `unknown` is a claim about the world and only the agent makes it.
 This is what keeps `unknown` unshoppable: a lazy probe degrades to *ask*, never
-to *looks fine*. Enforced at the type level via
-`Omit<Verdict,'nodeId'|'decidedBy'|'probeId'> | null`.
+to *looks fine*.
+
+> **CORRECTED 2026-07-24 (schema v3).** This section originally claimed the
+> rule was "enforced at the type level via
+> `Omit<Verdict,'nodeId'|'decidedBy'|'probeId'> | null`". **That was false** —
+> that `Omit` retains `class: GroundingClass`, which includes `'unknown'`.
+> There was no enforcement, and three unit plans were written against the
+> assumption that there was. It is real now: `assess` returns
+> `ProbeVerdict | null` where `ProbeVerdict.class` is
+> `Exclude<GroundingClass,'unknown'>`, verified to fail compilation with
+> `TS2322`. "Reject at load time" remains **unimplementable** and has been
+> struck from the plans — a probe's return value is only knowable by calling
+> it, and calling it may only happen inside the sandbox child.
 
 **Grounding ratio** = `anchored / (anchored + self_referential + unknown)`.
 

@@ -6,3 +6,7 @@ __pycache__/
 
 # bstack RCS control-loop machine-local telemetry (not committed)
 .control/audit/*.jsonl
+
+# fan-out scratch (per-worktree probe dir, corpus clones)
+.keel-probes/
+.keel-corpus/

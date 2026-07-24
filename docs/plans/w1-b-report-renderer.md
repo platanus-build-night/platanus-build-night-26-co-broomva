@@ -68,4 +68,4 @@ Also render a synthetic 200-node report to prove it does not break.
 ## Do not touch
 
 `schemas/keel.ts` · `scripts/gather.ts` · `scripts/classify.ts` · `SKILL.md` ·
-`README.md` · `site/**` (W1·H owns the site)
+`README.md` · `site/**` (W2·H owns the site)

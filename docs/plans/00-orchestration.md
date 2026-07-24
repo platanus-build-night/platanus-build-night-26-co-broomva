@@ -35,14 +35,107 @@ decides, re-freezes, and re-dispatches. This has now happened twice by hand
 (`not_a_check` after running `gather`; then the pre-dispatch v2 amendment
 below), and it was cheap only because nothing was running in parallel yet.
 
-**Schema v2 is the frozen version** (this commit): adds `ClassifyOutput`
+**Schema v3 is the frozen version** (pre-dispatch). v2 added `ClassifyOutput`
 (the dispatch↔judgment contract), `RunEconomics.nodesSampled` +
 `tokensEstimated` (token counts are estimates — no API exposes session usage
 to a skill; label chart axes accordingly), and `coverageByKind()`.
 
+**v3 adds `ProbeVerdict`**, and it changes what units must build. Three plans
+asserted that a probe returning `unknown` is *"rejected at load time"* / *"at
+mint time"*. **That is not implementable** — a probe's return value is only
+knowable by calling it, and calling it may only happen inside the sandbox
+child. It is now a **type**: `Probe.assess` returns `ProbeVerdict | null`,
+where `ProbeVerdict.class` is `Exclude<GroundingClass,'unknown'>`. A probe
+returning `unknown` is a compile error (verified: `TS2322`).
+
+Consequences, and units must follow them:
+- **Delete "reject at load time" / "enforce at mint time"** from your plan's
+  reading. The compiler holds it.
+- Keep a **runtime check at assess-call time inside the sandbox child** — a
+  probe can be plain JS and lie to the compiler. That is belt-and-braces, and
+  it is the ONLY runtime enforcement point.
+- The handoff's old claim that `Omit<Verdict,'nodeId'|'decidedBy'|'probeId'>`
+  enforced this was **false** — that `Omit` retained `class: GroundingClass`,
+  which includes `'unknown'`. It is true now.
+
 Same rule, softer, for the shared prose hotspots: **`SKILL.md`, `README.md`, and
 `site/index.html` are orchestrator-owned.** Units propose edits in their PR body
-rather than making them.
+rather than making them. W2·H's "add the results link" edit to `site/index.html`
+is the **one** carve-out, and it happens after Wave 1 has drained.
+
+**Also orchestrator-owned — do not edit, do not "fix":**
+
+- `package.json`, `tsconfig.json`, `bun.lock` — the toolchain baseline.
+- `tests/grounding-ratio.test.ts` — the pre-flight smoke test. W1·E builds
+  *on* it; W1·E does not replace it.
+- `CLAUDE.md`, `AGENTS.md`, `METALAYER.md`, `.control/**` — **governance.**
+  Editing these trips the L3 rate gate in `.githooks/pre-commit`, whose only
+  documented escape is `git commit --no-verify` — which Gate (P2) blocks as
+  G2. The result is an **unrecoverable commit deadlock**. No unit has any
+  reason to touch them.
+
+### Pre-flight state (already true on `main` — verify, do not rebuild)
+
+`bun test` → **exit 0** (3 pass) · `bunx tsc --noEmit` → **exit 0** (clean).
+
+Both were exit 1 before dispatch prep: there was no `tsconfig.json` and no test
+files, so every unit running the loop-prompt's step 7 would have read a
+pre-existing failure as its own damage. If either is non-zero when your unit
+starts, something upstream broke — **report it, do not chase it.**
+
+### Probe-directory isolation (MANDATORY — worktrees do not cover `$HOME`)
+
+W1·A, W1·C and W1·D all read and write `~/.config/keel/probes/`. Worktrees
+isolate the repo; they do **not** isolate the home directory. Left as-is, A's
+deliberately-hostile probes (a thrower, a `while(true)`) would hang C's
+acceptance run and poison D's corpus economics — which is the crystallization
+curve, i.e. the headline result.
+
+Every unit therefore resolves its probe dir as:
+
+```
+KEEL_PROBE_DIR="${KEEL_PROBE_DIR:-$HOME/.config/keel/probes}"
+```
+
+and every dispatched unit exports a worktree-local value before running
+anything:
+
+```bash
+export KEEL_PROBE_DIR="$PWD/.keel-probes"   # per-worktree, git-ignored
+mkdir -p "$KEEL_PROBE_DIR"
+```
+
+The dir may not exist — `loadProbes` MUST treat a missing dir as "no probes",
+never as an error. `~/.config/keel/probes/` stays the user-facing default in
+`SKILL.md`; it is only overridden during fan-out.
+
+### `reports/` partition (three units write here)
+
+`reports/**` is claimed wholesale by W2·H, but W1·D and W1·G write into it
+during Wave 1. Filenames are disjoint, so the partition is by **file**:
+
+| Path | Owner |
+|---|---|
+| `reports/<target>.json`, `reports/corpus-summary.json` | W1·D |
+| `reports/curve.json` | W1·G |
+| `site/reports/**` and publishing | W2·H (reads the above; writes neither) |
+
+### B ↔ G insertion point (named, because units cannot talk)
+
+W1·G emits the curve as a standalone SVG fragment to **`reports/curve.svg`**.
+W1·B's template contains the literal marker line:
+
+```html
+<!-- KEEL:CURVE -->
+```
+
+B renders the marker whether or not the file exists; if `reports/curve.svg` is
+absent B leaves the marker and renders nothing there. Neither unit waits for
+the other, and the token is fixed here so they cannot disagree at merge.
+
+**Class colours** (all four — `not_a_check` was missing):
+`anchored #4ade80` · `self_referential #f87171` · `unknown #fbbf24` ·
+`not_a_check #64748b` (slate — deliberately inert, it asserts nothing).
 
 ### The sandbox contract (orchestrator-owned interface between A and C)
 
@@ -106,8 +199,8 @@ pure lost wall-clock.
 | **B · report renderer** | `skills/keel/scripts/render.ts`, `skills/keel/templates/` | schema + fixture |
 | **C · probe mint + sandbox** | `skills/keel/scripts/mint-probe.ts`, `skills/keel/scripts/probe-sandbox.ts`, `skills/keel/probes/*.ts` | schema + sandbox contract |
 | **D · corpus runner** | `skills/keel/scripts/corpus.ts`, `corpus.json` | schema |
-| **E · tests + CI** | `tests/**` (except W0's fixture), `.github/workflows/test.yml` | schema + fixture |
-| **G · crystallization curve** | `skills/keel/scripts/curve.ts` | schema + fixture (synthetic economics) |
+| **E · tests + CI** | `tests/**` — **except** `tests/fixtures/report.sample.json` (W0), `tests/fixtures/economics/**` (G), and `tests/grounding-ratio.test.ts` (pre-flight) — plus `.github/workflows/test.yml` | schema + fixture |
+| **G · crystallization curve** | `skills/keel/scripts/curve.ts`, **`tests/fixtures/economics/**`**, `reports/curve.json` | schema + fixture (synthetic economics) |
 | **I · demo assets (minus video)** | `docs/demo/**` | handoff + plans only |
 
 **Critical path is A → D.** B, C, E, G, I are genuinely independent of A

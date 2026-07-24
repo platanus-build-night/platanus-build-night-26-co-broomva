@@ -130,6 +130,26 @@ export interface ClassifyOutput {
 // Probes — crystallized judgment. Code, because code is reviewable.
 // ---------------------------------------------------------------------------
 
+/**
+ * What a probe is allowed to return.
+ *
+ * `unknown` is EXCLUDED at the type level, not by convention. `unknown` is a
+ * claim about the world and only the agent may make it; a probe that cannot
+ * tell says so by returning `null` (abstain). This is the mechanism that keeps
+ * `unknown` unshoppable — and it must be a type, because "enforce at load time"
+ * is not implementable: a probe's return value is only knowable by CALLING it,
+ * and calling it is exactly what may only happen inside the sandbox child.
+ *
+ * Runtime belt-and-braces still applies at assess-call time in the sandbox
+ * (a probe can be plain JS and lie to the compiler) — but the contract is here.
+ */
+export type ProbeVerdict = Omit<
+  Verdict,
+  'nodeId' | 'decidedBy' | 'probeId' | 'class'
+> & {
+  class: Exclude<GroundingClass, 'unknown'>;
+};
+
 export interface ProbeMeta {
   id: string;
   version: number;
@@ -157,7 +177,7 @@ export interface Probe extends ProbeMeta {
    * being measured can never cause a cheap green, and a lazy probe degrades to
    * "ask the agent" rather than to "looks fine".
    */
-  assess(node: Node): Omit<Verdict, 'nodeId' | 'decidedBy' | 'probeId'> | null;
+  assess(node: Node): ProbeVerdict | null;
 }
 
 // ---------------------------------------------------------------------------

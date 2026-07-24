@@ -92,4 +92,4 @@ cat ../../reports/corpus-summary.json    # entries carry ratio + anchored + cove
 ## Do not touch
 
 `schemas/keel.ts` · `gather.ts` · `classify.ts` · `render.ts` · `SKILL.md` ·
-`README.md` · `site/**` (W1·H publishes)
+`README.md` · `site/**` (W2·H publishes)
