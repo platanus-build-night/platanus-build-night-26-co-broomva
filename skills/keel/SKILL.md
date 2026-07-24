@@ -44,11 +44,20 @@ that producer?**
 | `anchored` | The producer is outside the actor's write boundary | a test process exit code, a type checker, a payment that settled, a third-party API, a customer action, an independent prober |
 | `self_referential` | The producer is inside it | an LLM judging output, a doc checked against a doc, a self-set status field, an agent asserting it completed |
 | `unknown` | The fork point could not be established | anything you cannot trace |
+| `not_a_check` | It asserts nothing about correctness | a dev server, a help target, a formatter that only rewrites |
 
 `unknown` **fails closed** — it counts against the ratio, exactly like
 `self_referential`. Absence of evidence of dependence is not evidence of
 independence. And `unknown` is never settable by the thing being measured:
 if the target could choose its own class it would never choose `unknown`.
+
+`not_a_check` is **excluded from the ratio** — a node that asserts nothing
+would be a lie in either column. But it is the one **shoppable** class:
+mis-filing a real check here shrinks the denominator and inflates the score.
+So it carries the same burden of argument as any other verdict, the report
+prints its count beside the ratio, and the audit samples it like everything
+else. If you reach for it because a node is *hard*, the honest answer is
+`unknown`.
 
 Grounding ratio = `anchored / (anchored + self_referential + unknown)`.
 

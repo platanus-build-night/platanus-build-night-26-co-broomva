@@ -53,8 +53,24 @@ export interface Node {
  * unknown         we could not establish the fork point.
  *                 FAILS CLOSED. Counts against the ratio. Never a default
  *                 green, and never settable by the thing being measured.
+ *
+ * not_a_check     the gatherer surfaced it, but it does not assert anything
+ *                 about correctness (a dev server, a help target, a formatter
+ *                 that only rewrites). EXCLUDED from the ratio entirely.
+ *
+ *                 This class is SHOPPABLE and must be watched: mis-filing a
+ *                 real check here shrinks the denominator and inflates the
+ *                 score. So it carries the same burden of argument as any
+ *                 other verdict, the report surfaces its count next to the
+ *                 ratio, and the audit samples it like everything else. If you
+ *                 are tempted to use it because a node is hard to classify,
+ *                 the honest answer is `unknown`.
  */
-export type GroundingClass = 'anchored' | 'self_referential' | 'unknown';
+export type GroundingClass =
+  | 'anchored'
+  | 'self_referential'
+  | 'unknown'
+  | 'not_a_check';
 
 export interface WriteBoundaryArgument {
   /** what actually emits the signal ("vitest process exit code", "an LLM") */
@@ -142,7 +158,9 @@ export interface GroundingRatio {
   anchored: number;
   selfReferential: number;
   unknown: number;
-  /** anchored / total. `unknown` counts against — fail closed. */
+  /** Excluded from the ratio. Reported anyway — it is the shoppable class. */
+  notACheck: number;
+  /** anchored / (anchored + selfReferential + unknown). `unknown` counts against. */
   ratio: number;
 }
 
@@ -162,14 +180,19 @@ export interface RunEconomics {
 }
 
 export function groundingRatio(verdicts: Verdict[]): GroundingRatio {
-  const anchored = verdicts.filter((v) => v.class === 'anchored').length;
-  const selfReferential = verdicts.filter((v) => v.class === 'self_referential').length;
-  const unknown = verdicts.filter((v) => v.class === 'unknown').length;
+  const count = (c: GroundingClass) => verdicts.filter((v) => v.class === c).length;
+  const anchored = count('anchored');
+  const selfReferential = count('self_referential');
+  const unknown = count('unknown');
+  const notACheck = count('not_a_check');
+  // not_a_check is excluded from the denominator: it asserts nothing, so
+  // counting it either way would be a lie. It is reported separately instead.
   const total = anchored + selfReferential + unknown;
   return {
     anchored,
     selfReferential,
     unknown,
+    notACheck,
     ratio: total === 0 ? 0 : anchored / total,
   };
 }
