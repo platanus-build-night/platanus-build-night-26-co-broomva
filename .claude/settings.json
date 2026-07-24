@@ -1,0 +1,119 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/skill-freshness-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P7"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/.agents/skills/role-x/scripts/role-x-coverage-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P17"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/.claude/skills/bstack/scripts/auth-preflight-hook.sh",
+            "timeout": 8,
+            "_bstack_primitive": "auth-preflight",
+            "_purpose": "Warn (never block) if gh auth is missing, so an autonomous arc learns it at session start instead of dying on the push/PR step mid-task"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/.agents/skills/role-x/scripts/role-x-intake-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P17"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/conversation-bridge-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P1"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/knowledge-catalog-refresh-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P6",
+            "_purpose": "Regenerate dense LLM-loadable catalog (LLM-as-index architecture; routes /kg load)"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/conversation-bridge-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P1"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P2"
+          }
+        ],
+        "matcher": "Bash"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P2"
+          }
+        ],
+        "matcher": "Write"
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/broomva/keel/scripts/control-gate-hook.sh",
+            "timeout": 5,
+            "_bstack_primitive": "P2"
+          }
+        ],
+        "matcher": "Edit"
+      }
+    ]
+  }
+}
