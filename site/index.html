@@ -5,63 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keel — is your verification touching the world?</title>
 <meta name="description" content="Keel measures whether a codebase's verification actually touches the world, or whether it is checking itself. Grounding ratio for agent-maintained systems." />
+<!-- The compact mark is a redraw, not a scaled primary — below ~24px the 3x3
+     block stops resolving. See skills/keel/design/mark-compact.svg. -->
+<link rel="icon" type="image/svg+xml" href="./mark-compact.svg" />
+<link rel="apple-touch-icon" href="./icon.svg" />
+<meta property="og:image" content="./icon.svg" />
+<meta property="og:title" content="Keel — is your verification touching the world?" />
+<!-- Design system. Canonical source is skills/keel/design/; these are copies
+     kept byte-identical by `make design-sync` and gated by `make design-audit`
+     (site/ deploys standalone and cannot reach up into skills/). -->
+<link rel="stylesheet" href="./tokens.css" />
+<link rel="stylesheet" href="./keel.css" />
 <style>
-  :root{
-    --bg:#07090c; --fg:#e8edf2; --dim:#8b97a5; --line:#1b2027;
-    --anchored:#4ade80; --self:#f87171; --unknown:#fbbf24; --accent:#7dd3fc;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--bg); color:var(--fg);
-    font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Inter,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:760px;margin:0 auto;padding:80px 24px 120px}
-  .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
-  h1{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:0 0 48px}
-  .hero{font-size:clamp(30px,5.2vw,46px);line-height:1.18;letter-spacing:-.022em;font-weight:600;margin:0 0 28px}
-  .hero em{font-style:normal;color:var(--accent)}
-  .lede{font-size:19px;color:var(--dim);margin:0 0 44px;max-width:60ch}
-  .rule{border:0;border-top:1px solid var(--line);margin:56px 0}
-  h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:0 0 20px}
-  p{margin:0 0 18px}
-  blockquote{
-    margin:0 0 28px;padding:18px 22px;border-left:2px solid var(--accent);
-    background:#0c1015;font-size:18px;line-height:1.55;
-  }
-  code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.9em;color:var(--accent)}
-  .install{
-    display:block;background:#0c1015;border:1px solid var(--line);border-radius:8px;
-    padding:16px 18px;margin:0 0 12px;font-family:ui-monospace,Menlo,monospace;font-size:15px;
-  }
-  .install::before{content:"$ ";color:var(--dim)}
-  table{width:100%;border-collapse:collapse;margin:0 0 24px;font-size:15px}
-  td{padding:12px 0;border-bottom:1px solid var(--line);vertical-align:top}
-  td:first-child{width:150px;white-space:nowrap}
-  .tag{font-family:ui-monospace,Menlo,monospace;font-size:13px;padding:2px 8px;border-radius:4px}
-  .t-a{color:var(--anchored);background:rgba(74,222,128,.1)}
-  .t-s{color:var(--self);background:rgba(248,113,113,.1)}
-  .t-u{color:var(--unknown);background:rgba(251,191,36,.1)}
-  .formula{font-family:ui-monospace,Menlo,monospace;font-size:15px;color:var(--dim);margin:0 0 24px}
-  .formula b{color:var(--fg);font-weight:500}
-  footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
-  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(125,211,252,.3)}
-  a:hover{border-bottom-color:var(--accent)}
+  /* Page-specific layout only. Every value is a token — see design-audit. */
+  /* The lockup is composed from the mark plus real text rather than loaded as
+     lockup.svg, so the wordmark stays selectable, translatable, and indexable.
+     lockup.svg is for contexts that cannot compose — README, slides, favicons. */
+  .site-head { display: flex; align-items: center; gap: var(--k-space-3); margin: 0 0 var(--k-space-12); }
+  .site-head img { display: block; height: var(--k-space-6); width: auto; }
+  .hero { margin: 0 0 var(--k-space-6); }
+  .lede { margin: 0 0 var(--k-space-10); }
+  /* Sections that follow a rule get their air from the rule; back-to-back
+     sections (Install → Scope, cheaper → audits itself) need their own. */
+  h2 { margin: var(--k-space-12) 0 var(--k-space-5); }
+  .k-rule + h2 { margin-top: 0; }
+  .k-table td:first-child { width: var(--k-space-24); white-space: nowrap; }
+  .install { margin: 0 0 var(--k-space-3); }
+  footer { margin-top: var(--k-space-16); padding-top: var(--k-space-6); border-top: 1px solid var(--k-line); color: var(--k-ink-2); font-size: var(--k-fs-sm); }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="k-page">
 
-  <h1>Keel</h1>
+  <h1 class="site-head"><img src="./mark.svg" alt="" /><span class="k-wordmark">Keel</span></h1>
 
-  <p class="hero">Your agents are grading their&nbsp;own homework. <em>Keel measures how much.</em></p>
+  <p class="k-display hero">Your agents are grading their&nbsp;own homework. <em>Keel measures how much.</em></p>
 
-  <p class="lede">
+  <p class="k-lede lede">
     A ship's keel is the reference line everything else is measured from — and an
     <em>even keel</em> is a stability property, not a decoration.
   </p>
 
-  <blockquote>
+  <blockquote class="k-callout">
     A check is only a check if the signal it reads comes from somewhere the thing
     being checked cannot write to.
   </blockquote>
@@ -69,38 +54,43 @@
   <p>
     Most verification in an agent-maintained codebase fails this. An LLM reviews what
     an LLM wrote. A doc is validated against another doc. A status field reads
-    <code>passed</code> because something set it to <code>passed</code>. The pipeline
-    is green and nothing has been verified.
+    <code class="k-mono">passed</code> because something set it to
+    <code class="k-mono">passed</code>. The pipeline is green and nothing has been
+    verified.
   </p>
 
-  <hr class="rule" />
+  <hr class="k-rule" />
 
-  <h2>The classification</h2>
-  <table>
+  <h2 class="k-eyebrow">The classification</h2>
+  <table class="k-table">
     <tr>
-      <td><span class="tag t-a">anchored</span></td>
+      <td><span class="k-class" data-class="anchored">anchored</span></td>
       <td>The signal's producer is outside the actor's write boundary — a process exit code, a type checker, a payment that settled, a customer action.</td>
     </tr>
     <tr>
-      <td><span class="tag t-s">self-referential</span></td>
+      <td><span class="k-class" data-class="self_referential">self_referential</span></td>
       <td>Inside it — an LLM judging output, a doc checked against a doc, a self-set status field.</td>
     </tr>
     <tr>
-      <td><span class="tag t-u">unknown</span></td>
+      <td><span class="k-class" data-class="unknown">unknown</span></td>
       <td>The fork point could not be traced. <strong>Fails closed.</strong></td>
+    </tr>
+    <tr>
+      <td><span class="k-class" data-class="not_a_check">not_a_check</span></td>
+      <td>Surfaced by the gatherer, but it asserts nothing — a build step, a cache restore. Excluded from the ratio, which is exactly why it is the one class worth shopping into. Reaching for it because a node is <em>hard</em> is wrong; the honest answer there is <span class="k-mono">unknown</span>.</td>
     </tr>
   </table>
 
-  <p class="formula"><b>grounding ratio</b> = anchored / (anchored + self-referential + unknown)</p>
+  <p class="k-mono k-meta">grounding ratio = anchored / (anchored + self_referential + unknown)</p>
 
   <p>
-    <code>unknown</code> counts against, deliberately. Absence of evidence of
+    <code class="k-mono">unknown</code> counts against, deliberately. Absence of evidence of
     dependence is not evidence of independence.
   </p>
 
-  <hr class="rule" />
+  <hr class="k-rule" />
 
-  <h2>It gets cheaper every run</h2>
+  <h2 class="k-eyebrow">It gets cheaper every run</h2>
   <p>
     Novel shapes are judged by the agent. Recurring shapes get crystallized into
     <strong>probes</strong> — small, reviewable scripts — so the next occurrence costs
@@ -108,12 +98,12 @@
     rejectable, and the library compounds across everyone who runs Keel.
   </p>
   <p>
-    Probes may <em>abstain</em>. They may never return <code>unknown</code>. A probe
+    Probes may <em>abstain</em>. They may never return <code class="k-mono">unknown</code>. A probe
     that is unsure falls through to the agent, so a lazy probe degrades to
     <em>ask</em> rather than to <em>looks fine</em>.
   </p>
 
-  <h2>And it audits itself</h2>
+  <h2 class="k-eyebrow">And it audits itself</h2>
   <p>
     Probes drift. Keel re-decides a sampled fraction of probe-classified nodes
     agentically, with the cached verdict hidden, and retires the ones that disagree.
@@ -122,21 +112,20 @@
     it exists to find.
   </p>
 
-  <hr class="rule" />
+  <hr class="k-rule" />
 
-  <h2>Install</h2>
-  <code class="install">npx skills add broomva/keel</code>
-  <p style="color:var(--dim);font-size:14px">
+  <h2 class="k-eyebrow">Install</h2>
+  <code class="k-code k-code--cmd install">npx skills add broomva/keel</code>
+  <p class="k-meta">
     Works with Claude Code, Codex, Cursor, and any agent that reads
     <a href="https://agentskills.io">Agent Skills</a>. Point your agent at
     <a href="./agents/">/agents</a> and it will install and run Keel itself.
   </p>
 
-  <h2>Scope, honestly</h2>
-  <p>
-    Keel measures the <em>shape</em> of verification, not its quality. A repo can be
-    100% anchored with terrible tests. Anchoring says the signal comes from outside; it
-    does not say the signal is enough.
+  <p class="k-scope">
+    <strong>Scope.</strong> Keel measures the <em>shape</em> of verification, not its
+    quality. A repo can be 100% anchored with terrible tests. Anchoring says the signal
+    comes from outside; it does not say the signal is sufficient.
   </p>
 
   <footer>

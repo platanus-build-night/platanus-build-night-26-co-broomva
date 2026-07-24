@@ -34,7 +34,8 @@ define REQUIRE_BSTACK
 endef
 
 .PHONY: help doctor bstack-check janitor janitor-apply portability-check \
-        bstack-primitive-lint bstack-rule-of-three bstack-l3-trust
+        bstack-primitive-lint bstack-rule-of-three bstack-l3-trust \
+        design-audit design-sync
 
 help: ## Show available targets
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -50,6 +51,12 @@ bstack-check: ## Harness validation — doctor in strict mode (needs bstack; non
 
 portability-check: ## Fail if any committed file hardcodes a machine-specific path
 	@bash scripts/portability-check.sh
+
+design-audit: ## Design-system adherence gate (raw literals, token drift, schema/CSS agreement)
+	@python3 scripts/design-audit.py
+
+design-sync: ## Rewrite the site/ token copies from skills/keel/design/ (canonical)
+	@python3 scripts/design-audit.py --fix-sync
 
 janitor: ## P8 — dry-run branch/worktree cleanup
 	@bash scripts/branch-janitor.sh

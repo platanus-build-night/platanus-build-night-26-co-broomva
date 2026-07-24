@@ -1,4 +1,9 @@
-# Keel
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="skills/keel/design/lockup.svg" />
+    <img src="skills/keel/design/lockup-on-light.svg" alt="Keel" width="268" />
+  </picture>
+</p>
 
 **Your agents are grading their own homework. Keel measures how much.**
 
@@ -29,6 +34,7 @@ gates, deploy conditions, integration signals — and classifies each one:
 | `anchored` | outside the actor's write boundary — a process exit code, a type checker, a payment that settled, a customer action |
 | `self_referential` | inside it — an LLM judging output, a doc checked against a doc, a self-set status |
 | `unknown` | untraceable. **Fails closed.** |
+| `not_a_check` | nothing — the node asserts no property. Excluded from the ratio, which is why it is the one class worth shopping into |
 
 **Grounding ratio** = `anchored / (anchored + self_referential + unknown)`.
 

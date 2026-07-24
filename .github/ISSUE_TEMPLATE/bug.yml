@@ -1,0 +1,45 @@
+name: Bug
+description: Keel crashed, produced a broken artifact, or behaved incorrectly
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For Keel assigning the **wrong grounding class**, use the
+        *Misclassification* template instead — that is a different kind of bug
+        and needs different information.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got.
+      placeholder: |
+        $ bun scripts/render.ts report.json -o out.html
+        <the error, or a description of the broken output>
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+
+  - type: input
+    id: harness
+    attributes:
+      label: Agent harness
+      description: Claude Code, Codex, Cursor, other — and its version if you have it.
+    validations:
+      required: false
+
+  - type: input
+    id: versions
+    attributes:
+      label: Bun version and OS
+      placeholder: bun 1.1.x, macOS 15
+    validations:
+      required: false
