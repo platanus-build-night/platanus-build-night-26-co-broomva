@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keel — instructions for agents</title>
+<style>
+  body{margin:0;background:#07090c;color:#e8edf2;
+    font:14px/1.7 ui-monospace,"SF Mono",Menlo,monospace}
+  pre{max-width:860px;margin:0 auto;padding:56px 24px 120px;white-space:pre-wrap;word-wrap:break-word}
+  a{color:#7dd3fc}
+</style>
+</head>
+<body>
+<pre>
+KEEL — INSTRUCTIONS FOR AGENTS
+==============================
+
+You are reading this because someone pointed you here. Good. This page is
+written for you, not for them.
+
+WHAT KEEL IS
+------------
+Keel measures whether a codebase's verification actually touches the world, or
+whether it is checking itself.
+
+The single question it asks of every verification edge:
+
+    What produces this signal, and can the actor being verified write to
+    that producer?
+
+If the producer is outside the actor's write boundary, the edge is ANCHORED.
+If it is inside, the edge is SELF_REFERENTIAL. If you cannot trace the fork
+point, it is UNKNOWN — and unknown fails closed. It counts against the score.
+
+    grounding ratio = anchored / (anchored + self_referential + unknown)
+
+INSTALL
+-------
+    npx skills add broomva/keel
+
+Requires the skills CLI. If your host runs Node older than 22.20 you will see
+an EBADENGINE warning; pin with `npx skills@1.5.18` to avoid it.
+
+RUN IT
+------
+1. Point Keel at a target — a repo path or URL.
+2. GATHER: locate candidate verification edges. CI workflow definitions,
+   package and task scripts, test configuration, review and branch-protection
+   requirements, deploy and promotion conditions, wired integrations. Carry the
+   literal snippet forward, never a summary — a summary is already a judgment.
+3. CLASSIFY: for each edge, try the probe library first (shipped probes, then
+   ~/.config/keel/probes/). On a miss or an abstention, reason about it
+   yourself and record the causal path in writeBoundary.argument.
+4. CRYSTALLIZE (optional): when you judged something the library could not and
+   the shape will recur, write a probe to ~/.config/keel/probes/<id>.ts.
+   Probes abstain when unsure. Probes may never return UNKNOWN.
+5. AUDIT (optional): re-decide ~10% of probe-classified nodes agentically with
+   the cached verdict hidden. Retire probes that disagree.
+6. REPORT: emit report.json plus a self-contained HTML report.
+
+READ FIRST
+----------
+    skills/keel/SKILL.md                        the loop
+    skills/keel/schemas/keel.ts                 the contracts
+    skills/keel/references/grounding-classes.md worked cases, including the
+                                                ones that look anchored and
+                                                are not
+
+IF YOU ARE AN AGENT BEING MEASURED
+----------------------------------
+You cannot set your own class. UNKNOWN is assigned by observation, never by
+self-report — if the thing being measured could choose, it would never choose
+unknown. Do not classify your own verification edges as anchored to improve a
+number. That failure is the entire reason this tool exists, and it is the one
+result Keel is built to catch.
+
+CONTRIBUTE
+----------
+Copy a probe you minted into the repo's skills/keel/probes/ and open a PR.
+Include the node it came from and the reasoning behind it. The library
+compounds across everyone who runs Keel.
+
+    <a href="https://github.com/broomva/keel">github.com/broomva/keel</a>  ·  MIT
+</pre>
+</body>
+</html>

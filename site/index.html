@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keel — is your verification touching the world?</title>
+<meta name="description" content="Keel measures whether a codebase's verification actually touches the world, or whether it is checking itself. Grounding ratio for agent-maintained systems." />
+<style>
+  :root{
+    --bg:#07090c; --fg:#e8edf2; --dim:#8b97a5; --line:#1b2027;
+    --anchored:#4ade80; --self:#f87171; --unknown:#fbbf24; --accent:#7dd3fc;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Inter,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:80px 24px 120px}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+  h1{font-size:15px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:0 0 48px}
+  .hero{font-size:clamp(30px,5.2vw,46px);line-height:1.18;letter-spacing:-.022em;font-weight:600;margin:0 0 28px}
+  .hero em{font-style:normal;color:var(--accent)}
+  .lede{font-size:19px;color:var(--dim);margin:0 0 44px;max-width:60ch}
+  .rule{border:0;border-top:1px solid var(--line);margin:56px 0}
+  h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:500;margin:0 0 20px}
+  p{margin:0 0 18px}
+  blockquote{
+    margin:0 0 28px;padding:18px 22px;border-left:2px solid var(--accent);
+    background:#0c1015;font-size:18px;line-height:1.55;
+  }
+  code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.9em;color:var(--accent)}
+  .install{
+    display:block;background:#0c1015;border:1px solid var(--line);border-radius:8px;
+    padding:16px 18px;margin:0 0 12px;font-family:ui-monospace,Menlo,monospace;font-size:15px;
+  }
+  .install::before{content:"$ ";color:var(--dim)}
+  table{width:100%;border-collapse:collapse;margin:0 0 24px;font-size:15px}
+  td{padding:12px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  td:first-child{width:150px;white-space:nowrap}
+  .tag{font-family:ui-monospace,Menlo,monospace;font-size:13px;padding:2px 8px;border-radius:4px}
+  .t-a{color:var(--anchored);background:rgba(74,222,128,.1)}
+  .t-s{color:var(--self);background:rgba(248,113,113,.1)}
+  .t-u{color:var(--unknown);background:rgba(251,191,36,.1)}
+  .formula{font-family:ui-monospace,Menlo,monospace;font-size:15px;color:var(--dim);margin:0 0 24px}
+  .formula b{color:var(--fg);font-weight:500}
+  footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(125,211,252,.3)}
+  a:hover{border-bottom-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Keel</h1>
+
+  <p class="hero">Your agents are grading their&nbsp;own homework. <em>Keel measures how much.</em></p>
+
+  <p class="lede">
+    A ship's keel is the reference line everything else is measured from — and an
+    <em>even keel</em> is a stability property, not a decoration.
+  </p>
+
+  <blockquote>
+    A check is only a check if the signal it reads comes from somewhere the thing
+    being checked cannot write to.
+  </blockquote>
+
+  <p>
+    Most verification in an agent-maintained codebase fails this. An LLM reviews what
+    an LLM wrote. A doc is validated against another doc. A status field reads
+    <code>passed</code> because something set it to <code>passed</code>. The pipeline
+    is green and nothing has been verified.
+  </p>
+
+  <hr class="rule" />
+
+  <h2>The classification</h2>
+  <table>
+    <tr>
+      <td><span class="tag t-a">anchored</span></td>
+      <td>The signal's producer is outside the actor's write boundary — a process exit code, a type checker, a payment that settled, a customer action.</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-s">self-referential</span></td>
+      <td>Inside it — an LLM judging output, a doc checked against a doc, a self-set status field.</td>
+    </tr>
+    <tr>
+      <td><span class="tag t-u">unknown</span></td>
+      <td>The fork point could not be traced. <strong>Fails closed.</strong></td>
+    </tr>
+  </table>
+
+  <p class="formula"><b>grounding ratio</b> = anchored / (anchored + self-referential + unknown)</p>
+
+  <p>
+    <code>unknown</code> counts against, deliberately. Absence of evidence of
+    dependence is not evidence of independence.
+  </p>
+
+  <hr class="rule" />
+
+  <h2>It gets cheaper every run</h2>
+  <p>
+    Novel shapes are judged by the agent. Recurring shapes get crystallized into
+    <strong>probes</strong> — small, reviewable scripts — so the next occurrence costs
+    no model call at all. Probes are code, which means they are diffable, testable, and
+    rejectable, and the library compounds across everyone who runs Keel.
+  </p>
+  <p>
+    Probes may <em>abstain</em>. They may never return <code>unknown</code>. A probe
+    that is unsure falls through to the agent, so a lazy probe degrades to
+    <em>ask</em> rather than to <em>looks fine</em>.
+  </p>
+
+  <h2>And it audits itself</h2>
+  <p>
+    Probes drift. Keel re-decides a sampled fraction of probe-classified nodes
+    agentically, with the cached verdict hidden, and retires the ones that disagree.
+    The library's agreement rate is Keel's own counter-metric — a tool that measured
+    groundedness while refusing to measure its own would be making the exact mistake
+    it exists to find.
+  </p>
+
+  <hr class="rule" />
+
+  <h2>Install</h2>
+  <code class="install">npx skills add broomva/keel</code>
+  <p style="color:var(--dim);font-size:14px">
+    Works with Claude Code, Codex, Cursor, and any agent that reads
+    <a href="https://agentskills.io">Agent Skills</a>. Point your agent at
+    <a href="./agents/">/agents</a> and it will install and run Keel itself.
+  </p>
+
+  <h2>Scope, honestly</h2>
+  <p>
+    Keel measures the <em>shape</em> of verification, not its quality. A repo can be
+    100% anchored with terrible tests. Anchoring says the signal comes from outside; it
+    does not say the signal is enough.
+  </p>
+
+  <footer>
+    MIT · <a href="https://github.com/broomva/keel">github.com/broomva/keel</a>
+  </footer>
+
+</div>
+</body>
+</html>
