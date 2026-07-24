@@ -86,6 +86,19 @@ Do not treat completion of one unit, PR, or handoff as completion of the goal.
   conflict-free.
 - **Orchestrator-owned prose:** `SKILL.md`, `README.md`, `site/index.html`.
   Propose edits in the PR body instead of making them.
+- **Orchestrator-owned infrastructure:** `package.json`, `tsconfig.json`,
+  `bun.lock`, `tests/grounding-ratio.test.ts`. These make step 7's gates real.
+  If a gate fails on your FIRST iteration before you have written anything,
+  something upstream broke — report it, do not chase it.
+- **NEVER touch governance:** `CLAUDE.md`, `AGENTS.md`, `METALAYER.md`,
+  `.control/**`. The L3 rate gate in `.githooks/pre-commit` blocks the commit,
+  and its documented escape (`--no-verify`) is itself blocked by Gate (P2) as
+  G2. You will deadlock with no way out and burn the rest of the night.
+- **Probe dir is per-worktree.** Export it before running anything:
+  `export KEEL_PROBE_DIR="$PWD/.keel-probes" && mkdir -p "$KEEL_PROBE_DIR"`.
+  Worktrees isolate the repo, not `$HOME` — A, C and D otherwise race on
+  `~/.config/keel/probes/` and destroy the crystallization signal, which is
+  the headline result.
 - **Probes may abstain; probes may never return `unknown`.** Enforce at load
   and at mint.
 
@@ -150,9 +163,10 @@ automated test requires deterministic input, and keep it minimal.
 - **Blocked ≠ retry forever.** If a unit is genuinely blocked (needs a human
   decision, an unavailable credential, an upstream unit unmerged), record the
   blocker in the handoff, move to the next unblocked unit, and do not spin.
-- **Degradation ladder** when behind, in this order: drop W2·F, then the
-  fallback video, then the curve, then corpus down to 3 repos. Never drop the
-  renderer — a run with no visual is not demonstrable.
+- **Degradation ladder** when behind, in this order: drop W2·F, then W1·E
+  (tests+CI — cuttable, and it is the one plan the pre-dispatch pass skipped),
+  then the fallback video, then the curve, then corpus down to 3 repos. Never
+  drop the renderer — a run with no visual is not demonstrable.
 
 ### Handoff continuity
 
@@ -176,8 +190,11 @@ conversation history.
 
 Continue until all of:
 
-- every unit in `docs/plans/` is merged or explicitly cut via the degradation
-  ladder and recorded as cut
+- every unit in `docs/plans/w*.md` is merged or explicitly cut via the
+  degradation ladder and recorded as cut. **Only `w*.md` files are dispatchable
+  units.** `00-orchestration.md` is the map, `loop-prompt.md` is this harness,
+  and `constructive-grounding-layer.md` is a POST-EVENT roadmap — none of the
+  three is a unit, and none is in scope tonight.
 - `bun test` and `bunx tsc --noEmit` pass
 - the corpus runs end to end and `reports/corpus-summary.json` carries a ratio
   for every target, including Keel itself

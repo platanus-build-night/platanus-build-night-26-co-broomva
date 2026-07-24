@@ -1,0 +1,14 @@
+{
+  "name": "keel",
+  "private": true,
+  "type": "module",
+  "description": "Toolchain baseline only. Keel ships as an agent skill (skills/keel/), not as a package — nothing here is a runtime dependency, and nothing here is published.",
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
+  }
+}

@@ -36,7 +36,9 @@ Read `skills/keel/references/grounding-classes.md`.
    propagates.
 4. Set `decidedBy: 'agent'` on all of them (no probes exist yet).
 5. Fill `economics` plausibly: `decidedByProbe: 0`, `probesMinted: 0`,
-   `probeLibrarySize: 0`, realistic token/ms values.
+   `probeLibrarySize: 0`, realistic token/ms values, and (schema v2)
+   `nodesSampled` (= nodesTotal here — no cap on a hand-picked fixture) and
+   `tokensEstimated: true`.
 6. Compute `grounding` with `groundingRatio()` — do not hand-write it.
 
 ## Acceptance

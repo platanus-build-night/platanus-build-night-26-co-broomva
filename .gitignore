@@ -26,3 +26,7 @@ __pycache__/
 # they publish local session content, which a public repo should not do. The
 # file still exists locally, which is what the bridge-freshness check reads.
 docs/conversations/
+
+# fan-out scratch (per-worktree probe dir, corpus clones)
+.keel-probes/
+.keel-corpus/

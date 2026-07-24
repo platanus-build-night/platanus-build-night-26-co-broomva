@@ -176,6 +176,16 @@ Verified by grep across the broomva workspace: **zero hits** for
 
 ### 2.5 Why the "AI-native platform" framing was rejected
 
+> **⚠ SUPERSEDED 2026-07-24 18:xx COT — read
+> [`docs/adrs/2026-07-24-ai-native-platform-reframe.html`](../adrs/2026-07-24-ai-native-platform-reframe.html)
+> before acting on this section.** The rejection below is *too broad*. It
+> conflates "build the graph" with "build the graph **and** let it author its
+> own anchors" — only the second is fatal. `grounded-vs-ungrounded-improvement.md:58-69`
+> enumerates exactly three things topology cannot supply (anchors, frozen nodes,
+> the root definition of "better"); pairing, hierarchy, arbitration, and audit
+> loops are explicitly *constructible*. The build decision for tonight is
+> unchanged — see the ADR §Consequences.
+
 The originally-proposed platform — agentic workspaces reading a company's ops,
 source, docs, and integrations (Composio et al.) to synthesize a workflow graph
 — is, by Perez's own argument, **the construction of a maximally ungrounded
@@ -362,8 +372,19 @@ Frontmatter parses; no silent rejection.
 **`Probe.assess()` returns `null` to ABSTAIN.** A probe may never return
 `unknown` — `unknown` is a claim about the world and only the agent makes it.
 This is what keeps `unknown` unshoppable: a lazy probe degrades to *ask*, never
-to *looks fine*. Enforced at the type level via
-`Omit<Verdict,'nodeId'|'decidedBy'|'probeId'> | null`.
+to *looks fine*.
+
+> **CORRECTED 2026-07-24 (schema v3).** This section originally claimed the
+> rule was "enforced at the type level via
+> `Omit<Verdict,'nodeId'|'decidedBy'|'probeId'> | null`". **That was false** —
+> that `Omit` retains `class: GroundingClass`, which includes `'unknown'`.
+> There was no enforcement, and three unit plans were written against the
+> assumption that there was. It is real now: `assess` returns
+> `ProbeVerdict | null` where `ProbeVerdict.class` is
+> `Exclude<GroundingClass,'unknown'>`, verified to fail compilation with
+> `TS2322`. "Reject at load time" remains **unimplementable** and has been
+> struck from the plans — a probe's return value is only knowable by calling
+> it, and calling it may only happen inside the sandbox child.
 
 **Grounding ratio** = `anchored / (anchored + self_referential + unknown)`.
 

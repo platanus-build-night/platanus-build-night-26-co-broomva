@@ -20,22 +20,26 @@ Read `skills/keel/scripts/gather.ts` for the upstream node shape.
 
 Validate each against the `Probe` interface. A malformed probe is **skipped
 with a warning, never silently** — that failure mode is documented upstream in
-skills.sh and it cost real debugging time. Return `Probe[]`.
+skills.sh and it cost real debugging time. Export exactly
+`loadProbes(dirs: string[]): Promise<{probes: Probe[]; warnings: string[]}>` —
+this signature is part of the sandbox contract
+(`00-orchestration.md`) and W1·C's child imports it. **Loading a probe
+executes its file**, so `loadProbes` is only ever called inside the sandbox
+child — never call it from `classify.ts`.
 
-**`classify.ts`** — cache-first dispatch:
+**`classify.ts`** — the sandbox PARENT (see the sandbox contract in
+`00-orchestration.md` — it is the interface, do not improvise):
 
-```
-for each node:
-  for each probe where probe.match(node):
-    v = probe.assess(node)
-    if (v !== null) -> verdict, decidedBy:'probe', probeId; break
-  if no verdict -> node goes to the PENDING set
-```
-
-Output two artifacts:
-- `decided[]` — probe verdicts
-- `pending[]` — nodes needing agent judgment, emitted as a structured prompt
-  payload the agent can consume (node id, kind, name, source, **full raw**)
+1. Spawn `bun scripts/probe-sandbox.ts <nodes.json> --probe-dir ... ` (W1·C's
+   child; code to the contract, not to their implementation — a thin stub of
+   the child is fine for local testing until merge).
+2. Hold a **wall-clock kill-timer on the child** (~10s default). Child dead,
+   hung, or killed → ALL nodes `pending`, warning recorded, exit 0.
+3. Parse the child's `ClassifyOutput` (schema v2), then emit:
+   - `decided[]` — probe verdicts
+   - `pending[]` — nodes needing agent judgment, as structured prompt payloads
+     **batched 10–20 nodes per payload** (node id, kind, name, source, **full
+     raw**). One node per call does not survive a 15-repo corpus night.
 
 **The zero-probe path must be complete.** With an empty library, everything
 lands in `pending` and the run is still valid. Probes are strictly a cache
@@ -51,8 +55,10 @@ layer; the pure-agentic path is the product.
   with a clear error.
 - Never default a node to `anchored`. Absence of a verdict is `pending`, not a
   class.
-- Probe execution must not be able to hang the run — wrap `match`/`assess` in a
-  try/catch and a time guard; a throwing probe is skipped and reported.
+- **Never execute probe code in-process.** A synchronous `while(true)` cannot
+  be preempted in JS — an in-process "time guard" is fiction. The only place
+  probe code runs (including load) is the sandbox child, and the only real
+  timeout is the parent's kill-timer on the process handle.
 
 ## Acceptance
 
@@ -64,6 +70,8 @@ bun scripts/classify.ts /tmp/nodes.json --json | head -40
 # with an empty probe library: decided=0, pending=<node count>, exit 0
 # then add a deliberately-throwing probe to ~/.config/keel/probes/ and confirm
 # it is skipped WITH a warning and the run still completes
+# then add a probe whose match() is `while(true){}` and confirm the batch is
+# killed at the timeout, all nodes land pending, and the run STILL exits 0
 ```
 
 ## Do not touch

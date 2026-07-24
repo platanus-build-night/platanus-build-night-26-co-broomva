@@ -40,9 +40,15 @@ knowledge. Not a markdown projection.
 
 Must show:
 
-1. **The grounding ratio, huge.** Plus the raw counts. `not_a_check` printed
-   *beside* the ratio, never folded into it — it is excluded from the
-   denominator and it is the shoppable class, so hiding it would be dishonest.
+1. **The grounding ratio, huge — but never alone.** Beside it, always: the
+   **absolute anchored count**, the **coverage by kind**
+   (`coverageByKind(nodes)`), and the raw counts. A 1.0 over one edge and a
+   0.7 over fifty are different claims, and a bare ratio rewards deleting
+   checks. `not_a_check` printed *beside* the ratio, never folded into it —
+   it is excluded from the denominator and it is the shoppable class, so
+   hiding it would be dishonest. A report with **zero nodes renders an
+   explicit "nothing gathered" state**, never a ratio — "unverified" and
+   "unreadable" must be visually distinct.
 2. **The node graph** — inline SVG, one mark per node, coloured by class.
    Legible at 70 nodes.
 3. **Per-verdict detail** — for every node: name, source, class, and the
@@ -82,4 +88,4 @@ Also render a synthetic 200-node report to prove it does not break.
 ## Do not touch
 
 `schemas/keel.ts` · `scripts/gather.ts` · `scripts/classify.ts` · `SKILL.md` ·
-`README.md` · `site/**` (W1·H owns the site)
+`README.md` · `site/**` (W2·H owns the site)

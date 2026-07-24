@@ -25,13 +25,29 @@ probe to `~/.config/keel/probes/<id>.ts`:
 - validate the minted file loads and satisfies the interface before writing
 - refuse to overwrite an existing probe id; version instead
 
-**`probe-sandbox.ts`** — execute probe code safely:
-- child process, **no network**, hard timeout (~2s), read-only view of the target
-- a probe that hangs, throws, or exceeds budget is **skipped and reported**,
-  never fatal to the run
-- this is the honest answer to *"you're running LLM-generated code?"* — build
-  the subprocess version; Firecracker is the year-two answer for probes running
-  against customer infrastructure
+**`probe-sandbox.ts`** — the sandbox CHILD per the contract in
+`00-orchestration.md` (the contract is the interface — code to it, not to
+W1·A's implementation):
+
+- Invoked as `bun scripts/probe-sandbox.ts <nodes.json> [--probe-dir <dir>]...`
+- Loads probes via W1·A's `loadProbes(dirs)` (loading executes probe files —
+  that is WHY loading happens here and not in the parent), runs
+  `match`/`assess` over **all** nodes in one process, writes `ClassifyOutput`
+  JSON to stdout. One spawn per run — a process per probe would wreck the
+  economics D measures.
+- Per-probe try/catch: a throwing probe is **skipped and reported** in
+  `warnings`, never fatal. A hang is the PARENT's problem (kill-timer) — do
+  not pretend to time out synchronous code in-process.
+- **Before hand-rolling isolation, spend ≤15 min checking the workspace
+  control kernel** (`~/broomva/.control/policy.yaml`, S3/S4 shield surface)
+  for reusable enforcement — Keel's sandbox posture *being* the workspace
+  policy beats an ad-hoc reimplementation.
+- **Network: claim only what is enforced.** Preferred: a macOS `sandbox-exec`
+  deny-default profile (~10 lines: allow file-read of target + probes,
+  deny network). If that fails in ~20 min, fall back to subprocess + stripped
+  env (no keys) + parent kill-timer, and **say exactly that** — in this
+  product, an overclaimed sandbox is self-refuting on stage. Firecracker is
+  the year-two answer for probes running against customer infrastructure.
 
 **Example probes** — ship **at most two**, and only as *contract references*
 clearly marked as examples. Do not seed a library of hand-written rules: the
@@ -52,13 +68,16 @@ measures.
 cd skills/keel
 # mint from a real node + verdict, then prove it loads and runs sandboxed
 bun scripts/mint-probe.ts --node /tmp/node.json --verdict /tmp/verdict.json
-bun scripts/probe-sandbox.ts ~/.config/keel/probes/<id>.ts /tmp/node.json
+bun scripts/probe-sandbox.ts /tmp/nodes.json --probe-dir ~/.config/keel/probes
 
 # adversarial: these must all be non-fatal and reported
-#   probe with `while(true){}`        -> timeout, skipped
-#   probe that throws                 -> skipped
+#   probe that throws                 -> skipped, in warnings
 #   probe that returns 'unknown'      -> REJECTED at load with a clear error
-#   probe attempting network access   -> blocked
+#   probe with `while(true){}`        -> child hangs; killed by the PARENT's
+#                                        timer (verify with `timeout 12 bun ...`
+#                                        until A's classify.ts is merged)
+#   probe attempting network access   -> blocked IF sandbox-exec landed;
+#                                        otherwise documented as not-enforced
 ```
 
 ## Do not touch
