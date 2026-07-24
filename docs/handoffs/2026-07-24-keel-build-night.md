@@ -176,6 +176,16 @@ Verified by grep across the broomva workspace: **zero hits** for
 
 ### 2.5 Why the "AI-native platform" framing was rejected
 
+> **⚠ SUPERSEDED 2026-07-24 18:xx COT — read
+> [`docs/adrs/2026-07-24-ai-native-platform-reframe.html`](../adrs/2026-07-24-ai-native-platform-reframe.html)
+> before acting on this section.** The rejection below is *too broad*. It
+> conflates "build the graph" with "build the graph **and** let it author its
+> own anchors" — only the second is fatal. `grounded-vs-ungrounded-improvement.md:58-69`
+> enumerates exactly three things topology cannot supply (anchors, frozen nodes,
+> the root definition of "better"); pairing, hierarchy, arbitration, and audit
+> loops are explicitly *constructible*. The build decision for tonight is
+> unchanged — see the ADR §Consequences.
+
 The originally-proposed platform — agentic workspaces reading a company's ops,
 source, docs, and integrations (Composio et al.) to synthesize a workflow graph
 — is, by Perez's own argument, **the construction of a maximally ungrounded
