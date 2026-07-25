@@ -61,13 +61,25 @@ rather than losing one. Spanish runs roughly 15–20% longer than English for th
 same content — the per-beat word budgets on the sheet are counted separately for
 each language, and the beats with the least headroom are marked.
 
-**The one number hazard.** The video's S4 shows **0.421** (full-population
-dogfood, 8 of 19 classified edges); the corpus page shows **0.357** for the same
-repo under the 25-node cap. Both are real and both are published on purpose. The
-script's standing rule is therefore *never speak a number the screen
-contradicts* — the presenter says no keel figure over S4, and introduces 0.357
-only while standing in front of the page that prints it. The reconciliation is
-the first Q&A card on the sheet.
+**The hero number matches the live page.** `S4Ratio.tsx` renders the **corpus**
+figure — `0.357`, 5 anchored of 14 classified, 25 judged of 32 gathered — and
+not the full-population dogfood `0.421` it used to carry. Both are real and both
+stay published, but the scene now shows the number a viewer can go and verify in
+the first row of `broomva.github.io/keel/reports/`, under the same 25-node cap
+every other target on that page ran under.
+
+A hero number in the video that disagreed with the hero number on the site would
+be, in a product about ungrounded claims, the worst inconsistency to ship — and
+picking the higher of the two would be the exact behaviour Keel exists to
+detect. It is also the lower number, which is the right way for that tie to
+break. Slide 8 of the 20-slide deck still carries `0.421`; the reconciliation is
+the first Q&A card on the stage sheet.
+
+The scene derives everything from one `COUNTS` literal, so re-pointing it at a
+future run is a four-number edit — but note it also drives the cell grid (25
+lays out as a 5×5) and the `JUDGED of GATHERED` coverage label, which must never
+collapse back to a bare "edges gathered": a ratio over a sample must not read as
+a ratio over a repository.
 
 ## Operating it
 
