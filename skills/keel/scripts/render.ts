@@ -102,9 +102,16 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * them — a document whose argument is that it depends on nothing does not embed
  * a subdocument. Gathered target text cannot trip this: `esc()` turns a snippet
  * containing `<object` into `&lt;object` long before the guard runs.
+ *
+ * `<img>` is the one exception, and it is narrow: a `src="data:…"` image is
+ * carried IN the document and fetches nothing, so refusing it would enforce
+ * self-containment against something already self-contained — and the error
+ * would say "off-origin" about bytes that never leave the file. Every other
+ * `<img>` is refused, `src=` or not, because `srcset` and a protocol-relative
+ * `//host` both fetch through spellings a `https?:` test does not see.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image|img)\b|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image)\b|<img\b(?![^>]*\bsrc\s*=\s*["']data:)|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
 
 /**
  * An off-origin fetch from CSS — checked only where CSS is EXECUTED.
@@ -135,9 +142,29 @@ const STYLE_ATTR = /\bstyle\s*=\s*"([^"]*)"|\bstyle\s*=\s*'([^']*)'/gi;
 const CSS_EXTERNAL_REF =
   /@import\s+(?:url\(|["'])|(?:url|(?:-webkit-)?image-set)\(\s*["']?\s*(?:https?:|\/\/)/i;
 
-/** The same question asked of an SVG fragment we did not write. */
-const SVG_EXTERNAL_REF =
-  /<script\b|<image\b|xlink:href\s*=\s*["']https?:|\bhref\s*=\s*["']https?:|@import\s+(?:url\(|["'])|url\(\s*["']?https?:/i;
+/**
+ * The same question asked of an SVG fragment we did not write.
+ *
+ * It reuses `CSS_EXTERNAL_REF` rather than carrying its own copy of the CSS
+ * rules: the two had drifted, and the drift was reachable — an SVG carrying
+ * `style=background-image:image-set(https://…)` passed this while the same
+ * declaration in a `<style>` block was refused, because only one of the two
+ * patterns had learned about `image-set`. One definition of "this CSS fetches"
+ * means a hole closed in one place is closed in both.
+ *
+ * Protocol-relative `//host/…` is included for the same reason it is there:
+ * it inherits the page scheme and fetches exactly like an absolute URL.
+ */
+const SVG_EXTERNAL_REF = new RegExp(
+  [
+    '<script\\b',
+    '<image\\b',
+    'xlink:href\\s*=\\s*["\'](?:https?:|//)',
+    '\\bhref\\s*=\\s*["\'](?:https?:|//)',
+    CSS_EXTERNAL_REF.source,
+  ].join('|'),
+  'i',
+);
 
 // ---------------------------------------------------------------------------
 // Template engine — substitution only, on purpose.
@@ -619,6 +646,28 @@ export function render(report: Report, opts: RenderOptions = {}): string {
   // ── Curve insertion point ────────────────────────────────────────────────
   let curveInner = '';
   if (opts.curveSvg) {
+    // The curve is the ONE fragment spliced in raw, and it is the only content
+    // in the document that `esc()` never touched. So it is asked the fragment
+    // question HERE, at the boundary it enters, rather than left to a scan of
+    // the finished document.
+    //
+    // That placement is the fix for a real pair of defects the cross-review
+    // found, which pulled in opposite directions and together showed the
+    // document-wide scan was the wrong instrument: an unquoted
+    // `style=fill:url(https://…)` slipped past an attribute matcher that
+    // expects quotes, while `<text>style="background:url(https://…)"</text>` —
+    // inert prose inside an SVG label — was falsely refused. A regex reading a
+    // finished document cannot tell an attribute from text shaped like one.
+    // Reading the fragment as a fragment can, and `loadCurve` already applied
+    // exactly this check on the CLI path — so this closes the gap for every
+    // caller that passes `curveSvg` directly, rather than only the one that
+    // went through the loader.
+    const offending = opts.curveSvg.match(SVG_EXTERNAL_REF);
+    if (offending) {
+      throw new Error(
+        `refusing to write: the supplied curve references something off-origin (${offending[0]})`,
+      );
+    }
     curveInner = fill(t.curve as string, { SVG: opts.curveSvg });
   } else if (opts.curveRejectedPath) {
     curveInner = fill(t['curve-rejected'] as string, {

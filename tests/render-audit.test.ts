@@ -606,6 +606,52 @@ describe('render · the artifact stays self-contained', () => {
     }
   });
 
+  test('a supplied curve is checked as a fragment, before it is spliced in', () => {
+    // The curve is the only content inlined raw — `esc()` never touches it — so
+    // it is the only way unescaped markup reaches the document. The final round
+    // of the cross-review reached both remaining guard holes exclusively
+    // through it. Checking the fragment on entry closes them at the boundary,
+    // for every caller, not only the CLI path that went through `loadCurve`.
+    const report = reportOf([{ id: 'c#9', class: 'anchored', decidedBy: 'probe' }]);
+    for (const curve of [
+      '<svg><rect style=fill:url(https://example.com/x.svg) /></svg>', // UNQUOTED attribute
+      // image-set: the drift that made the SVG check and the CSS check
+      // disagree — refused in a <style> block, allowed in an SVG, until the two
+      // were given one definition of "this CSS fetches".
+      '<svg><rect style=background-image:image-set(https://example.com/x.png) /></svg>',
+      '<svg><image href="https://example.com/x.png"/></svg>',
+      '<svg><style>@import url(https://example.com/x.css);</style></svg>',
+      '<svg xlink:href="https://example.com/x"></svg>',
+      '<svg><a href="//example.com/x"></a></svg>', // protocol-relative
+    ]) {
+      expect(() => render(report, { curveSvg: curve })).toThrow(/off-origin/);
+    }
+    // A self-contained curve is inlined, which is the whole point of the slot.
+    const clean = '<svg viewBox="0 0 10 10"><path d="M0 0 L10 10"/></svg>';
+    expect(render(report, { curveSvg: clean })).toContain(clean);
+  });
+
+  test('a data: URI image is not refused as "off-origin"', () => {
+    // It fetches nothing — the bytes are in the document. Refusing it would
+    // enforce self-containment against something already self-contained, and
+    // say "off-origin" about bytes that never leave the file.
+    const base = loadTemplate();
+    const report = reportOf([{ id: 'd#9', class: 'anchored', decidedBy: 'probe' }]);
+    const dataImg =
+      '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="">';
+    expect(() => render(report, { template: { ...base, scope: dataImg } })).not.toThrow();
+    // ...while every fetching spelling still is.
+    for (const img of [
+      '<img src="https://example.com/x.png">',
+      '<img src="//example.com/x.png">',
+      '<img srcset="https://example.com/x.png 1x">',
+    ]) {
+      expect(() =>
+        render(report, { template: { ...base, scope: img } }),
+      ).toThrow(/off-origin/);
+    }
+  });
+
   test('a target whose evidence contains `@import url(...)` still renders', () => {
     // Round 3's false-refusal finding, and the reason `@import` moved out of the
     // document-wide guard: a stylesheet is an ordinary thing for a repository to
