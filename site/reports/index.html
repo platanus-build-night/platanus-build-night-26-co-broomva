@@ -600,213 +600,225 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
 }
 
-.k-num{text-align:right;white-space:nowrap}
-.k-inert{color:var(--k-not-a-check)}
-.k-sub{font-size:var(--k-fs-xs);color:var(--k-ink-2)}
-.k-cap{display:inline-block;margin-left:var(--k-space-2);color:var(--k-unknown)}
-.k-nothing{color:var(--k-ink-2);font-style:italic}
-.k-thin{color:var(--k-unknown);font-size:var(--k-fs-xs);font-weight:400}
-.k-selfmeasure{color:var(--k-unknown);font-size:var(--k-fs-xs);max-width:34em;margin-top:var(--k-space-1)}
-.k-ratio-inline{font-size:var(--k-fs-ratio);font-variant-numeric:tabular-nums}
-table{width:100%;border-collapse:collapse}
-th,td{padding:var(--k-space-2);border-bottom:1px solid var(--k-line);vertical-align:top}
-th{text-align:left;font-size:var(--k-fs-xs);color:var(--k-ink-2);text-transform:uppercase;letter-spacing:.08em}
-th.k-num{text-align:right}
+/* Page-local layout only. Every component below is the frozen design system's;
+   nothing here re-declares a colour, a size, or a component. */
+.corpus-table td:first-child { max-width: 22em; }
+.corpus-table td:nth-child(2) { white-space: nowrap; }
+.k-ratio__value--inline { font-size: var(--k-fs-h1); line-height: 1; }
+/* "Weaker than it looks" — the same claim the data-smell marker makes about a
+   verdict, applied to a ratio standing on too few edges. Reuses the system's
+   own token rather than inventing a colour. */
+.k-ratio__value--thin { color: var(--k-smell); }
+.thin-note { font-size: var(--k-fs-xs); color: var(--k-smell); }
 </style>
 </head>
-<body class="k-page">
+<body>
 <main class="k-report">
-<header class="k-meta">
-  <h1>Keel — corpus grounding ratios</h1>
+<header>
+  <p class="k-eyebrow">Keel</p>
+  <h1 class="k-display">Corpus grounding ratios</h1>
   <p class="k-lede">Every verification edge in each repository below was classified by who
-  produces the signal, and whether the actor being verified can write to that producer.
-  <strong>A check is only a check if the signal it reads comes from somewhere the thing
-  being checked cannot write to.</strong></p>
-  <p class="k-scope k-mono">generated 2026-07-25T03:59:42.265Z ·
+  produces the signal, and whether the actor being verified can write to that producer.</p>
+  <blockquote class="k-callout">A check is only a check if the signal it reads comes from
+  somewhere the thing being checked cannot write to.</blockquote>
+  <p class="k-meta k-mono">generated 2026-07-25T03:59:42.265Z ·
   14 target(s) measured · 1 with no verification surface</p>
 </header>
 
-<section class="k-card">
-  <h2>Pooled across the corpus</h2>
-  <p class="k-ratio">
-    <strong>0.853</strong>
-    <span class="k-scope">= 122 anchored / 143 classified edges
-    across 14 repositories · 190 <span class="k-inert">not_a_check</span>
-    excluded from the denominator</span>
-  </p>
-  <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of verification, not its
-  quality. A repo can be 100% anchored with terrible tests. Anchoring says the signal comes
-  from outside; it does not say the signal is sufficient.</p>
-  <p class="k-scope">The pooled figure weights repositories by how many edges each
-  contributed, so it is not the mean of the per-repository column below. Both are printed
-  because neither alone is honest: the mean hides size, the pooled figure hides spread.
-  <strong>Mean of the 14 target(s) that have a denominator:
-  0.867</strong>.</p>
-</section>
+<h2 class="k-eyebrow">Pooled across the corpus</h2>
+<div class="k-ratio">
+  <span class="k-ratio__value">0.853</span>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown)</p>
+  <div class="k-meter">
+    <div class="k-meter__seg" data-class="anchored" style="width:85.3%"></div>
+    <div class="k-meter__seg" data-class="self_referential" style="width:9.8%"></div>
+    <div class="k-meter__seg" data-class="unknown" style="width:4.9%"></div>
+  </div>
+  <div class="k-ratio__counts">
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 122</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 14</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 7</span>
+    <span class="k-ratio__count k-ratio__count--excluded">
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 190
+      <span class="k-meta">excluded from the denominator</span>
+    </span>
+  </div>
+</div>
 
-<section class="k-card">
-  <h2>By repository</h2>
-  <table>
-    <thead><tr>
-      <th>target</th><th class="k-num">ratio</th><th class="k-num">anchored</th>
-      <th class="k-num">self_ref</th><th class="k-num">unknown</th>
-      <th class="k-num">not_a_check</th><th>coverage (judged)</th>
-    </tr></thead>
-    <tbody>
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of verification, not its
+quality. A repo can be 100% anchored with terrible tests. Anchoring says the signal comes
+from outside; it does not say the signal is sufficient.</p>
+
+<p class="k-meta">Across 14 repositories. The pooled figure weights each
+repository by how many edges it contributed, so it is not the mean of the column below.
+Both are printed because neither alone is honest: the mean hides size, the pooled figure
+hides spread. <strong>Mean of the 14 target(s) with a denominator:
+0.867</strong>.</p>
+
+<hr class="k-rule" />
+
+<h2 class="k-eyebrow">By repository</h2>
+<table class="k-table k-table--num corpus-table">
+  <thead><tr>
+    <th>target</th><th>ratio</th><th>anchored</th>
+    <th>self_referential</th><th>unknown</th>
+    <th>not_a_check</th><th>coverage (judged)</th>
+  </tr></thead>
+  <tbody>
 <tr>
   <td><a href="keel.html">keel</a>
-      <div class="k-sub k-mono">44f7e8d6cbdf</div><div class="k-selfmeasure">self-measured — Keel judging Keel. The one run
-         where query independence collapses: the measured system and the system that
-         chose the question are the same. Reported because refusing to publish our own
-         number would be the failure this project names, and flagged because it is not
-         evidence of the same kind as the rows above.</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.357</strong></td>
-  <td class="k-num">5 of 14</td>
-  <td class="k-num">9</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">11</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 32 — 78% of the surface</span><div class="k-sub">script 12 · ci_step 13</div></td>
+      <div class="k-meta k-mono">44f7e8d6cbdf</div><div class="k-meta">self-measured — Keel judging Keel, the one run where query
+         independence collapses. Published because refusing to print our own number
+         would be the failure this project names; flagged because it is not evidence
+         of the same kind as the rows around it.</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.357</span></td>
+  <td>5 of 14</td>
+  <td>9</td>
+  <td>0</td>
+  <td>11</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 32 — 78% of the surface</div><div><span class="k-tag">script 12</span> <span class="k-tag">ci_step 13</span></div></td>
 </tr>
 <tr>
   <td><a href="anthropic-sdk-python.html">anthropic-sdk-python</a>
-      <div class="k-sub k-mono">60c64fba5c2b</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.667</strong></td>
-  <td class="k-num">8 of 12</td>
-  <td class="k-num">2</td>
-  <td class="k-num">2</td>
-  <td class="k-num k-inert">13</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 41 — 61% of the surface</span><div class="k-sub">test_target 2 · ci_step 22 · review_gate 1</div></td>
+      <div class="k-meta k-mono">60c64fba5c2b</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.667</span></td>
+  <td>8 of 12</td>
+  <td>2</td>
+  <td>2</td>
+  <td>13</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 41 — 61% of the surface</div><div><span class="k-tag">test_target 2</span> <span class="k-tag">ci_step 22</span> <span class="k-tag">review_gate 1</span></div></td>
 </tr>
 <tr>
   <td><a href="openai-python.html">openai-python</a>
-      <div class="k-sub k-mono">d4c151d92ba7</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.769</strong></td>
-  <td class="k-num">10 of 13</td>
-  <td class="k-num">2</td>
-  <td class="k-num">1</td>
-  <td class="k-num k-inert">12</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 95 — 26% of the surface</span><div class="k-sub">test_target 2 · ci_step 22 · review_gate 1</div></td>
+      <div class="k-meta k-mono">d4c151d92ba7</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.769</span></td>
+  <td>10 of 13</td>
+  <td>2</td>
+  <td>1</td>
+  <td>12</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 95 — 26% of the surface</div><div><span class="k-tag">test_target 2</span> <span class="k-tag">ci_step 22</span> <span class="k-tag">review_gate 1</span></div></td>
 </tr>
 <tr>
   <td><a href="vercel-ai.html">vercel-ai</a>
-      <div class="k-sub k-mono">e29788dd545f</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.800</strong></td>
-  <td class="k-num">8 of 10</td>
-  <td class="k-num">0</td>
-  <td class="k-num">2</td>
-  <td class="k-num k-inert">15</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 1014 — 2% of the surface</span><div class="k-sub">script 8 · test_target 8 · ci_step 8 · deploy_gate 1</div></td>
+      <div class="k-meta k-mono">e29788dd545f</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.800</span></td>
+  <td>8 of 10</td>
+  <td>0</td>
+  <td>2</td>
+  <td>15</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 1014 — 2% of the surface</div><div><span class="k-tag">script 8</span> <span class="k-tag">test_target 8</span> <span class="k-tag">ci_step 8</span> <span class="k-tag">deploy_gate 1</span></div></td>
 </tr>
 <tr>
   <td><a href="aider.html">aider</a>
-      <div class="k-sub k-mono">5dc9490bb35f</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong><div class="k-thin">thin — 7 classified edges</div></td>
-  <td class="k-num">7 of 7</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">18</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 62 — 40% of the surface</span><div class="k-sub">test_target 1 · review_gate 1 · ci_step 23</div></td>
+      <div class="k-meta k-mono">5dc9490bb35f</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline k-ratio__value--thin">1.000</span><div class="thin-note">thin — 7 classified edges</div></td>
+  <td>7 of 7</td>
+  <td>0</td>
+  <td>0</td>
+  <td>18</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 62 — 40% of the surface</div><div><span class="k-tag">test_target 1</span> <span class="k-tag">review_gate 1</span> <span class="k-tag">ci_step 23</span></div></td>
 </tr>
 <tr>
   <td><a href="browser-use.html">browser-use</a>
-      <div class="k-sub k-mono">b909fbfba0ae</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong><div class="k-thin">thin — 7 classified edges</div></td>
-  <td class="k-num">7 of 7</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">18</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 104 — 24% of the surface</span><div class="k-sub">review_gate 1 · ci_step 22 · test_target 2</div></td>
+      <div class="k-meta k-mono">b909fbfba0ae</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline k-ratio__value--thin">1.000</span><div class="thin-note">thin — 7 classified edges</div></td>
+  <td>7 of 7</td>
+  <td>0</td>
+  <td>0</td>
+  <td>18</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 104 — 24% of the surface</div><div><span class="k-tag">review_gate 1</span> <span class="k-tag">ci_step 22</span> <span class="k-tag">test_target 2</span></div></td>
 </tr>
 <tr>
   <td><a href="mcp-python-sdk.html">mcp-python-sdk</a>
-      <div class="k-sub k-mono">00a70148bcd3</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong></td>
-  <td class="k-num">15 of 15</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">10</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 121 — 21% of the surface</span><div class="k-sub">review_gate 1 · ci_step 16 · test_target 8</div></td>
+      <div class="k-meta k-mono">00a70148bcd3</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>15 of 15</td>
+  <td>0</td>
+  <td>0</td>
+  <td>10</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 121 — 21% of the surface</div><div><span class="k-tag">review_gate 1</span> <span class="k-tag">ci_step 16</span> <span class="k-tag">test_target 8</span></div></td>
 </tr>
 <tr>
   <td><a href="simonw-llm.html">simonw-llm</a>
-      <div class="k-sub k-mono">0392226e6630</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.750</strong><div class="k-thin">thin — 4 classified edges</div></td>
-  <td class="k-num">3 of 4</td>
-  <td class="k-num">1</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">21</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 38 — 66% of the surface</span><div class="k-sub">test_target 2 · script 2 · ci_step 21</div></td>
+      <div class="k-meta k-mono">0392226e6630</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline k-ratio__value--thin">0.750</span><div class="thin-note">thin — 4 classified edges</div></td>
+  <td>3 of 4</td>
+  <td>1</td>
+  <td>0</td>
+  <td>21</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 38 — 66% of the surface</div><div><span class="k-tag">test_target 2</span> <span class="k-tag">script 2</span> <span class="k-tag">ci_step 21</span></div></td>
 </tr>
 <tr>
   <td><a href="tiktoken.html">tiktoken</a>
-      <div class="k-sub k-mono">08a5f3b2c987</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong><div class="k-thin">thin — 4 classified edges</div></td>
-  <td class="k-num">4 of 4</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">8</td>
-  <td class="k-sub">12 judged <div class="k-sub">ci_step 12</div></td>
+      <div class="k-meta k-mono">08a5f3b2c987</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline k-ratio__value--thin">1.000</span><div class="thin-note">thin — 4 classified edges</div></td>
+  <td>4 of 4</td>
+  <td>0</td>
+  <td>0</td>
+  <td>8</td>
+  <td>12 judged <div><span class="k-tag">ci_step 12</span></div></td>
 </tr>
 <tr>
   <td><a href="requests.html">requests</a>
-      <div class="k-sub k-mono">69f84847045b</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.917</strong></td>
-  <td class="k-num">11 of 12</td>
-  <td class="k-num">0</td>
-  <td class="k-num">1</td>
-  <td class="k-num k-inert">13</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 106 — 24% of the surface</span><div class="k-sub">review_gate 2 · script 10 · ci_step 10 · test_target 3</div></td>
+      <div class="k-meta k-mono">69f84847045b</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.917</span></td>
+  <td>11 of 12</td>
+  <td>0</td>
+  <td>1</td>
+  <td>13</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 106 — 24% of the surface</div><div><span class="k-tag">review_gate 2</span> <span class="k-tag">script 10</span> <span class="k-tag">ci_step 10</span> <span class="k-tag">test_target 3</span></div></td>
 </tr>
 <tr>
   <td><a href="flask.html">flask</a>
-      <div class="k-sub k-mono">36e4a824f340</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong></td>
-  <td class="k-num">15 of 15</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">10</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 59 — 42% of the surface</span><div class="k-sub">review_gate 1 · test_target 11 · ci_step 12 · script 1</div></td>
+      <div class="k-meta k-mono">36e4a824f340</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>15 of 15</td>
+  <td>0</td>
+  <td>0</td>
+  <td>10</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 59 — 42% of the surface</div><div><span class="k-tag">review_gate 1</span> <span class="k-tag">test_target 11</span> <span class="k-tag">ci_step 12</span> <span class="k-tag">script 1</span></div></td>
 </tr>
 <tr>
   <td><a href="sinatra.html">sinatra</a>
-      <div class="k-sub k-mono">cb22afd7902b</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">0.875</strong><div class="k-thin">thin — 8 classified edges</div></td>
-  <td class="k-num">7 of 8</td>
-  <td class="k-num">0</td>
-  <td class="k-num">1</td>
-  <td class="k-num k-inert">17</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 59 — 42% of the surface</span><div class="k-sub">test_target 2 · script 11 · ci_step 11 · review_gate 1</div></td>
+      <div class="k-meta k-mono">cb22afd7902b</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline k-ratio__value--thin">0.875</span><div class="thin-note">thin — 8 classified edges</div></td>
+  <td>7 of 8</td>
+  <td>0</td>
+  <td>1</td>
+  <td>17</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 59 — 42% of the surface</div><div><span class="k-tag">test_target 2</span> <span class="k-tag">script 11</span> <span class="k-tag">ci_step 11</span> <span class="k-tag">review_gate 1</span></div></td>
 </tr>
 <tr>
   <td><a href="commander-js.html">commander-js</a>
-      <div class="k-sub k-mono">ba6d13ddb424</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong></td>
-  <td class="k-num">12 of 12</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">9</td>
-  <td class="k-sub">21 judged <div class="k-sub">script 11 · ci_step 10</div></td>
+      <div class="k-meta k-mono">ba6d13ddb424</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>12 of 12</td>
+  <td>0</td>
+  <td>0</td>
+  <td>9</td>
+  <td>21 judged <div><span class="k-tag">script 11</span> <span class="k-tag">ci_step 10</span></div></td>
 </tr>
 <tr>
   <td><a href="anthropic-quickstarts.html">anthropic-quickstarts</a>
-      <div class="k-sub k-mono">370e18d4a20f</div></td>
-  <td class="k-num"><strong class="k-ratio-inline">1.000</strong></td>
-  <td class="k-num">10 of 10</td>
-  <td class="k-num">0</td>
-  <td class="k-num">0</td>
-  <td class="k-num k-inert">15</td>
-  <td class="k-sub">25 judged <span class="k-cap">sampled 25 of 62 — 40% of the surface</span><div class="k-sub">script 9 · review_gate 1 · ci_step 10 · test_target 5</div></td>
+      <div class="k-meta k-mono">370e18d4a20f</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>10 of 10</td>
+  <td>0</td>
+  <td>0</td>
+  <td>15</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 62 — 40% of the surface</div><div><span class="k-tag">script 9</span> <span class="k-tag">review_gate 1</span> <span class="k-tag">ci_step 10</span> <span class="k-tag">test_target 5</span></div></td>
 </tr>
-    </tbody>
-  </table>
-  <p class="k-scope"><code class="k-mono">not_a_check</code> is excluded from the ratio
-  entirely, which makes it the one <em>shoppable</em> class: mis-filing a real check there
-  shrinks the denominator and inflates the score. It is printed here for exactly that
-  reason. <code class="k-mono">unknown</code> fails closed and counts against the ratio
-  like <code class="k-mono">self_referential</code>.</p>
-</section>
+  </tbody>
+</table>
+<p class="k-meta"><code class="k-mono">not_a_check</code> is excluded from the ratio
+entirely, which makes it the one <em>shoppable</em> class: mis-filing a real check there
+shrinks the denominator and inflates the score. It is printed here for exactly that reason.
+<code class="k-mono">unknown</code> fails closed and counts against the ratio like
+<code class="k-mono">self_referential</code>.</p>
 
-<section class="k-card"><h2>Crystallization curve</h2>
+<hr class="k-rule" />
+
+<section><h2 class="k-eyebrow">Crystallization curve</h2>
 <p class="k-scope">Cost per node against corpus run index. The run order is part of the
 measurement — the curve is a claim about ordered probe accumulation, so a reshuffle
 changes it by design. If cost per node does not fall, that is published as-is.</p>
@@ -1067,7 +1079,7 @@ changes it by design. If cost per node does not fall, that is published as-is.</
 </svg>
 </section>
 
-<section class="k-card"><h2>Measured, and found nothing to measure</h2>
+<section><h2 class="k-eyebrow">Measured, and found nothing to measure</h2>
 <p class="k-scope">The clone and the gather both succeeded; these repositories simply carry
 no verification edge the gatherer can read. That is a result about the repository, not a
 failure of the run, and it is reported as "nothing gathered" rather than as a ratio —
@@ -1078,8 +1090,8 @@ is a different and false claim.</p>
 
 
 
-<section class="k-card">
-  <h2>Reproducing this</h2>
+<section>
+  <h2 class="k-eyebrow">Reproducing this</h2>
   <p class="k-scope">Every target is pinned to a revision (shown under its name). The corpus
   ran sequentially in a recorded order, because the crystallization curve measures ordered
   probe-library growth and a parallel run would destroy the signal being measured.</p>
