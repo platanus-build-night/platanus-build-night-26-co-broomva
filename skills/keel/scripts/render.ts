@@ -104,23 +104,36 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * containing `<object` into `&lt;object` long before the guard runs.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:|<(?:object|embed|iframe|video|audio|source|track|image)\b|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image|img)\b|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
 
 /**
- * An off-origin fetch from inside a `<style>` block.
+ * An off-origin fetch from CSS — checked only where CSS is EXECUTED.
  *
- * Checked ONLY within style blocks, and that scoping is the entire point.
- * `esc()` neutralises markup from a gathered snippet — `<object` becomes
- * `&lt;object` — but it does not escape parentheses or colons, so a target
- * whose config happens to contain the text `url(https://example.com)` would
- * trip a document-wide scan for that pattern. Refusing to render a report
- * because the repository it measured mentions a URL is precisely the check that
- * reads something other than what it claims to read, which is the failure this
- * whole tool is named after. In body text such a string is inert text; it only
- * fetches inside CSS, so that is where the question is asked.
+ * The scoping is the entire point, and it is why `@import` moved out of
+ * `EXTERNAL_REF` and into here. `esc()` neutralises markup from a gathered
+ * snippet — `<object` becomes `&lt;object` — but it does not escape
+ * parentheses, colons or `@`, so a target whose own config contains the text
+ * `@import url(https://cdn.example.com/x.css)` (a stylesheet is a perfectly
+ * ordinary thing for a repository to contain) tripped a document-wide scan and
+ * the whole report refused to render. Rejecting a valid report because the
+ * repository it measured mentions a URL is exactly the check that reads
+ * something other than what it claims to read — the failure this tool is named
+ * after, committed by the tool itself.
+ *
+ * In body text these strings are inert. They fetch in exactly two places: a
+ * `<style>` block and a `style="…"` attribute. Both are enumerated below, and
+ * both are ours — the only `style` attribute the template emits is the meter's
+ * `width:{{WIDTH}}%`, whose slot is a number.
+ *
+ * `image-set()` is named alongside `url()` because it is a second CSS function
+ * that fetches, and a guard that knows only about the first is a guard with a
+ * documented hole. Protocol-relative `//host/…` counts: it inherits the page's
+ * scheme and fetches just as well as an absolute URL.
  */
 const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
-const CSS_EXTERNAL_REF = /url\(\s*["']?\s*(?:https?:|\/\/)/i;
+const STYLE_ATTR = /\bstyle\s*=\s*"([^"]*)"|\bstyle\s*=\s*'([^']*)'/gi;
+const CSS_EXTERNAL_REF =
+  /@import\s+(?:url\(|["'])|(?:url|(?:-webkit-)?image-set)\(\s*["']?\s*(?:https?:|\/\/)/i;
 
 /** The same question asked of an SVG fragment we did not write. */
 const SVG_EXTERNAL_REF =
@@ -631,13 +644,19 @@ export function render(report: Report, opts: RenderOptions = {}): string {
       `refusing to write: output contains an off-origin document reference (${offending[0]})`,
     );
   }
-  // The CSS question, asked only where CSS is executed. See CSS_EXTERNAL_REF.
-  for (const [, css] of html.matchAll(STYLE_BLOCK)) {
-    const fetched = (css as string).match(CSS_EXTERNAL_REF);
-    if (fetched) {
-      throw new Error(
-        `refusing to write: a <style> block fetches something off-origin (${fetched[0]})`,
-      );
+  // The CSS question, asked in both places CSS executes. See CSS_EXTERNAL_REF.
+  for (const [where, pattern] of [
+    ['<style> block', STYLE_BLOCK],
+    ['style="" attribute', STYLE_ATTR],
+  ] as const) {
+    for (const m of html.matchAll(pattern)) {
+      const css = m[1] ?? m[2] ?? '';
+      const fetched = css.match(CSS_EXTERNAL_REF);
+      if (fetched) {
+        throw new Error(
+          `refusing to write: a ${where} fetches something off-origin (${fetched[0]})`,
+        );
+      }
     }
   }
   return html;

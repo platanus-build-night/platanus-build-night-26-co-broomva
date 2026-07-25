@@ -553,6 +553,72 @@ describe('render · the artifact stays self-contained', () => {
     }
   });
 
+  test('every CSS fetch shape the review demonstrated is refused', () => {
+    // Round 3 executed each of these through render() and got fetch-capable
+    // HTML back. They are here as executed regressions, in both CSS positions.
+    const base = loadTemplate();
+    const CSS_FETCHES = [
+      '.a{background-image:url(https://example.com/x.png)}',
+      ".b{background:url('//example.com/y.png')}",           // protocol-relative
+      '.c{background: URL( "https://example.com/z.png" )}',  // case + whitespace
+      '.d{background-image:image-set("https://example.com/x.png" 1x)}',
+      '.e{background-image:-webkit-image-set(url(//example.com/x.png) 1x)}',
+      '@import url(https://example.com/x.css);',
+      '@import "https://example.com/x.css";',
+    ];
+    for (const css of CSS_FETCHES) {
+      // (a) inside a <style> block
+      expect(() =>
+        render(reportOf([{ id: 's#1', class: 'anchored', decidedBy: 'probe' }]), {
+          template: { ...base, 'layout-css': `${base['layout-css']}\n${css}` },
+        }),
+      ).toThrow(/off-origin/);
+    }
+    // (b) inside a style="" attribute — a position the block scan cannot see.
+    // Inner values are single-quoted because the attribute is double-quoted:
+    // nesting `"` inside `"` is markup a browser mis-parses too, so asserting
+    // against it would be testing a string that could never reach a renderer.
+    for (const decl of [
+      'background:url(https://example.com/x.png)',
+      "background:url('//example.com/x.png')",
+      "background-image:image-set('https://example.com/x.png' 1x)",
+    ]) {
+      expect(() =>
+        render(reportOf([{ id: 's#2', class: 'anchored', decidedBy: 'probe' }]), {
+          template: { ...base, scope: `<p style="${decl}">x</p>` },
+        }),
+      ).toThrow(/off-origin/);
+    }
+  });
+
+  test('<img> is refused outright, including the shapes a src=https test misses', () => {
+    const base = loadTemplate();
+    for (const img of [
+      '<img src="https://example.com/x.png">',
+      '<img src="//example.com/x.png">',            // protocol-relative
+      '<img srcset="https://example.com/x.png 1x">', // no src= at all
+    ]) {
+      expect(() =>
+        render(reportOf([{ id: 'i#1', class: 'anchored', decidedBy: 'probe' }]), {
+          template: { ...base, scope: img },
+        }),
+      ).toThrow(/off-origin/);
+    }
+  });
+
+  test('a target whose evidence contains `@import url(...)` still renders', () => {
+    // Round 3's false-refusal finding, and the reason `@import` moved out of the
+    // document-wide guard: a stylesheet is an ordinary thing for a repository to
+    // contain, and refusing to render a valid report because the TARGET mentions
+    // one is this tool's own named failure committed by the tool itself.
+    const report = reportOf([{ id: 'u#1', class: 'anchored', decidedBy: 'probe' }]);
+    (report.verdicts[0] as Verdict).evidence = [
+      'app.css:1 — @import url(https://cdn.example.com/reset.css)',
+    ];
+    const html = render(report);
+    expect(html).toContain('@import url(https://cdn.example.com/reset.css)');
+  });
+
   test('a target whose own text contains url(https://…) still renders', () => {
     // The other half of the scoping decision, and the one that keeps the CSS
     // check from becoming a check that reads the target instead of the

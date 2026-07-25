@@ -464,11 +464,18 @@ signal is sufficient.</p>
 <!-- No slots: there is nothing trustworthy in the block to interpolate. Printing
      a garbage `agentClass` back out would dress unreadable input as a finding. -->
 <!--@block verdict-audit-malformed -->
+    <!--@note Like `audit-malformed`, this must stay in step with
+         `auditIsWellFormed`. It deliberately does NOT name which of the four
+         conditions failed: the renderer knows, but printing "no re-decided
+         class" on a record that has one and contradicts itself instead
+         misdiagnoses the producer, and a wrong diagnosis is worse than a
+         general one. The summary card lists the four; this row says which
+         verdict. -->
     <p class="kr-line kr-audit-alert" data-audit-malformed><strong>ε-audit block
        unreadable.</strong> This verdict carries an <span class="k-mono">audit</span>
-       with no re-decided class, or an <span class="k-mono">agreed</span> that is
-       not a boolean. It states no comparison, so it counts as neither agreement
-       nor disagreement and is excluded from the rate above.</p>
+       that does not state a comparison — it fails one of the four conditions
+       listed with the summary above. It counts as neither agreement nor
+       disagreement and is excluded from the rate.</p>
 <!--@endblock -->
 
 <!--@block evidence-item -->
