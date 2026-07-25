@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Keel — demo run sheet</title>
+<!--
+  Self-contained by construction: zero external requests, opens from file://.
+  The two blocks below are skills/keel/design/tokens.css and keel.css inlined
+  VERBATIM — that directory is canonical and this file is a consumer of it.
+  To re-sync after a design change, replace the two blocks with the current
+  file contents; do not edit them here.
+-->
+<style>
+/* ── skills/keel/design/tokens.css (verbatim) ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — design tokens. THE canonical source. There is no second copy.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Every Keel surface reads these: the report artifact (inlined by render.ts),
+   the marketing site, the agents page, and the governance docs. `site/` gets a
+   byte-identical copy written by `make site-tokens`; `make design-audit`
+   executes a diff and exits non-zero if it has drifted. That check is anchored
+   under Keel's own definition — the signal is a diff exit code, not an
+   assertion this repo also writes.
+
+   WHY ONE FILE AND NOT FIVE. Systems this size usually split color/type/space
+   into separate files behind an @import entry point. Keel cannot: the report
+   must open from file:// with zero external requests, so `render.ts` inlines
+   this text verbatim into a <style> block. One file is one read. The section
+   rules below carry the structure the file split would have carried.
+
+   NAMESPACE. Every token is `--k-*`. Keel's output gets embedded in other
+   people's pages and pasted into other people's docs; an unprefixed `--accent`
+   would collide and silently restyle someone else's surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ═══ CANVAS ══════════════════════════════════════════════════════════════
+     Dark, because Keel is an instrument, not a document. Elevation is
+     expressed as a background step plus a hairline — never a shadow. On a
+     #07090c canvas a shadow is a smudge: it costs paint and reads as nothing.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-bg-0: #07090c;          /* page */
+  --k-bg-1: #0c1015;          /* raised: cards, code blocks, table headers */
+  --k-bg-2: #11161d;          /* nested / hover */
+  --k-bg-3: #171d26;          /* active / selected row */
+
+  --k-line: #1b2027;          /* hairline — the default separator */
+  --k-line-strong: #2a323c;   /* emphasis rule, focused input */
+
+  /* ═══ INK ═════════════════════════════════════════════════════════════════
+     Four steps. --k-ink-3 is BELOW the 4.5:1 text threshold on --k-bg-0 by
+     design; it is for borders, disabled glyphs, and decorative rules. Never
+     set body copy in it. The other three clear 4.5:1 on bg-0 and bg-1.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ink-0: #e8edf2;         /* primary text        ~16:1 on bg-0 */
+  --k-ink-1: #b6c0cb;         /* secondary text      ~10:1 */
+  --k-ink-2: #8b97a5;         /* tertiary / meta      ~6:1 */
+  --k-ink-3: #5b6774;         /* NON-TEXT ONLY        ~2.6:1 */
+
+  /* ═══ KEEL'S OWN VOICE ════════════════════════════════════════════════════
+     One accent, used surgically: links, the emphasized clause in a headline,
+     Keel's own annotations. It is a HUE RESERVED FOR THE NARRATOR — it never
+     encodes a verdict, and no verdict color is ever used for chrome. Mixing
+     the two is how a tool starts congratulating itself in green.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-accent: #7dd3fc;
+  --k-accent-hover: #b6e6ff;
+  --k-accent-line: rgba(125, 211, 252, 0.30);   /* link underline at rest */
+  --k-accent-wash: rgba(125, 211, 252, 0.10);   /* callout fill */
+
+  /* ═══ VERDICTS ════════════════════════════════════════════════════════════
+     Exactly four, matching `GroundingClass` in schemas/keel.ts. The schema is
+     frozen; so is this list. Adding a fifth swatch here without a schema
+     change means someone is inventing a class in CSS.
+
+       anchored          the producer is outside the write boundary
+       self_referential  it is inside
+       unknown           the fork point could not be traced — FAILS CLOSED
+       not_a_check       asserts nothing; excluded from the denominator
+
+     `not_a_check` is deliberately the least attractive swatch in the file. It
+     is the one shoppable class — misfiling a real check there shrinks the
+     denominator and inflates the score — so it gets inert slate and, per
+     `.k-verdict`, a dashed border rather than a solid one. It should never
+     look like a place you want your nodes to land.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-anchored: #4ade80;
+  --k-self-referential: #f87171;
+  --k-unknown: #fbbf24;
+  --k-not-a-check: #94a3b8;
+
+  /* Tints for chip fills and graph marks. Kept as explicit rgba rather than
+     color-mix() so the report renders identically in older embedded viewers
+     (email clients, IDE previews) that never see a modern engine. */
+  --k-anchored-wash: rgba(74, 222, 128, 0.10);
+  --k-self-referential-wash: rgba(248, 113, 113, 0.10);
+  --k-unknown-wash: rgba(251, 191, 36, 0.10);
+  --k-not-a-check-wash: rgba(148, 163, 184, 0.08);
+
+  /* Confidence smell — an `anchored` verdict asserted with confidence < 0.5.
+     Aliased to --k-unknown on purpose: the visual claim is "this is closer to
+     unknown than its color suggests". A separate hue would imply a fifth
+     class, and there is no fifth class. */
+  --k-smell: var(--k-unknown);
+
+  /* ═══ TYPE ════════════════════════════════════════════════════════════════
+     NO WEBFONTS. Not a preference — an invariant. The report must open from
+     file://, survive being emailed, and issue zero external requests, which
+     rules out every hosted face. System stacks are the honest answer; a
+     bundled base64 face would add ~80KB to an artifact whose whole argument
+     is that it depends on nothing.
+
+     The two families carry a PROVENANCE distinction, and this is the rule
+     most worth keeping: MONO IS QUOTED FROM THE WORLD, SANS IS KEEL TALKING.
+     Node names, file paths, commands, exit codes, class names, hashes — mono,
+     because Keel did not write them. Prose, headings, arguments, and
+     annotations — sans, because Keel did. A reader can tell claim from
+     evidence at a glance without reading a word.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, system-ui, sans-serif;
+  --k-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                 "Cascadia Mono", Consolas, monospace;
+
+  --k-fs-ratio: clamp(64px, 13vw, 128px);   /* the grounding ratio, and only it */
+  --k-fs-display: clamp(30px, 5.2vw, 46px); /* page hero */
+  --k-fs-h1: 24px;
+  --k-fs-h2: 19px;
+  --k-fs-h3: 16px;
+  --k-fs-lede: 19px;
+  --k-fs-body: 16px;
+  --k-fs-ui: 15px;                          /* dense report UI */
+  --k-fs-sm: 14px;
+  --k-fs-xs: 12.5px;
+  --k-fs-micro: 11px;                       /* eyebrows, table headers */
+
+  --k-lh-ratio: 0.9;
+  --k-lh-tight: 1.18;
+  --k-lh-snug: 1.35;
+  --k-lh-body: 1.65;
+
+  /* Three weights. There is no 700: on a near-black canvas heavy strokes
+     bloom, and the halation costs more legibility than the emphasis buys. */
+  --k-fw-regular: 400;
+  --k-fw-medium: 500;
+  --k-fw-semibold: 600;
+
+  --k-track-ratio: -0.045em;
+  --k-track-display: -0.022em;
+  --k-track-tight: -0.01em;
+  --k-track-normal: 0;
+  --k-track-eyebrow: 0.18em;   /* uppercase section labels */
+  --k-track-brand: 0.22em;     /* the wordmark only */
+
+  /* ═══ SPACE ═══════════════════════════════════════════════════════════════
+     4px grid. Measures are capped tight: a verdict list read at 1400px wide
+     loses the row it started on, and this artifact is read row by row.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-space-0: 0;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+  --k-space-16: 64px;
+  --k-space-20: 80px;
+  --k-space-24: 96px;
+
+  --k-measure-read: 760px;     /* prose column — site, docs */
+  --k-measure-report: 1080px;  /* report shell: graph + verdict table */
+  --k-measure-prose: 62ch;     /* lede / paragraph wrap */
+
+  /* ═══ RADIUS ══════════════════════════════════════════════════════════════
+     Small. Keel's surfaces are cells, rows, and records — the vocabulary of a
+     ledger. Generous rounding reads as consumer-soft and undersells that the
+     numbers on screen are accounting, not a dashboard.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-r-xs: 3px;
+  --k-r-sm: 4px;
+  --k-r-md: 6px;
+  --k-r-lg: 8px;
+  --k-r-xl: 12px;
+  --k-r-pill: 999px;           /* tags and class chips only */
+
+  /* ═══ MOTION ══════════════════════════════════════════════════════════════
+     Fast and flat. Instruments settle; they do not perform. No overshoot, no
+     bounce, nothing above 200ms. Motion here exists to preserve object
+     continuity across a state change, never to draw attention to one.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ease: cubic-bezier(0.2, 0, 0.38, 1);
+  --k-dur-fast: 90ms;
+  --k-dur-base: 160ms;
+
+  /* ═══ GRAPH MARKS ═════════════════════════════════════════════════════════
+     The node graph is one mark per node. SQUARES, not circles: a circle in a
+     verification UI reads as a status dot, and a status dot is exactly the
+     unaccountable green light Keel exists to criticize. A square reads as a
+     cell in a ledger. Sized to stay legible at 200 nodes.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-mark: 10px;
+  --k-mark-gap: 3px;
+  --k-mark-r: 2px;
+  --k-mark-stroke: 1.5px;      /* smell ring on an anchored mark */
+
+  /* ═══ FOCUS ═══════════════════════════════════════════════════════════════
+     Two-stop ring: a bg-colored inset so the accent never touches the element
+     edge, then the accent. Visible on every surface step without a per-context
+     override. */
+  --k-focus-ring: 0 0 0 2px var(--k-bg-0), 0 0 0 4px var(--k-accent);
+}
+
+/* ── skills/keel/design/keel.css (verbatim) ──────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — element defaults and component classes. Requires tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHY CSS CLASSES AND NOT COMPONENTS. Keel's surfaces are static HTML emitted
+   as strings by `render.ts`, plus two hand-written pages. There is no runtime,
+   no build step, and no framework to hang a component API on — so the
+   component contract is a class name plus a documented markup shape. See
+   `README.md` in this directory for the per-component usage brief.
+
+   Every value below is a var(). A literal hex, px, or ms in this file is a
+   bug, and `make design-audit` fails on one. The two exceptions are marked
+   inline with `audit-ok:` and carry a reason.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Reset, kept to what actually bites ─────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-0);
+  color: var(--k-ink-0);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-body);
+  line-height: var(--k-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--k-fw-semibold);
+  line-height: var(--k-lh-snug);
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+
+p { margin: 0 0 var(--k-space-4); max-width: var(--k-measure-prose); }
+
+a {
+  color: var(--k-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--k-accent-line);
+  transition: color var(--k-dur-fast) var(--k-ease),
+              border-color var(--k-dur-fast) var(--k-ease);
+}
+a:hover { color: var(--k-accent-hover); border-bottom-color: var(--k-accent); }
+
+code, kbd, samp, pre { font-family: var(--k-font-mono); }
+
+::selection { background: var(--k-accent-wash); color: var(--k-ink-0); }
+
+:focus-visible { outline: none; box-shadow: var(--k-focus-ring); border-radius: var(--k-r-sm); }
+
+/* Motion is never load-bearing here, so honouring the preference costs
+   nothing and removes every transition and the one animated element. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.k-page   { max-width: var(--k-measure-read);   margin: 0 auto; padding: var(--k-space-20) var(--k-space-6) var(--k-space-24); }
+.k-report { max-width: var(--k-measure-report); margin: 0 auto; padding: var(--k-space-12) var(--k-space-6) var(--k-space-20); }
+
+.k-rule { border: 0; border-top: 1px solid var(--k-line); margin: var(--k-space-16) 0; }
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+
+/* Uppercase section label. Sentence-case everywhere else — these are the only
+   shouted words in the system, and they are structural, not emphatic. */
+.k-eyebrow {
+  margin: 0 0 var(--k-space-5);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-wordmark {
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-brand);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-display {
+  font-size: var(--k-fs-display);
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  font-weight: var(--k-fw-semibold);
+}
+/* The one emphasized clause in a headline. Accent = Keel's own voice. */
+.k-display em { font-style: normal; color: var(--k-accent); }
+
+.k-lede {
+  font-size: var(--k-fs-lede);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+
+.k-meta { font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+/* Anything quoted from the target: paths, node names, commands, hashes. */
+.k-mono { font-family: var(--k-font-mono); font-size: 0.92em; } /* audit-ok: relative to inherited size, not a fixed step */
+
+/* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+.k-card {
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-5);
+}
+
+.k-code {
+  display: block;
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-4) var(--k-space-5);
+  font-size: var(--k-fs-ui);
+  overflow-x: auto;
+}
+.k-code--cmd::before { content: "$ "; color: var(--k-ink-2); }
+
+.k-callout {
+  margin: 0 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  background: var(--k-bg-1);
+  border-left: 2px solid var(--k-accent);
+  font-size: var(--k-fs-lede);
+  line-height: var(--k-lh-snug);
+}
+
+/* ── Verdict classes ────────────────────────────────────────────────────────
+   `.k-class` renders a GroundingClass name. The name is ALWAYS the schema
+   spelling in mono — `self_referential`, never "Self-Referential". The class
+   is an identifier from the data model, not a label we get to prettify, and
+   re-spelling it in prose breaks the reader's ability to grep the JSON.
+
+   Drive the variant with data-class so invalid values render unstyled and
+   loudly wrong rather than silently defaulting to something plausible.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-1);
+  padding: var(--k-space-1) var(--k-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  line-height: var(--k-lh-snug);
+  white-space: nowrap;
+}
+
+.k-class[data-class="anchored"]         { color: var(--k-anchored);         background: var(--k-anchored-wash); }
+.k-class[data-class="self_referential"] { color: var(--k-self-referential); background: var(--k-self-referential-wash); }
+.k-class[data-class="unknown"]          { color: var(--k-unknown);          background: var(--k-unknown-wash); }
+
+/* Dashed, because this class is EXCLUDED FROM THE DENOMINATOR. The border
+   style is the reader's cue that the node left the accounting entirely — the
+   one place a verdict changes what the ratio is computed over, so it is the
+   one place the chip stops looking like the others. */
+.k-class[data-class="not_a_check"] {
+  color: var(--k-not-a-check);
+  background: var(--k-not-a-check-wash);
+  border-color: var(--k-ink-3);
+  border-style: dashed;
+}
+
+/* Confidence smell: `anchored` asserted below 0.5. High confidence with thin
+   evidence is the pattern worth catching, so it gets a ring rather than a
+   footnote. */
+.k-class[data-smell] { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+/* ── Verdict row ────────────────────────────────────────────────────────────
+   A verdict without its argument is the unaccountable green check Keel exists
+   to criticize, so the markup contract is: every `.k-verdict` contains a
+   `.k-argument`. The rule below makes a violation visible in the artifact
+   itself during development, and `make design-audit` fails the build on one.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-verdict {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) auto;
+  gap: var(--k-space-2) var(--k-space-4);
+  padding: var(--k-space-4) 0;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.k-verdict__name   { font-family: var(--k-font-mono); font-size: var(--k-fs-ui); color: var(--k-ink-0); word-break: break-word; }
+.k-verdict__source { grid-column: 1; font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-verdict__class  { grid-column: 2; grid-row: 1; justify-self: end; }
+
+/* The evidence. Sans, because this is Keel reasoning — not quoted material. */
+.k-argument {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+
+.k-verdict:not(:has(.k-argument))::after {
+  content: "missing write-boundary argument — a class without its causal path is not a verdict";
+  grid-column: 1 / -1;
+  padding: var(--k-space-2) var(--k-space-3);
+  border-radius: var(--k-r-sm);
+  background: var(--k-self-referential-wash);
+  color: var(--k-self-referential);
+  font-size: var(--k-fs-xs);
+}
+
+/* ── Grounding ratio ────────────────────────────────────────────────────────
+   NEVER render `.k-ratio__value` without `.k-ratio__counts`. A ratio with a
+   hidden denominator is the exact move this tool was built to expose, and it
+   is trivially inflated by shopping nodes into `not_a_check`. The counts row
+   prints `not_a_check` BESIDE the ratio, visibly outside the fraction.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-ratio { margin: 0 0 var(--k-space-8); }
+
+.k-ratio__value {
+  display: block;
+  font-size: var(--k-fs-ratio);
+  line-height: var(--k-lh-ratio);
+  letter-spacing: var(--k-track-ratio);
+  font-weight: var(--k-fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+
+.k-ratio__formula { margin: var(--k-space-3) 0 var(--k-space-4); font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+.k-ratio__counts { display: flex; flex-wrap: wrap; gap: var(--k-space-2) var(--k-space-5); align-items: center; font-size: var(--k-fs-sm); }
+.k-ratio__count { display: inline-flex; align-items: baseline; gap: var(--k-space-2); font-variant-numeric: tabular-nums; color: var(--k-ink-1); }
+
+/* Set off with a leading rule: everything after it is outside the fraction. */
+.k-ratio__count--excluded {
+  padding-left: var(--k-space-5);
+  border-left: 1px solid var(--k-line);
+  color: var(--k-ink-2);
+}
+
+/* Composition bar. Segment widths are set inline by the renderer from the
+   real counts — no minimum width, because a class with two nodes must look
+   like a class with two nodes. */
+.k-meter { display: flex; height: var(--k-space-2); border-radius: var(--k-r-pill); overflow: hidden; background: var(--k-bg-2); margin: var(--k-space-4) 0; }
+.k-meter__seg[data-class="anchored"]         { background: var(--k-anchored); }
+.k-meter__seg[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-meter__seg[data-class="unknown"]          { background: var(--k-unknown); }
+.k-meter__seg[data-class="not_a_check"]      { background: var(--k-not-a-check); opacity: 0.45; }
+
+/* ── Node graph ─────────────────────────────────────────────────────────────
+   One mark per node, squares on a wrapping grid. Squares, not circles: a
+   circle reads as a status dot, and a status dot is the thing being audited.
+   The grid wraps rather than scaling, so 15 nodes and 200 nodes use the same
+   mark size and neither clips.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-graph { display: flex; flex-wrap: wrap; gap: var(--k-mark-gap); margin: 0 0 var(--k-space-6); }
+
+.k-mark {
+  width: var(--k-mark);
+  height: var(--k-mark);
+  border-radius: var(--k-mark-r);
+  background: var(--k-ink-3);
+}
+.k-mark[data-class="anchored"]         { background: var(--k-anchored); }
+.k-mark[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-mark[data-class="unknown"]          { background: var(--k-unknown); }
+.k-mark[data-class="not_a_check"]      { background: transparent; box-shadow: inset 0 0 0 1px var(--k-not-a-check); } /* audit-ok: 1px hairline is the smallest renderable inset, not a scale step */
+.k-mark[data-smell]                    { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+.k-legend { display: flex; flex-wrap: wrap; gap: var(--k-space-4); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-legend__item { display: inline-flex; align-items: center; gap: var(--k-space-2); }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--k-fs-ui); }
+.k-table th {
+  padding: var(--k-space-2) var(--k-space-3) var(--k-space-2) 0;
+  border-bottom: 1px solid var(--k-line-strong);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+  text-align: left;
+}
+.k-table td { padding: var(--k-space-3) var(--k-space-3) var(--k-space-3) 0; border-bottom: 1px solid var(--k-line); vertical-align: top; color: var(--k-ink-1); }
+.k-table td:first-child { color: var(--k-ink-0); }
+.k-table--num td { font-variant-numeric: tabular-nums; }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-2);
+  padding: var(--k-space-2) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-r-md);
+  background: var(--k-bg-1);
+  color: var(--k-ink-0);
+  font-family: inherit;
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  cursor: pointer;
+  transition: background var(--k-dur-fast) var(--k-ease), border-color var(--k-dur-fast) var(--k-ease);
+}
+.k-btn:hover { background: var(--k-bg-2); border-color: var(--k-ink-3); }
+.k-btn--accent { border-color: var(--k-accent-line); color: var(--k-accent); }
+
+.k-tag {
+  display: inline-flex;
+  padding: var(--k-space-1) var(--k-space-3);
+  border-radius: var(--k-r-pill);
+  background: var(--k-bg-2);
+  color: var(--k-ink-2);
+  font-size: var(--k-fs-micro);
+  letter-spacing: var(--k-track-normal);
+}
+
+/* ── Scope note ─────────────────────────────────────────────────────────────
+   MANDATORY on every artifact that prints a grounding ratio. A high ratio
+   reported without it will be read as "well tested", which is a claim Keel
+   does not make and cannot support. It is a component, not a paragraph, so
+   that it cannot be quietly reworded per artifact.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-scope {
+  margin: var(--k-space-10) 0 0;
+  padding: var(--k-space-4) var(--k-space-5);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-lg);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+.k-scope strong { color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+
+/* ── Economics footer ───────────────────────────────────────────────────── */
+
+.k-econ { display: flex; flex-wrap: wrap; gap: var(--k-space-8); margin-top: var(--k-space-8); padding-top: var(--k-space-5); border-top: 1px solid var(--k-line); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-econ__stat { display: flex; flex-direction: column; gap: var(--k-space-1); }
+.k-econ__value { font-size: var(--k-fs-h3); font-variant-numeric: tabular-nums; color: var(--k-ink-0); }
+
+/* ── Print ──────────────────────────────────────────────────────────────────
+   The report is expected to be emailed, and an emailed artifact gets printed
+   and pasted into decks. Dark-on-paper is unreadable and wastes toner, so the
+   canvas and ink tokens invert while the four verdict hues are DARKENED
+   rather than swapped — the classification must survive the medium, otherwise
+   a printed report and a screen report disagree about what they show.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  :root {
+    --k-bg-0: #ffffff;
+    --k-bg-1: #f7f7f5;
+    --k-bg-2: #eeeeec;
+    --k-bg-3: #e6e6e3;
+    --k-line: #dcdcd7;
+    --k-line-strong: #b9b9b2;
+    --k-ink-0: #14161a;
+    --k-ink-1: #3a4048;
+    --k-ink-2: #626a74;
+    --k-ink-3: #9aa1aa;
+    --k-accent: #0b6ea8;
+    --k-accent-line: rgba(11, 110, 168, 0.35);
+    --k-anchored: #157f3e;
+    --k-self-referential: #b3261e;
+    --k-unknown: #8a5a00;
+    --k-not-a-check: #5f6b78;
+  }
+  body { background: #ffffff; } /* audit-ok: print canvas must be paper-white regardless of theme tokens */
+  .k-verdict, .k-card, .k-scope { break-inside: avoid; }
+  a { border-bottom: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
+}
+
+/* ── demo-asset layer (stage only) ───────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — demo-asset layer. Stage-only.
+
+   Everything below composes tokens.css + keel.css. It adds NO colors and NO
+   verdict hues. It DOES introduce a stage-only display scale in literal px
+   (52 / 32 / 30 / 24 / 21 / 18) plus a handful of literal rail and column
+   widths — deliberately outside `--k-fs-*` and `--k-space-*`, which top out
+   well below what a projector needs. That fork is intentional and stops at
+   this file: these sizes exist only because the sheet is read at 2AM from
+   across a room, and no product surface may import them. If `make
+   design-audit` is ever extended to `docs/**/*.html`, this layer needs an
+   allowlist or a `--k-fs-stage-*` token set, not a quiet edit.
+
+   Namespace `rs-*` (run sheet). It never overrides a `.k-*` component; it only
+   arranges them. Verdict hues never appear here — per design rule 2 the four
+   hues are DATA, and a stage asset carries no data.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.rs-shell {
+  max-width: var(--k-measure-report);
+  margin: 0 auto;
+  padding: 0 var(--k-space-6) var(--k-space-24);
+}
+
+/* ── sticky finder bar — the 3-second lookup ─────────────────────────────── */
+.rs-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--k-bg-0);
+  border-bottom: 1px solid var(--k-line);
+  margin: 0 calc(-1 * var(--k-space-6));
+  padding: var(--k-space-3) var(--k-space-6);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--k-space-3) var(--k-space-5);
+}
+.rs-topbar__brand {
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-micro);
+  letter-spacing: var(--k-track-brand);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+  margin-right: auto;
+}
+.rs-topbar__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--k-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rs-topbar__nav a {
+  display: inline-block;
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  padding: var(--k-space-1) var(--k-space-3);
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-r-sm);
+  color: var(--k-ink-1);
+  text-decoration: none;
+  background: none;
+}
+.rs-topbar__nav a:hover { color: var(--k-accent-hover); border-color: var(--k-accent-line); }
+
+/* ── masthead ────────────────────────────────────────────────────────────── */
+.rs-masthead { padding: var(--k-space-16) 0 var(--k-space-10); }
+.rs-masthead h1 {
+  font-size: var(--k-fs-display);
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  margin: var(--k-space-3) 0 var(--k-space-4);
+}
+.rs-budget {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--k-space-6);
+  margin-top: var(--k-space-6);
+  padding-top: var(--k-space-5);
+  border-top: 1px solid var(--k-line);
+}
+.rs-budget div { min-width: 120px; }
+.rs-budget dt {
+  font-size: var(--k-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--k-track-eyebrow);
+  color: var(--k-ink-2);
+}
+.rs-budget dd {
+  margin: var(--k-space-1) 0 0;
+  font-size: var(--k-fs-h1);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+
+/* ── a beat: clock rail + body, one per screenful ────────────────────────── */
+.rs-beat {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: var(--k-space-8);
+  padding: var(--k-space-12) 0;
+  border-top: 1px solid var(--k-line-strong);
+  scroll-margin-top: 72px;
+}
+.rs-rail { position: sticky; top: 72px; align-self: start; }
+.rs-rail__no {
+  font-size: 52px;
+  line-height: 1;
+  font-weight: var(--k-fw-semibold);
+  letter-spacing: var(--k-track-ratio);
+  color: var(--k-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.rs-rail__clock {
+  margin-top: var(--k-space-3);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-h2);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+.rs-rail__dur {
+  margin-top: var(--k-space-1);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.rs-beat h2 {
+  font-size: 30px;
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  margin: 0 0 var(--k-space-4);
+}
+
+/* ── the line the presenter says out loud ────────────────────────────────── */
+.rs-say {
+  margin: var(--k-space-5) 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  border-left: 3px solid var(--k-accent);
+  background: var(--k-accent-wash);
+  border-radius: 0 var(--k-r-md) var(--k-r-md) 0;
+}
+.rs-say p {
+  margin: 0;
+  font-size: var(--k-fs-lede);
+  line-height: var(--k-lh-snug);
+  color: var(--k-ink-0);
+}
+.rs-say p + p { margin-top: var(--k-space-3); }
+
+/* ── labelled step blocks ────────────────────────────────────────────────── */
+.rs-step { margin: var(--k-space-6) 0; }
+.rs-label {
+  display: block;
+  font-size: var(--k-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--k-track-eyebrow);
+  color: var(--k-ink-2);
+  margin-bottom: var(--k-space-2);
+}
+.rs-step .k-code { font-size: var(--k-fs-ui); }
+
+/* A projector is not a terminal: wrap long commands rather than hiding them
+   behind a horizontal scrollbar nobody will drag while presenting. */
+.rs-shell pre.k-code {
+  margin: 0 0 var(--k-space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.rs-shell pre.k-code:last-child { margin-bottom: 0; }
+.rs-out { color: var(--k-ink-1); }
+
+/* `.k-meta` is inline by definition; on this sheet it is always an annotation
+   under a block, so give it its own line and its own measure. */
+.rs-shell span.k-meta {
+  display: block;
+  margin-top: var(--k-space-2);
+  max-width: var(--k-measure-prose);
+  line-height: var(--k-lh-snug);
+}
+
+/* ── fallback: neutral by construction ───────────────────────────────────── */
+.rs-fallback {
+  margin: var(--k-space-6) 0 0;
+  padding: var(--k-space-4) var(--k-space-5);
+  background: var(--k-bg-1);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-md);
+}
+.rs-fallback > .rs-label { color: var(--k-ink-1); }
+.rs-fallback p { margin: 0 0 var(--k-space-2); }
+.rs-fallback p:last-child { margin-bottom: 0; }
+
+/* ── an open item somebody must close before the pitch ───────────────────── */
+.rs-todo {
+  display: block;
+  margin: var(--k-space-4) 0;
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px solid var(--k-accent-line);
+  background: var(--k-accent-wash);
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-sm);
+  line-height: var(--k-lh-snug);
+  color: var(--k-ink-0);
+}
+.rs-todo__i { display: block; }
+.rs-todo__i + .rs-todo__i { margin-top: var(--k-space-2); }
+.rs-todo b {
+  font-family: var(--k-font-sans);
+  font-weight: var(--k-fw-semibold);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  font-size: var(--k-fs-micro);
+  color: var(--k-accent);
+  display: block;
+  margin-bottom: var(--k-space-2);
+}
+
+/* ── checklists — mono boxes, never a check mark ─────────────────────────── */
+.rs-check { list-style: none; margin: var(--k-space-4) 0; padding: 0; }
+/* The box is absolutely positioned, NOT a grid column: a grid here turns every
+   inline child of the <li> into its own track and shreds the row. Verified by
+   rendering, which is the only way that bug is visible. */
+.rs-check li {
+  position: relative;
+  padding: var(--k-space-4) 0 var(--k-space-4) 2.8em;
+  border-bottom: 1px solid var(--k-line);
+  font-size: var(--k-fs-ui);
+  line-height: var(--k-lh-snug);
+}
+.rs-check li::before {
+  content: "[ ]";
+  position: absolute;
+  left: 0;
+  top: var(--k-space-4);
+  font-family: var(--k-font-mono);
+  color: var(--k-ink-2);
+}
+.rs-check li > b:first-child { color: var(--k-ink-0); }
+.rs-check li pre.k-code { margin-top: var(--k-space-3); }
+
+/* ── two-up panels ───────────────────────────────────────────────────────── */
+.rs-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--k-space-5);
+  margin: var(--k-space-5) 0;
+}
+.rs-panel {
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-5);
+}
+.rs-panel h3 { margin: 0 0 var(--k-space-3); font-size: var(--k-fs-h3); }
+.rs-panel ul { margin: 0; padding-left: 1.1em; }
+.rs-panel li { margin-bottom: var(--k-space-2); font-size: var(--k-fs-sm); line-height: var(--k-lh-snug); }
+
+/* ── section shell for non-beat sections ─────────────────────────────────── */
+.rs-section {
+  padding: var(--k-space-12) 0;
+  border-top: 1px solid var(--k-line-strong);
+  scroll-margin-top: 72px;
+}
+.rs-section > h2 {
+  font-size: var(--k-fs-h1);
+  letter-spacing: var(--k-track-tight);
+  margin: 0 0 var(--k-space-4);
+}
+
+/* ── objection cards ─────────────────────────────────────────────────────── */
+.rs-card {
+  padding: var(--k-space-10) 0;
+  border-top: 1px solid var(--k-line-strong);
+  scroll-margin-top: 76px;
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: var(--k-space-8);
+}
+.rs-card__q {
+  font-size: 30px;
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  margin: 0 0 var(--k-space-5);
+  color: var(--k-ink-0);
+}
+.rs-card__a {
+  font-size: 21px;
+  line-height: var(--k-lh-snug);
+  color: var(--k-ink-0);
+  margin: 0 0 var(--k-space-5);
+  padding-left: var(--k-space-5);
+  border-left: 3px solid var(--k-accent);
+}
+.rs-card__more p { font-size: var(--k-fs-body); color: var(--k-ink-1); }
+.rs-never {
+  margin-top: var(--k-space-5);
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-sm);
+  background: var(--k-bg-1);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+.rs-never b {
+  display: block;
+  font-size: var(--k-fs-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--k-track-eyebrow);
+  color: var(--k-ink-2);
+  margin-bottom: var(--k-space-1);
+}
+
+/* ── narrow screens: the clock stops being a margin and becomes a header ─── */
+@media (max-width: 760px) {
+  .rs-beat, .rs-card { grid-template-columns: minmax(0, 1fr); gap: var(--k-space-4); }
+  .rs-rail { position: static; display: flex; align-items: baseline; gap: var(--k-space-4); }
+  .rs-rail__no { font-size: 32px; }
+  .rs-rail__clock, .rs-rail__dur { margin-top: 0; }
+  .rs-beat h2, .rs-card__q { font-size: 24px; }
+  .rs-card__a { font-size: 18px; }
+}
+
+/* ── print: a run sheet on paper is a legitimate fallback ────────────────── */
+@media print {
+  .rs-topbar { display: none; }
+  .rs-beat, .rs-card, .rs-section { break-inside: avoid; page-break-inside: avoid; }
+  .rs-rail { position: static; }
+}
+
+</style>
+</head>
+<body>
+<div class="rs-shell">
+
+<nav class="rs-topbar">
+  <span class="rs-topbar__brand">Keel · run sheet</span>
+  <ul class="rs-topbar__nav">
+    <li><a href="#preflight">pre-flight</a></li>
+    <li><a href="#beat-0">0 line</a></li>
+    <li><a href="#beat-1">1 corpus</a></li>
+    <li><a href="#beat-2">2 live</a></li>
+    <li><a href="#beat-3">3 install</a></li>
+    <li><a href="#picker">repo picker</a></li>
+    <li><a href="#substrate">substrate</a></li>
+    <li><a href="#fallbacks">fallbacks</a></li>
+    <li><a href="#human">human tasks</a></li>
+  </ul>
+</nav>
+
+<header class="rs-masthead">
+  <p class="k-eyebrow">Platanus Build Night Bogotá · 2026-07-24</p>
+  <h1>Three beats. Four minutes. Each beat degrades to the one before it.</h1>
+  <p class="k-lede">Beat 1 is precomputed and static, so a complete pitch survives
+    a dead network. Beat 2 is the only live model call in the run. Beat 3 needs
+    nothing but a package registry and thirty seconds.</p>
+
+  <dl class="rs-budget">
+    <div><dt>stage time</dt><dd>4:00</dd></div>
+    <div><dt>pre-flight</dt><dd>T−10 min</dd></div>
+    <div><dt>live model calls</dt><dd>1 (beat 2)</dd></div>
+    <div><dt>minimum viable pitch</dt><dd>beat 1</dd></div>
+  </dl>
+
+  <p class="k-callout">Every command on this sheet assumes one working directory:
+    <span class="k-mono">~/keel/skills/keel</span>. Set it once during pre-flight
+    and never <span class="k-mono">cd</span> again on stage.</p>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-section" id="preflight">
+  <h2>Pre-flight — T−10 minutes, offstage</h2>
+  <p>Ten items. Every one of them has failed for somebody at some point; none of
+    them is recoverable in front of a room.</p>
+
+  <ol class="rs-check">
+    <li><b>Working directory and probe dir.</b> The fan-out worktrees export
+      <span class="k-mono">KEEL_PROBE_DIR</span>; the stage run must not.
+      <pre class="k-code k-code--cmd">unset KEEL_PROBE_DIR; cd ~/keel/skills/keel; pwd</pre></li>
+
+    <li><b>Node floor.</b> <span class="k-mono">skills</span> v1.5.19+ requires
+      Node ≥ 22.20. This machine measured <span class="k-mono">v22.14.0</span>,
+      which prints an <span class="k-mono">EBADENGINE</span> warning. Either
+      raise Node or pin the CLI — decide now, not on stage.
+      <pre class="k-code k-code--cmd">node -v   # 22.14.0 here → pin skills@1.5.18, or: nvm install 22.20</pre></li>
+
+    <li><b>Pre-warm the npx cache.</b> A cold <span class="k-mono">npx</span> on
+      venue wifi is an unbounded wait. Warm, the full install measured
+      <span class="k-mono">5.3 s</span>.
+      <pre class="k-code k-code--cmd">mkdir -p /tmp/keel-cleanroom &amp;&amp; cd /tmp/keel-cleanroom &amp;&amp; npx -y skills@1.5.18 add broomva/keel --all ; cd ~/keel/skills/keel &amp;&amp; pwd</pre>
+      <span class="k-meta">The last hop is <span class="k-mono">;</span>, not
+      <span class="k-mono">&amp;&amp;</span>, on purpose: this item exists to
+      catch a failing install, and a failing install must not strand the shell
+      in <span class="k-mono">/tmp/keel-cleanroom</span>. Read the printed
+      <span class="k-mono">pwd</span> before you move on — beat 2's commands are
+      relative.</span></li>
+
+    <li><b>Snapshot the probe library.</b> Beat 2's claim is that the library
+      <em>grew</em>. Write the before-count on your hand.
+      <pre class="k-code k-code--cmd">cp -R ~/.config/keel/probes ~/.config/keel/probes.bak-$(date +%H%M) 2>/dev/null; ls ~/.config/keel/probes | wc -l</pre></li>
+
+    <li><b>Corpus report is live.</b> Beat 1 dies without it.
+      <pre class="k-code k-code--cmd">curl -s -o /dev/null -w '%{http_code}\n' -L https://broomva.github.io/keel/reports/</pre>
+      <span class="k-meta">Measured 404 at the time this sheet was written —
+      W2·H had not shipped yet. It must read 200 before you walk up.</span></li>
+
+    <li><b>Two screened backup repos on disk.</b> If the volunteer's repo comes
+      up thin, you switch in four seconds instead of apologising. Both below were
+      cloned and gathered for real:
+      <span class="k-mono">pallets/click</span> → 54 edges ·
+      <span class="k-mono">sindresorhus/got</span> → 9 edges.
+      <pre class="k-code k-code--cmd">ls ~/keel/.keel-corpus/click ~/keel/.keel-corpus/got</pre>
+      <span class="k-meta"><span class="k-mono">.keel-corpus/</span> is
+      gitignored — these clones are machine-local and survive neither a fresh
+      clone nor <span class="k-mono">git clean -xdf</span>. If either is
+      missing, restore it now; this is rung 2's only floor.</span>
+      <pre class="k-code k-code--cmd">git clone --depth 1 https://github.com/pallets/click ~/keel/.keel-corpus/click</pre>
+      <pre class="k-code k-code--cmd">git clone --depth 1 https://github.com/sindresorhus/got ~/keel/.keel-corpus/got</pre></li>
+
+    <li><b>Browser tabs, in order, already loaded.</b>
+      (1) <span class="k-mono">https://broomva.github.io/keel/reports/</span> ·
+      (2) <span class="k-mono">https://broomva.github.io/keel/</span> ·
+      (3) the fallback video, paused at 0:00 in its own window.</li>
+
+    <li><b>Terminal set for a projector.</b> Font ≥ 18 pt, dark theme, window
+      wide enough that no command on this sheet wraps. Clear the scrollback.</li>
+
+    <li><b>Rehearse the switch.</b> Terminal → browser → terminal, on the keys
+      you will actually use. A fumbled window switch costs more seconds than any
+      command here.</li>
+
+    <li><b>Fallback video reachable offline.</b> Local file, not a share link.
+      <span class="k-mono">open -R</span> it once so you know the path is right.</li>
+  </ol>
+
+  <div class="rs-todo"><b>Open — orchestrator fills before the pitch</b>
+    <span class="rs-todo__i">Fallback video path: [TODO — W2·I₂, recorded ~01:00]</span>
+    <span class="rs-todo__i">Corpus report URL returning 200: [TODO — confirm after W2·H merges]</span></div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-beat" id="beat-0">
+  <div class="rs-rail">
+    <div class="rs-rail__no">0</div>
+    <div class="rs-rail__clock">0:00</div>
+    <div class="rs-rail__dur">20 s</div>
+  </div>
+  <div>
+    <h2>The line</h2>
+    <div class="rs-say">
+      <p>A check is only a check if the signal it reads comes from somewhere the
+        thing being checked cannot write to.</p>
+      <p>Most verification in an agent-maintained codebase fails that. An LLM
+        reviews what an LLM wrote. A status field says passed because something
+        set it to passed. The pipeline is green and nothing has been verified.</p>
+    </div>
+    <p class="k-meta">Say it before any screen is shown. If the room does not
+      have the sentence, the number in beat 1 is just a number.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-beat" id="beat-1">
+  <div class="rs-rail">
+    <div class="rs-rail__no">1</div>
+    <div class="rs-rail__clock">0:20</div>
+    <div class="rs-rail__dur">60 s</div>
+  </div>
+  <div>
+    <h2>The corpus report — a number that did not exist this morning</h2>
+
+    <div class="rs-say">
+      <p>We ran this across a corpus of well-known repositories. Every
+        verification edge is classified by who produces the signal, and the ratio
+        never travels alone — the anchored count and the coverage are printed
+        beside it, because a 1.0 over one edge and a 0.7 over fifty are different
+        claims.</p>
+      <p>The second chart is the one I care about: cost per node falling as the
+        probe library grows. That is the platform thesis, measured.</p>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">Do</span>
+      <p>Switch to browser tab 1. Scroll once: ratio table, then the
+        crystallization curve. Do not read the table aloud row by row — point at
+        one high ratio and one low one and say what separates them.</p>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">On screen</span>
+      <pre class="k-code rs-out">https://broomva.github.io/keel/reports/
+  ratio table · anchored count · coverage (judged) · unknown count
+  crystallization curve — estimated tokens per node vs probes in library</pre>
+      <span class="k-meta">Static, precomputed, committed. Nothing here can fail
+      live except the network, and the fallback below removes that too.</span>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">The line that lands — do not skip it for time</span>
+      <p class="k-callout">"The first repository we ran this on was our own.
+        Keel's grounding ratio for Keel is <b>0.421</b> — 8 of 19 classified
+        edges anchored, 11 self-referential, no unknowns, and 13 more edges
+        excluded as not-a-check with the count printed beside the ratio. And the
+        most useful thing it found is about us: our own
+        <span class="k-mono">bun test</span> and
+        <span class="k-mono">tsc --noEmit</span> are not run by any CI workflow,
+        so they gate nothing. Both were classified anchored by one agent and
+        downgraded to self-referential by the reviewer, because what matters is
+        the edge that blocks the merge, not the file that could have."</p>
+      <span class="k-meta">This is the most credible sentence in the pitch: the
+      tool's first finding cost us points on our own number. Say the counts, not
+      just <span class="k-mono">0.421</span> — a ratio without its denominator is
+      the exact move this product exists to expose. If a heckler asks whether we
+      fixed it: no, not tonight, and quietly fixing it before measuring would
+      have been the dishonest version.</span>
+      <span class="k-meta">Beat 1's budget is 60 s and this callout is ~25 s of
+      it. If the beat runs long, cut the "second chart is the one I care about"
+      sentence above and point at the curve instead — <em>not</em> this. The
+      curve survives being pointed at; this line does not survive being
+      paraphrased.</span>
+    </div>
+
+    <div class="rs-fallback">
+      <span class="rs-label">If it fails</span>
+      <p><b>Page does not load →</b> open the committed copy from disk. Same
+        bytes, no network:</p>
+      <pre class="k-code k-code--cmd">open ~/keel/site/reports/index.html</pre>
+      <p><b>Corpus report does not exist at all →</b> render the fixture report
+        instead and pitch it as one target rather than fifteen. It carries the
+        same argument at smaller scale.</p>
+      <pre class="k-code k-code--cmd">bun scripts/render.ts ../../tests/fixtures/report.sample.json -o /tmp/keel-report.html &amp;&amp; open /tmp/keel-report.html</pre>
+    </div>
+
+    <div class="rs-todo"><b>Verify before the pitch</b>
+      The two fallback paths above depend on W2·H (site/reports/index.html) and
+      W1·B (render.ts). Run both once, for real, the moment those merge.
+      [TODO — orchestrator]</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-beat" id="beat-2">
+  <div class="rs-rail">
+    <div class="rs-rail__no">2</div>
+    <div class="rs-rail__clock">1:20</div>
+    <div class="rs-rail__dur">100 s</div>
+  </div>
+  <div>
+    <h2>Live, on a repo Keel has never seen — and the library grows</h2>
+
+    <div class="rs-say">
+      <p>Somebody give me a repository. Any language, as long as it has CI.</p>
+      <p>Gather is mechanical — it locates surfaces, it does not judge them.
+        Classification is the agent's, and every verdict ships the causal path
+        that produced it, so you can check it in seconds without trusting me or
+        the model. When the agent judges a shape the library did not have, it
+        writes a probe. That probe is code: reviewable, diffable, rejectable —
+        and the next run gets it for free.</p>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">Screen the repo — 10 seconds, out loud</span>
+      <pre class="k-code k-code--cmd">git clone --depth 1 &lt;volunteer-url&gt; /tmp/volunteer</pre>
+      <pre class="k-code k-code--cmd">bun scripts/gather.ts /tmp/volunteer</pre>
+      <pre class="k-code rs-out">gathered 54 candidate verification edges from /tmp/volunteer
+
+    40  ci_step
+    13  test_target
+     1  review_gate
+
+nothing here is classified yet — that is the agent's job.</pre>
+      <span class="k-meta">Real output, from <span class="k-mono">pallets/click</span>.
+      Accept 8–120 edges. Below 8, ask for another repo — see the picker below.
+      Above ~120 the beat runs long.</span>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">Run the product</span>
+      <p>Keel ships as a skill, so the run happens inside the harness the room
+        already uses. One line, typed where they can see it:</p>
+      <pre class="k-code k-code--cmd">claude</pre>
+      <pre class="k-code rs-out">&gt; keel: measure the grounding ratio of /tmp/volunteer — gather, classify,
+&gt; and crystallize anything the probe library could not decide</pre>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">Land the beat — the library is bigger than it was</span>
+      <pre class="k-code k-code--cmd">ls -t ~/.config/keel/probes | head -3</pre>
+      <pre class="k-code k-code--cmd">cat ~/.config/keel/probes/&lt;new-id&gt;.v1.ts</pre>
+      <p>Read the probe's <span class="k-mono">match</span> out loud — it keys on
+        structure, never on a repo name. Then say the count: it was N before this
+        run; it is N+1 now, and every person who installs the skill can PR theirs
+        back.</p>
+      <span class="k-meta">Probe files are named
+        <span class="k-mono">&lt;id&gt;.v&lt;version&gt;.ts</span>; minting never
+        overwrites, it versions.</span>
+    </div>
+
+    <div class="rs-fallback">
+      <span class="rs-label">If it fails</span>
+      <p><b>Volunteer repo gathers 0 edges →</b> switch to a screened backup
+        without comment:</p>
+      <pre class="k-code k-code--cmd">bun scripts/gather.ts ~/keel/.keel-corpus/click</pre>
+      <p><b>The agent session stalls, or the network is gone →</b> the
+        deterministic path still shows the cache layer, with no model call at
+        all. It prints the probe/agent split and the nodes awaiting judgment:</p>
+      <pre class="k-code k-code--cmd">bun scripts/gather.ts /tmp/volunteer --json &gt; /tmp/nodes.json</pre>
+      <pre class="k-code k-code--cmd">bun scripts/classify.ts /tmp/nodes.json</pre>
+      <pre class="k-code rs-out">classify: 32 nodes
+  decided by probe      0
+  pending (agent)      32
+
+  pending by kind
+      19  ci_step
+      13  script
+
+  3 judgment batches of up to 15 nodes
+
+pending nodes are NOT classified. Judge them over `raw` — nothing here defaults to a class.</pre>
+      <span class="k-meta">Real output, byte for byte, from
+      <span class="k-mono">broomva/keel</span> itself — with the shipped probe
+      library, which decided nothing here, and identical under
+      <span class="k-mono">--probe-dir</span> pointed at an empty directory. Your
+      volunteer's numbers will differ; the <em>shape</em> is the point. No
+      <span class="k-mono">--json</span> on this line — that flag emits the full
+      node objects and a projector gets a wall of raw JSON cut off mid-object.
+      The plain form is the split. Read the last line out loud: it is the
+      invariant, on screen, with the network down.</span>
+      <p>Then open the corpus report and read one
+        <span class="k-mono">writeBoundary.argument</span> aloud instead of
+        minting live. Say plainly that classification needs a model and the
+        network is down — the argument on screen is still checkable by anyone in
+        the room.</p>
+      <p><b>Everything is gone →</b> play the recorded beat. Do not re-attempt a
+        live run under a clock.</p>
+    </div>
+
+    <div class="rs-todo"><b>Verify before the pitch</b>
+      The live path depends on W1·A (classify.ts) and W1·C (mint-probe.ts). Run
+      beat 2 end to end on a repo you have never gathered, twice, and confirm a
+      probe file actually appears in <span class="k-mono">~/.config/keel/probes/</span>.
+      Only the <span class="k-mono">gather</span> output above has been executed
+      as of W1·I. [TODO — orchestrator]</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-beat" id="beat-3">
+  <div class="rs-rail">
+    <div class="rs-rail__no">3</div>
+    <div class="rs-rail__clock">3:00</div>
+    <div class="rs-rail__dur">40 s</div>
+  </div>
+  <div>
+    <h2>The room installs it while you are still talking</h2>
+
+    <div class="rs-say">
+      <p>It is an open skill. Run this now, on your own repo, with your own
+        subscription — I am not in the loop and neither is a server of mine.</p>
+      <p>Probes are code, so the library improves every time anyone runs it, and
+        every run can send its probe back. The commons is the moat.</p>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">What the room types</span>
+      <pre class="k-code k-code--cmd">npx skills add broomva/keel</pre>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">What you type — pinned, non-interactive</span>
+      <pre class="k-code k-code--cmd">npx skills@1.5.18 add broomva/keel --all</pre>
+      <pre class="k-code rs-out">◇  Security Risk Assessments ───────────────────────────╮
+│                                                       │
+│        Gen               Socket            Snyk       │
+│  keel  Med Risk          0 alerts          High Risk  │
+│                                                       │
+│  Details: https://skills.sh/broomva/keel              │
+│                                                       │
+├───────────────────────────────────────────────────────╯
+│
+◇  Installed 1 skill ──────────────────────────────────────────╮
+│                                                              │
+│  ./.agents/skills/keel                                       │
+│    universal: &lt;agent roster, truncated to terminal width&gt;    │
+│    symlinked: Claude Code, Eve                               │
+│                                                              │
+├──────────────────────────────────────────────────────────────╯
+└  Done!  Review skills before use; they run with full agent permissions.</pre>
+      <span class="k-meta">Transcribed from a real run of the command directly
+      above — the risk panel prints <em>before</em> the summary, on every run,
+      with and without the agent env. Three deliberate departures. The CLI prints
+      a check glyph before the path; this sheet drops it, because an
+      unaccountable green check is the thing Keel exists to criticize. The
+      <span class="k-mono">universal:</span> roster is truncated to terminal
+      width — today's run named five agents and
+      <span class="k-mono">+14 more</span> — so it is a placeholder here; do not
+      compare it to this sheet mid-beat. And the blank spacer lines between
+      panels are removed, so this block is shorter than the terminal's. The words
+      inside the panels are verbatim. Exit 0 in 5.3 s on a warm npx
+      cache.</span>
+      <span class="k-meta">Installed into
+      <span class="k-mono">./.agents/skills/keel</span> with the
+      full directory — <span class="k-mono">scripts/</span>,
+      <span class="k-mono">schemas/</span>, <span class="k-mono">design/</span>,
+      <span class="k-mono">references/</span>.</span>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">The risk panel — say this before anyone reads it out</span>
+      <p>The panel above is full-width on the projector, it says
+        <b>Snyk: High Risk</b>, and it lands at the exact moment you are telling
+        a room to install this. Reproduced on every run, with and without the
+        agent env. Do not let someone else in the room narrate it first.</p>
+      <p class="k-callout">"Yes — third-party static analysis flags it, because
+        the skill ships executable scripts. That is what a skill is: an agent
+        skill that shipped no code would have nothing to run. Socket found zero
+        alerts; the other two are heuristics on 'contains code'. Everything that
+        ships is plain TypeScript in the repo you just cloned — that is the
+        point, and it is why the last line of that output says review it before
+        you run it."</p>
+      <span class="k-meta">Do not argue with the score, do not promise to fix
+      it, and do not open <span class="k-mono">skills.sh/broomva/keel</span> on
+      stage — the details page is a second unrehearsed screen. One sentence,
+      then move. If someone presses, the honest follow-up is the same one on
+      objection card 1: the code Keel <em>generates</em> runs only in a
+      kill-timed subprocess; the code Keel <em>ships</em> is reviewable before
+      it runs at all.</span>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">Why the pin</span>
+      <p><span class="k-mono">skills</span> v1.5.19+ declares
+        <span class="k-mono">node &gt;= 22.20.0</span>; this machine runs 22.14
+        and gets an <span class="k-mono">EBADENGINE</span> warning. v1.5.18 has
+        the fix that makes root-level skill repos install their whole directory
+        and predates the Node bump. Tell the room only if they hit it.</p>
+    </div>
+
+    <div class="rs-fallback">
+      <span class="rs-label">If it fails</span>
+      <p><b>Registry unreachable →</b> show the pre-warmed clean-room install
+        instead. It proves the shape of what ships, offline:</p>
+      <pre class="k-code k-code--cmd">find /tmp/keel-cleanroom/.agents/skills/keel -maxdepth 2</pre>
+      <p><b>Someone in the room hits EBADENGINE →</b> one sentence: pin
+        <span class="k-mono">skills@1.5.18</span> or upgrade Node. Do not debug
+        their laptop on stage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-beat" id="beat-close">
+  <div class="rs-rail">
+    <div class="rs-rail__no">4</div>
+    <div class="rs-rail__clock">3:40</div>
+    <div class="rs-rail__dur">20 s</div>
+  </div>
+  <div>
+    <h2>Close</h2>
+    <div class="rs-say">
+      <p>AI-native maturity is not how much of your operation is automated. It is
+        what fraction of your operational graph has a verification signal the
+        agents cannot author.</p>
+      <p>And Keel audits its own probe library, and publishes the agreement rate.
+        A system that measures groundedness while refusing to measure its own is
+        telling you something.</p>
+    </div>
+    <p class="k-meta">Stop there. The substrate table below is for questions, not
+      for the pitch.</p>
+
+    <div class="rs-todo"><b>Decide before the pitch — which closing sentence</b>
+      The line above is present tense and it is the last thing the room hears.
+      Its backing is <span class="k-mono">skills/keel/scripts/audit.ts</span>
+      (W2·F), which the plan marks <em>flourish — cut if behind</em>. Closing a
+      pitch about ungrounded assertions with an ungrounded assertion is the one
+      unrecoverable failure on this sheet.
+      <span class="rs-todo__i"><b>If the ε-audit shipped and ran</b> — say the
+      line above verbatim, and have the number ready (objection card 4).</span>
+      <span class="rs-todo__i"><b>If W2·F was cut, or shipped but did not run</b>
+      — say instead: "And Keel is built to audit its own probe library and
+      publish the agreement rate — that ships next. A system that measures
+      groundedness while refusing to measure its own is telling you
+      something." Same close, one tense weaker, and it is true.</span>
+      <span class="rs-todo__i">Status at the time this sheet was written:
+      <span class="k-mono">audit.ts</span> did not exist and no verdict carried
+      an <span class="k-mono">audit</span> field — the weaker line was the
+      correct one. [TODO — orchestrator: confirm or flip after W2·F]</span></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-section" id="picker">
+  <h2>The volunteer repo — how to pick one in ten seconds</h2>
+  <p>Beat 2 is only worth running if it is genuinely unseen, so the repo comes
+    from the room. That means the screening rule has to be sayable while you
+    type it.</p>
+
+  <div class="rs-cols">
+    <div class="rs-panel">
+      <h3>Take it</h3>
+      <ul>
+        <li>Any repo with <span class="k-mono">.github/workflows/*.yml</span> —
+          the densest source by far.</li>
+        <li>Python with <span class="k-mono">pyproject.toml</span>,
+          <span class="k-mono">tox.ini</span>,
+          <span class="k-mono">pytest.ini</span>, or
+          <span class="k-mono">conftest.py</span>.</li>
+        <li>JS/TS with a <span class="k-mono">package.json</span>
+          <span class="k-mono">scripts</span> block.</li>
+        <li>Anything with a <span class="k-mono">Makefile</span>,
+          <span class="k-mono">Rakefile</span>,
+          <span class="k-mono">.circleci/</span>,
+          <span class="k-mono">.gitlab-ci.yml</span>, or
+          <span class="k-mono">.travis.yml</span>.</li>
+        <li>Bonus texture: <span class="k-mono">CODEOWNERS</span>,
+          <span class="k-mono">.pre-commit-config.yaml</span>,
+          <span class="k-mono">codecov.yml</span>,
+          <span class="k-mono">dependabot.yml</span>, or a deploy config
+          (<span class="k-mono">vercel.json</span>,
+          <span class="k-mono">netlify.toml</span>,
+          <span class="k-mono">fly.toml</span>,
+          <span class="k-mono">wrangler.toml</span>,
+          <span class="k-mono">render.yaml</span>) — these produce
+          <span class="k-mono">review_gate</span> and
+          <span class="k-mono">deploy_gate</span> edges, which make a more
+          interesting spread than CI alone.</li>
+        <li>Public, shallow-clonable in under ten seconds.</li>
+      </ul>
+    </div>
+
+    <div class="rs-panel">
+      <h3>Steer away</h3>
+      <ul>
+        <li><b>Bazel or Buck monorepos.</b> Gather has no
+          <span class="k-mono">BUILD</span>/<span class="k-mono">.bzl</span>
+          reader, so the verification lives in files it does not open. You get
+          near-nothing and it looks like the tool failed.</li>
+        <li><b>No CI at all.</b> Gather prints
+          <span class="k-mono">gathered 0 candidate verification edges</span>,
+          and a target with zero nodes is reported as "nothing gathered" — never
+          as a ratio. Correct behaviour, terrible beat.</li>
+        <li><b>Private repos.</b> The clone prompts for auth in front of the
+          room.</li>
+        <li><b>Very large monorepos.</b> Hundreds of edges runs the beat long,
+          and the walk is depth-capped at 6 anyway.</li>
+        <li><b>A repo you have already gathered tonight.</b> The probe library
+          may already cover its shapes, and then nothing is minted — the beat
+          silently loses its point.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="rs-step">
+    <span class="rs-label">The screening rule, stated as one sentence</span>
+    <p>Clone it shallow, run <span class="k-mono">gather</span>, and look at one
+      number: <b>8 to 120 edges, take it; outside that, ask for another repo.</b>
+      Measured points on that scale — <span class="k-mono">pallets/click</span> 54,
+      <span class="k-mono">broomva/keel</span> itself 32,
+      <span class="k-mono">sindresorhus/got</span> 9, an empty directory 0.</p>
+  </div>
+
+  <div class="rs-step">
+    <span class="rs-label">Say this while it clones</span>
+    <p>"Gather is mechanical. It reads CI definitions, task scripts, test
+      configuration, review gates and deploy conditions, and carries the literal
+      snippet forward — because a summary is already a judgment, and a judgment
+      made by the gatherer is a rule table by another name."</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-section" id="substrate">
+  <h2>The substrate answer — Keel's own loop, by control level</h2>
+  <p>Hold this until someone asks what stops Keel from being another ungrounded
+    loop. Every level's reference is frozen by the level above it, and the top
+    level is frozen by design rather than by taste.</p>
+
+  <table class="k-table">
+    <thead>
+      <tr><th>Keel loop</th><th>RCS level</th><th>Frozen from below</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>gather + classify</td>
+        <td>L0 plant</td>
+        <td>output contract, the question asked</td>
+      </tr>
+      <tr>
+        <td>probe dispatch in sandbox, kill-timer</td>
+        <td>L1 controller</td>
+        <td>timeout / network policy</td>
+      </tr>
+      <tr>
+        <td>ε-audit (sampled, verdict-hidden, incl. agent verdicts)
+          <span class="k-meta">design — not yet shipped (W2·F). Describe the
+          level; do not imply it ran.</span></td>
+        <td>L2 watching loop</td>
+        <td>sampling policy</td>
+      </tr>
+      <tr>
+        <td>schema freeze, rubric, human probe review</td>
+        <td>L3 governance</td>
+        <td>everything — changes rare by design</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="k-callout">The target writes content. It never writes the question,
+    the output contract, or the audit policy — those are frozen a level above it.
+    That is the whole architecture in one sentence.</p>
+
+  <p class="k-meta">Cascade control's rule that the outer loop must be slower
+    than the inner one is why L3 changes are rare rather than merely
+    discouraged.</p>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-section" id="fallbacks">
+  <h2>Fallback ladder — decide by rung, not by improvisation</h2>
+  <p>Rung 1 is the pitch. Every rung below it is still a complete pitch, one
+    claim smaller. Never climb back up mid-run.</p>
+
+  <table class="k-table">
+    <thead>
+      <tr><th>Rung</th><th>What broke</th><th>What you do</th><th>What you lose</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>nothing</td>
+        <td>all three beats live</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>volunteer repo is thin or unclonable</td>
+        <td>screened backup from <span class="k-mono">~/keel/.keel-corpus/</span></td>
+        <td>"never seen it" — so do not claim it</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>agent session stalls</td>
+        <td>deterministic <span class="k-mono">gather</span> +
+            <span class="k-mono">classify</span>, then read one argument off the
+            corpus report</td>
+        <td>the live mint</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>network gone</td>
+        <td>local corpus report from disk, plus the recorded beat 2</td>
+        <td>everything live; say so plainly</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>laptop or projector gone</td>
+        <td>the line, the RCS table, and the printed run sheet</td>
+        <td>the demo — not the argument</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="rs-step">
+    <span class="rs-label">What is honestly impossible offline</span>
+    <p>Agentic classification needs a model, and the model needs the network.
+      There is no offline path to a live verdict, and pretending otherwise on
+      stage would be a self-refuting move in a pitch about grounding. Offline,
+      beat 2 is a recording or a precomputed report — say which one you are
+      showing.</p>
+    <p class="k-meta">Unverified as of W1·I: whether
+      <span class="k-mono">npx skills@1.5.18</span> resolves from a warm cache
+      with the network down. Assume it does not; rung 4 uses the clean-room
+      directory instead.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<section class="rs-section" id="human">
+  <h2>Human tasks — not done, and not doable by an agent</h2>
+  <p>This sheet is written and checkable. The rehearsal is neither. These items
+    are open and belong to a person with a clock and a laptop.</p>
+
+  <ol class="rs-check">
+    <li><b>Timed dry run #1, network on.</b> Full three beats, stopwatch
+      running, on a repo you have not gathered. Write down where you overran.</li>
+    <li><b>Timed dry run #2, wifi off.</b> Prove rung 4 with the wifi actually
+      off, not simulated. This is the run that finds the file path you got
+      wrong.</li>
+    <li><b>Record the fallback video</b> (Wave 2 · I₂) once beats 1 and 2 work,
+      around 01:00. MemorIA was blocked from presenting when production broke
+      minutes before pitching — record it before you need it.</li>
+    <li><b>Clean-room install check</b> at ~00:30, not 02:50: install into an
+      empty store and run the loop. A skill is published when a clean install
+      yields a <em>runnable</em> skill, not when
+      <span class="k-mono">--list</span> shows it.</li>
+    <li><b>Confirm the projector.</b> Resolution, aspect, terminal legibility
+      from the back row.</li>
+    <li><b>Decide the Node question</b> and do it:
+      <span class="k-mono">nvm install 22.20</span>, or pin
+      <span class="k-mono">skills@1.5.18</span> everywhere on this sheet.</li>
+  </ol>
+
+  <div class="rs-todo"><b>Not performed by W1·I</b>
+    No timed rehearsal was executed. Per orchestration correction #9 the
+    rehearsal is a human task; this unit's scope was the runbook and the assets.
+    Every command marked "real output" on this sheet was executed; every command
+    marked TODO was not.</div>
+</section>
+
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
+verification, not its quality. A repo can be 100% anchored with terrible tests.
+Anchoring says the signal comes from outside; it does not say the signal is
+sufficient.</p>
+
+</div>
+
+</body>
+</html>
