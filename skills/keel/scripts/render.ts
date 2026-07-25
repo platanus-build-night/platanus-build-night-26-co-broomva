@@ -19,14 +19,16 @@
  * disclosure if that disagrees with the ratio the report carried, rather than
  * trusting a field the producer could have written by hand.
  *
- * THE FOUR REFUSALS, all of them load-bearing:
+ * THE FIVE REFUSALS, all of them load-bearing:
  *   - a ratio never renders alone (absolute anchored count, coverage by kind,
  *     and the raw counts sit beside it, always),
  *   - `not_a_check` prints beside the fraction, never inside it,
  *   - zero gathered nodes renders "nothing gathered", never 0.00,
- *   - an empty denominator renders "no denominator", never 0.00.
- * The last two matter most: 0.00 reads as a measurement, and neither of those
- * states measured anything.
+ *   - an empty denominator renders "no denominator", never 0.00,
+ *   - zero ε-audit comparisons renders "not run", never an agreement rate and
+ *     never 1.00.
+ * The last three matter most: a printed number reads as a measurement, and
+ * none of those states measured anything.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -217,6 +219,48 @@ function smellsOf(v: Verdict): boolean {
   return v.class === 'anchored' && v.confidence < SMELL_THRESHOLD;
 }
 
+/**
+ * The ε-audit tally — Keel's counter-metric, counted rather than judged.
+ *
+ * Every field below is a count over verdicts that already carry their own
+ * `audit.agreed`. This function decides nothing: it does not re-open a
+ * comparison, does not weigh one against another, and does not have an opinion
+ * about whether a verdict "really" agreed. That distinction is the line
+ * between arithmetic (allowed here) and judgment (not).
+ *
+ * `agreed === true` is the only shape counted as agreement, so an `audit`
+ * block that arrives malformed lands in `disagreed` and is rendered loudly.
+ * That is the fail-closed direction: the alternative — treating an
+ * unrecognisable comparison as agreement — is precisely the cheap green this
+ * tool exists to name.
+ */
+export interface AuditTally {
+  /** verdicts carrying an `audit` block. The agreement denominator. */
+  compared: number;
+  agreed: number;
+  disagreed: number;
+  /** the population the ε-audit samples from. */
+  probeDecided: number;
+  /** how many of that population were actually audited — coverage. */
+  probeAudited: number;
+  /** audited verdicts outside that population. Counted in agreement, stated separately. */
+  auditedNonProbe: number;
+}
+
+export function auditTally(verdicts: Verdict[]): AuditTally {
+  const audited = verdicts.filter((v) => v.audit !== undefined);
+  const agreed = audited.filter((v) => v.audit?.agreed === true).length;
+  const probeAudited = audited.filter((v) => v.decidedBy === 'probe').length;
+  return {
+    compared: audited.length,
+    agreed,
+    disagreed: audited.length - agreed,
+    probeDecided: verdicts.filter((v) => v.decidedBy === 'probe').length,
+    probeAudited,
+    auditedNonProbe: audited.length - probeAudited,
+  };
+}
+
 export function render(report: Report, opts: RenderOptions = {}): string {
   const t = opts.template ?? loadTemplate();
   const styles = opts.styles ?? loadStyles();
@@ -286,6 +330,12 @@ export function render(report: Report, opts: RenderOptions = {}): string {
     });
     body.push(`<div class="kr-split">${ratioBlock}${coverageBlock}</div>`);
   }
+
+  // ── Keel's own counter-metric, beside Keel's own number ──────────────────
+  // Unconditional. The zero state is the whole reason this is not rendered
+  // "when there is something to show": a run that audited nothing has to say
+  // so, in the same place a run that audited something says what it found.
+  body.push(renderAudit(t, auditTally(verdicts)));
 
   // ── Disclosures: every place a number is narrower than it looks ──────────
   const econ = report.economics;
@@ -552,6 +602,66 @@ function renderVerdict(
     SMELL_NOTE: smellsOf(v)
       ? fill(t['smell-note'] as string, { THRESHOLD: String(SMELL_THRESHOLD) })
       : '',
+    // The re-decided class is printed as it arrived. A disagreement gets the
+    // loud variant because it is the most informative thing on the page: it is
+    // the one outcome that says a probe is mis-classifying, and the whole
+    // reason stage 4 exists. `agreed === true` is the only shape that takes
+    // the quiet variant — see `auditTally`.
+    AUDIT: v.audit
+      ? v.audit.agreed === true
+        ? fill(t['verdict-audit'] as string, {
+            AGENT_CLASS: v.audit.agentClass,
+            AT: v.audit.at,
+          })
+        : fill(t['verdict-audit-disagreed'] as string, {
+            AGENT_CLASS: v.audit.agentClass,
+            CLASS: v.class,
+            AT: v.audit.at,
+          })
+      : '',
+  });
+}
+
+/**
+ * The ε-audit card. Every branch here is a lookup into `t`; the prose lives in
+ * `templates/report.html` and the numbers arrive already counted.
+ */
+function renderAudit(t: Template, a: AuditTally): string {
+  // Zero comparisons is a STATE, not a rate — the same refusal `nothing
+  // gathered` makes above, by the same mechanism (a different block, not a
+  // different number). `1.00` over an empty audit is the most flattering
+  // figure this file could print and the least earned one, and an unaudited
+  // library is an absence of evidence: the tool exists to stop that reading as
+  // evidence.
+  if (a.compared === 0) {
+    return fill(t['audit-none'] as string, { PROBE_DECIDED: num(a.probeDecided) });
+  }
+
+  // A coverage percentage over an empty probe population is the same
+  // fabrication one scope down, so it gets the same treatment.
+  const coverage =
+    a.probeDecided === 0
+      ? (t['audit-coverage-none'] as string)
+      : fill(t['audit-coverage'] as string, {
+          AUDITED: num(a.probeAudited),
+          PROBE_DECIDED: num(a.probeDecided),
+          PCT: pct(a.probeAudited, a.probeDecided).toFixed(0),
+        });
+
+  return fill(t.audit as string, {
+    AGREED: num(a.agreed),
+    COMPARED: num(a.compared),
+    RATE: (a.agreed / a.compared).toFixed(2),
+    DISAGREED: num(a.disagreed),
+    DISAGREEMENT:
+      a.disagreed > 0
+        ? fill(t['audit-disagreement'] as string, { N: num(a.disagreed) })
+        : '',
+    COVERAGE: coverage,
+    NONPROBE:
+      a.auditedNonProbe > 0
+        ? fill(t['audit-nonprobe'] as string, { N: num(a.auditedNonProbe) })
+        : '',
   });
 }
 
@@ -605,7 +715,19 @@ const HERE = import.meta.dir;
 
 export function loadTemplate(path = join(HERE, '..', 'templates', 'report.html')): Template {
   const blocks = parseTemplate(readFileSync(path, 'utf8'));
-  const required = ['document', 'header', 'ratio', 'verdict', 'scope', 'econ'];
+  const required = [
+    'document',
+    'header',
+    'ratio',
+    'verdict',
+    'scope',
+    'econ',
+    // Both, not either: `audit` alone would let a template ship that renders a
+    // rate when there is one and silently nothing when there is not, which is
+    // the defect this pair exists to close.
+    'audit',
+    'audit-none',
+  ];
   const missing = required.filter((b) => !(b in blocks));
   if (missing.length > 0) {
     throw new Error(`${path}: template is missing block(s): ${missing.join(', ')}`);

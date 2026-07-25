@@ -1,0 +1,416 @@
+/**
+ * THE ε-AUDIT REPORTING TEST.
+ *
+ * `SKILL.md` §4 says the probe library's agreement rate is Keel's own
+ * counter-metric and that a system refusing to measure its own groundedness is
+ * telling you something. The number was computed, carried through the schema
+ * (`Verdict.audit`), preserved by `corpus.ts` — and then dropped by the one
+ * artifact a human actually reads. This file is the executed proof that it is
+ * not dropped any more.
+ *
+ * EVERY assertion here runs the real `render()` over a real `Report` and reads
+ * the bytes that come back. Nothing asserts that a template file contains a
+ * substring: a template is an input, and a test that checks its inputs is
+ * `self_referential` by this repo's own definition — it would keep passing
+ * while `render.ts` stopped filling the block. The renderer is the system under
+ * test, so the renderer is what gets executed.
+ *
+ * The reports are synthetic because they must be: no committed report carries
+ * an `audit` block (that is the bug), and the three states that matter —
+ * mixed, none, total disagreement — cannot all be sampled from one real run
+ * anyway.
+ */
+
+import { describe, expect, test } from 'bun:test';
+import type { GroundingClass, Node, Report, Verdict } from '../skills/keel/schemas/keel.ts';
+import { groundingRatio } from '../skills/keel/schemas/keel.ts';
+import { auditTally, render } from '../skills/keel/scripts/render.ts';
+
+// ---------------------------------------------------------------------------
+// Builders. Deliberately minimal and deliberately valid: the point of each
+// test below is the audit block, so every other field is well-formed enough
+// that nothing else in the renderer can be the reason a string appears.
+// ---------------------------------------------------------------------------
+
+interface Spec {
+  id: string;
+  class: GroundingClass;
+  decidedBy: 'probe' | 'agent';
+  /** omit for "no ε-audit touched this verdict" */
+  audit?: { agentClass: GroundingClass; agreed: boolean };
+}
+
+function nodeFor(spec: Spec, i: number): Node {
+  return {
+    id: spec.id,
+    kind: 'ci_step',
+    name: `step-${i}`,
+    source: `.github/workflows/test.yml:${i + 10}`,
+    raw: `- run: bun test  # ${spec.id}`,
+  };
+}
+
+function verdictFor(spec: Spec): Verdict {
+  const canWrite =
+    spec.class === 'anchored' ? false : spec.class === 'self_referential' ? true : null;
+  return {
+    nodeId: spec.id,
+    class: spec.class,
+    writeBoundary: {
+      producer: 'the bun test runner process exit code',
+      actorCanWrite: canWrite,
+      argument:
+        'The exit code is produced by a runtime executing assertions on a runner the PR author does not control, so the actor cannot write to the producer.',
+    },
+    evidence: ['.github/workflows/test.yml:70', 'package.json#scripts.test'],
+    confidence: 0.8,
+    decidedBy: spec.decidedBy,
+    ...(spec.decidedBy === 'probe' ? { probeId: 'probe-ci-exit-code@1' } : {}),
+    ...(spec.audit
+      ? { audit: { ...spec.audit, at: '2026-07-25T09:15:00.000Z' } }
+      : {}),
+  };
+}
+
+function reportOf(specs: Spec[]): Report {
+  const nodes = specs.map(nodeFor);
+  const verdicts = specs.map(verdictFor);
+  const byProbe = verdicts.filter((v) => v.decidedBy === 'probe').length;
+  return {
+    target: 'github.com/broomva/keel',
+    revision: 'c50e003',
+    generatedAt: '2026-07-25T09:00:00.000Z',
+    nodes,
+    verdicts,
+    grounding: groundingRatio(verdicts),
+    economics: {
+      nodesTotal: specs.length,
+      nodesSampled: specs.length,
+      decidedByProbe: byProbe,
+      decidedByAgent: specs.length - byProbe,
+      tokensIn: 4200,
+      tokensOut: 900,
+      tokensEstimated: true,
+      wallClockMs: 12_400,
+      probesMinted: 0,
+      probeLibrarySize: byProbe > 0 ? 3 : 0,
+    },
+  };
+}
+
+/**
+ * Strip tags so a prose assertion cannot be satisfied by an attribute value.
+ * A tag becomes a space, so `(<span>75%</span>)` reads `( 75% )` — assertions
+ * below allow for that rather than pretending the markup is not there.
+ */
+const textOf = (html: string): string =>
+  html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/**
+ * The ε-audit card only.
+ *
+ * The document inlines `tokens.css`, whose rgba alphas are decimals, so a
+ * whole-document scan for "a number that looks like a rate" measures the
+ * stylesheet. Scoping to the card is what makes "this state prints no rate" an
+ * assertion about the claim rather than about the design system. The card
+ * contains no nested `<div>`, so the first `</div>` after the marker closes it.
+ */
+function auditCardOf(html: string): string {
+  const marker = html.indexOf('ε-audit');
+  if (marker < 0) return '';
+  const start = html.lastIndexOf('<div', marker);
+  const end = html.indexOf('</div>', marker);
+  return html.slice(start, end + '</div>'.length);
+}
+
+/** Every decimal in a slice that could be read as a rate. */
+const ratesIn = (html: string): string[] => textOf(html).match(/\d+\.\d+/g) ?? [];
+
+// ---------------------------------------------------------------------------
+
+describe('render · a report with mixed agreement', () => {
+  const report = reportOf([
+    { id: 'a#1', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+    { id: 'a#2', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+    {
+      id: 'a#3',
+      class: 'anchored',
+      decidedBy: 'probe',
+      // The interesting one: the probe said anchored, the agent said the
+      // signal is inside the write boundary.
+      audit: { agentClass: 'self_referential', agreed: false },
+    },
+    { id: 'a#4', class: 'self_referential', decidedBy: 'probe' },
+    { id: 'a#5', class: 'unknown', decidedBy: 'agent' },
+  ]);
+  const html = render(report);
+  const text = textOf(html);
+
+  test('both counts appear as absolute numbers, not only as a rate', () => {
+    // 2 agreed of 3 compared. The pair is the deliverable — a bare 0.67 is the
+    // same defect here as a bare grounding ratio.
+    expect(text).toContain('2 / 3');
+    expect(text).toMatch(/agreed \/ compared = 2 \/ 3/);
+  });
+
+  test('the rate is printed beside the counts, and it is the counted rate', () => {
+    const a = auditTally(report.verdicts);
+    expect(a).toMatchObject({ compared: 3, agreed: 2, disagreed: 1 });
+    expect(text).toContain(`rate ${(a.agreed / a.compared).toFixed(2)}`);
+    expect(text).toContain('rate 0.67');
+  });
+
+  test('the disagreement is present, counted, and marked as prominent', () => {
+    expect(text).toContain('1 disagreement(s)');
+    // Marked, not merely mentioned: the loud variant is a distinct element,
+    // and the per-verdict row carries the grep-able attribute.
+    expect(html).toContain('kr-audit-alert');
+    expect(html).toContain('data-audit-disagreed');
+    // Exactly one verdict row is flagged — the one whose audit disagreed.
+    expect(html.match(/data-audit-disagreed/g)).toHaveLength(1);
+  });
+
+  test('the disagreeing verdict shows both classes: cached and re-decided', () => {
+    // The whole value of a disagreement is knowing which way it went.
+    const row = html.slice(html.indexOf('data-audit-disagreed'));
+    const untilRowEnd = row.slice(0, row.indexOf('</p>'));
+    expect(untilRowEnd).toContain('self_referential');
+    expect(untilRowEnd).toContain('anchored');
+  });
+
+  test('an agreeing verdict shows its re-decided class without the alert', () => {
+    // Two of the three audits agreed, so two quiet rows must be present...
+    const quiet = text.match(/agent re-decided anchored\s*, agreed/g);
+    expect(quiet).toHaveLength(2);
+    // ...and the loud treatment must be reserved for the one that did not. If
+    // the quiet variant ever borrowed the alert, prominence stops meaning
+    // anything — so count the marker on verdict rows, not in the stylesheet.
+    expect(html.match(/class="kr-line kr-audit-alert"/g)).toHaveLength(1);
+  });
+
+  test('audit coverage is stated in absolute terms, not implied', () => {
+    // 4 probe-decided verdicts exist; 3 of them were audited.
+    expect(text).toMatch(
+      /Audit coverage — 3 of 4 probe-decided verdict\(s\) audited \(\s*75%\s*\)/,
+    );
+  });
+
+  test('an audited verdict outside the probe population is disclosed, not folded in', () => {
+    // All three audits here are probe-decided, so the disclosure must be absent
+    // — the inverse case is covered below. This guards against a block that
+    // renders unconditionally and reads as a caveat that does not apply.
+    expect(text).not.toContain('audited verdict(s) were not probe-decided');
+  });
+
+  test('independence is not claimed anywhere in the output', () => {
+    // `Report` carries no `mintedFrom`, so the renderer cannot know which
+    // comparisons are independent. It must not say that it does.
+    expect(text).not.toMatch(/independent (re-)?judgment/i);
+    expect(text).toContain('not described as independent');
+  });
+});
+
+describe('render · a report with zero audit blocks', () => {
+  const report = reportOf([
+    { id: 'b#1', class: 'anchored', decidedBy: 'probe' },
+    { id: 'b#2', class: 'self_referential', decidedBy: 'probe' },
+    { id: 'b#3', class: 'anchored', decidedBy: 'agent' },
+  ]);
+  const html = render(report);
+  const text = textOf(html);
+
+  test('the explicit no-audit state renders', () => {
+    expect(auditTally(report.verdicts).compared).toBe(0);
+    expect(text).toContain('ε-audit — not run');
+    expect(text).toContain('there is no agreement rate to report');
+  });
+
+  test('it is not a rate: no fraction, no rate, and no number at all', () => {
+    // The refusal, executed. Zero audited nodes must never read as agreement.
+    expect(text).not.toMatch(/agreed \/ compared = /);
+    expect(text).not.toMatch(/\brate \d/);
+    expect(text).not.toContain('0 / 0');
+    // The strongest available form: the card prints NO decimal whatsoever.
+    // `1.00` is what a naive `agreed / compared` guard produces here and it is
+    // the most flattering number in the file — but so is any other rate, and
+    // even naming the forbidden one in prose would put it on the page.
+    expect(ratesIn(auditCardOf(html))).toHaveLength(0);
+    expect(auditCardOf(html)).not.toContain('1.00');
+  });
+
+  test('the un-audited population is named, so 0% coverage cannot hide', () => {
+    // Audit coverage is shoppable: audit nothing, find nothing. The count of
+    // what went un-audited is the disclosure that makes that visible.
+    expect(text).toContain('2 probe-decided verdict(s), none of them audited');
+  });
+
+  test('the grounding ratio still renders — the audit state is additive', () => {
+    // A regression that made the no-audit branch swallow the page would pass
+    // every assertion above.
+    expect(text).toContain('anchored / (anchored + self_referential + unknown)');
+    expect(html).toContain('k-ratio__value');
+  });
+});
+
+describe('render · a report where every audited verdict disagreed', () => {
+  // The inverse of the zero case, and the most valuable run the tool can have:
+  // 0/N is a finding, not an absence, and it must not be swallowed by any
+  // falsy-guard on the agreed count.
+  const report = reportOf([
+    { id: 'c#1', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'unknown', agreed: false } },
+    { id: 'c#2', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'self_referential', agreed: false } },
+  ]);
+  const html = render(report);
+  const text = textOf(html);
+
+  test('it renders 0 / N as a measured result', () => {
+    expect(auditTally(report.verdicts)).toMatchObject({ compared: 2, agreed: 0, disagreed: 2 });
+    expect(text).toContain('0 / 2');
+    expect(text).toContain('agreed / compared = 0 / 2');
+    expect(text).toContain('rate 0.00');
+  });
+
+  test('0 / 2 is NOT rendered as the no-audit state', () => {
+    // Total disagreement and no audit are opposite findings. Collapsing them
+    // would lose the more informative one.
+    expect(text).not.toContain('ε-audit — not run');
+    expect(text).not.toContain('none of them audited');
+  });
+
+  test('every disagreeing verdict is individually marked', () => {
+    expect(text).toContain('2 disagreement(s) recorded');
+    expect(html.match(/data-audit-disagreed/g)).toHaveLength(2);
+  });
+
+  test('full coverage of the probe population is reported as 100%, not as agreement', () => {
+    expect(text).toMatch(
+      /Audit coverage — 2 of 2 probe-decided verdict\(s\) audited \(\s*100%\s*\)/,
+    );
+    // The trap this guards: 100% coverage sitting next to 0.00 agreement must
+    // not be readable as a score. Both numbers, both meanings, side by side.
+    expect(text).toContain('rate 0.00');
+  });
+});
+
+describe('render · audits outside the probe population', () => {
+  // An `audit` block on an agent-decided verdict is legal in the frozen schema.
+  // It counts toward agreement (it IS a comparison) but it is not coverage of
+  // the probe library, and conflating the two would inflate coverage.
+  const report = reportOf([
+    { id: 'd#1', class: 'anchored', decidedBy: 'agent', audit: { agentClass: 'anchored', agreed: true } },
+    { id: 'd#2', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+    { id: 'd#3', class: 'self_referential', decidedBy: 'probe' },
+  ]);
+  const text = textOf(render(report));
+
+  test('agreement counts the comparison; coverage does not', () => {
+    expect(auditTally(report.verdicts)).toMatchObject({
+      compared: 2,
+      agreed: 2,
+      probeDecided: 2,
+      probeAudited: 1,
+      auditedNonProbe: 1,
+    });
+    expect(text).toContain('agreed / compared = 2 / 2');
+    expect(text).toMatch(
+      /Audit coverage — 1 of 2 probe-decided verdict\(s\) audited \(\s*50%\s*\)/,
+    );
+  });
+
+  test('the difference between the two denominators is stated out loud', () => {
+    expect(text).toContain('1 audited verdict(s) were not probe-decided');
+  });
+});
+
+describe('render · a report with no probe-decided verdicts at all', () => {
+  const report = reportOf([
+    { id: 'e#1', class: 'anchored', decidedBy: 'agent', audit: { agentClass: 'anchored', agreed: true } },
+  ]);
+  const text = textOf(render(report));
+
+  test('coverage over an empty population is refused rather than printed', () => {
+    // pct(0, 0) is 0 in this codebase, and "0% audited" would be a fabricated
+    // claim about a population that does not exist.
+    expect(text).toContain('no probe-decided verdict');
+    expect(text).not.toMatch(/probe-decided verdict\(s\) audited \(\d+%\)/);
+  });
+
+  test('the agreement over the comparisons that DO exist still renders', () => {
+    expect(text).toContain('agreed / compared = 1 / 1');
+  });
+});
+
+describe('render · the artifact stays self-contained', () => {
+  // The audit section adds markup to a document whose entire argument is that
+  // it depends on nothing. `render()` throws on an off-origin reference before
+  // returning, so reaching these assertions is already most of the proof —
+  // they close the gap for shapes the guard does not match.
+  const EXTERNAL = [
+    /<script[^>]+\bsrc\s*=/i,
+    /<link[^>]+\bhref\s*=/i,
+    /@import\s+(?:url\(|["'])/i,
+    /<img[^>]/i,
+    /url\(\s*["']?https?:/i,
+    /\bsrcset\s*=/i,
+    /<iframe\b/i,
+    /@font-face/i,
+  ];
+
+  for (const [label, report] of [
+    [
+      'with audit blocks',
+      reportOf([
+        { id: 'f#1', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'unknown', agreed: false } },
+        { id: 'f#2', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+      ]),
+    ],
+    ['without audit blocks', reportOf([{ id: 'f#3', class: 'anchored', decidedBy: 'probe' }])],
+  ] as const) {
+    test(`a report ${label} issues zero external requests`, () => {
+      const html = render(report);
+      for (const pattern of EXTERNAL) {
+        expect(html).not.toMatch(pattern);
+      }
+      // It must also open from file://: no protocol-relative or absolute-path
+      // document reference anywhere in the markup.
+      expect(html).not.toMatch(/(?:href|src)\s*=\s*["']\/\//i);
+    });
+  }
+
+  test('no unfilled slot survives into either output', () => {
+    // `fill()` throws on a slot it was not given a value for, but a slot in a
+    // block nobody filled would ship silently. This reads the bytes.
+    for (const report of [
+      reportOf([{ id: 'g#1', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } }]),
+      reportOf([{ id: 'g#2', class: 'anchored', decidedBy: 'probe' }]),
+      reportOf([]),
+    ]) {
+      const html = render(report);
+      expect(html).not.toMatch(/\{\{\s*[A-Z_]+\s*\}\}/);
+    }
+  });
+});
+
+describe('render · the tally is arithmetic over what the verdicts carry', () => {
+  test('an empty report audits nothing and claims nothing', () => {
+    const html = render(reportOf([]));
+    expect(auditTally([])).toMatchObject({ compared: 0, agreed: 0, probeDecided: 0 });
+    expect(textOf(html)).toContain('ε-audit — not run');
+    expect(ratesIn(auditCardOf(html))).toHaveLength(0);
+  });
+
+  test('the rendered counts equal a recomputation over the same verdicts', () => {
+    // The renderer must not carry a second, drifting notion of what agreed.
+    const report = reportOf([
+      { id: 'h#1', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+      { id: 'h#2', class: 'unknown', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: false } },
+      { id: 'h#3', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+    ]);
+    const expected = report.verdicts.filter((v) => v.audit?.agreed === true).length;
+    const compared = report.verdicts.filter((v) => v.audit !== undefined).length;
+    expect(textOf(render(report))).toContain(`agreed / compared = ${expected} / ${compared}`);
+  });
+});
