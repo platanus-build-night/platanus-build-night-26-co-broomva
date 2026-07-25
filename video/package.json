@@ -1,0 +1,21 @@
+{
+  "name": "keel-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion explainer video for Keel — how the skill works.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render KeelExplainer out/keel-explainer.mp4",
+    "still": "remotion still KeelExplainer out/still.png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.400",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.400"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}
