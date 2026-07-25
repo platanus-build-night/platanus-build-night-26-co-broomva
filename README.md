@@ -1,9 +1,8 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="skills/keel/design/lockup.svg" />
-    <img src="skills/keel/design/lockup-on-light.svg" alt="Keel" width="268" />
-  </picture>
+  <img src="skills/keel/design/mark.png" alt="Keel" width="180" />
 </p>
+
+<h1 align="center">Keel</h1>
 
 **Your agents are grading their own homework. Keel measures how much.**
 
