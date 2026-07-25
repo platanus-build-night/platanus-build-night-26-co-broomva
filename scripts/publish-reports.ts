@@ -103,8 +103,17 @@ ${readFileSync(curveSvg, 'utf8')}</section>`;
 }
 
 // --- the ratio table ---------------------------------------------------------
+// Three outcomes, and lumping the last two together publishes a false statement.
+// `ok` measured something. `empty` was measured successfully and HAS NO
+// VERIFICATION SURFACE — a docs repo with no CI is a real finding, not a failure,
+// and calling it one would be the mirror image of publishing 0.000 for it.
+// `bad` genuinely failed: the clone or the gather did not complete, so nothing is
+// known either way.
 const ok = (summary.entries ?? []).filter((e: any) => e.status === 'ok');
-const bad = (summary.entries ?? []).filter((e: any) => e.status !== 'ok');
+const empty = (summary.entries ?? []).filter((e: any) => e.status === 'nothing_gathered');
+const bad = (summary.entries ?? []).filter(
+  (e: any) => e.status !== 'ok' && e.status !== 'nothing_gathered'
+);
 
 function row(e: any): string {
   const judged = e.nodesJudged ?? 0;
@@ -217,7 +226,7 @@ th.k-num{text-align:right}
   <strong>A check is only a check if the signal it reads comes from somewhere the thing
   being checked cannot write to.</strong></p>
   <p class="k-scope k-mono">generated ${esc(summary.generatedAt ?? '')} ·
-  ${ok.length} target(s) measured${bad.length ? ` · ${bad.length} failed` : ''}</p>
+  ${ok.length} target(s) measured${empty.length ? ` · ${empty.length} with no verification surface` : ''}${bad.length ? ` · ${bad.length} failed` : ''}</p>
 </header>
 
 <section class="k-card">
@@ -258,6 +267,19 @@ ${ok.map(row).join('\n')}
 </section>
 
 ${curve}
+
+${
+  empty.length
+    ? `<section class="k-card"><h2>Measured, and found nothing to measure</h2>
+<p class="k-scope">The clone and the gather both succeeded; these repositories simply carry
+no verification edge the gatherer can read. That is a result about the repository, not a
+failure of the run, and it is reported as "nothing gathered" rather than as a ratio —
+publishing <code class="k-mono">0.000</code> here would read as "no grounded checks", which
+is a different and false claim.</p>
+<ul>${empty.map((e: any) => `<li class="k-mono">${esc(e.name)} — nothing gathered (0 edges)</li>`).join('')}</ul>
+</section>`
+    : ''
+}
 
 ${
   bad.length

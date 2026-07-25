@@ -622,7 +622,7 @@ th.k-num{text-align:right}
   <strong>A check is only a check if the signal it reads comes from somewhere the thing
   being checked cannot write to.</strong></p>
   <p class="k-scope k-mono">generated 2026-07-25T03:59:42.265Z ·
-  14 target(s) measured · 1 failed</p>
+  14 target(s) measured · 1 with no verification surface</p>
 </header>
 
 <section class="k-card">
@@ -1062,11 +1062,16 @@ changes it by design. If cost per node does not fall, that is published as-is.</
 </svg>
 </section>
 
-<section class="k-card"><h2>Targets that failed</h2>
-<p class="k-scope">Listed rather than dropped. A corpus that quietly omits what it could not
-measure is shopping its own denominator.</p>
-<ul><li class="k-mono">anthropic-courses — nothing_gathered</li></ul>
+<section class="k-card"><h2>Measured, and found nothing to measure</h2>
+<p class="k-scope">The clone and the gather both succeeded; these repositories simply carry
+no verification edge the gatherer can read. That is a result about the repository, not a
+failure of the run, and it is reported as "nothing gathered" rather than as a ratio —
+publishing <code class="k-mono">0.000</code> here would read as "no grounded checks", which
+is a different and false claim.</p>
+<ul><li class="k-mono">anthropic-courses — nothing gathered (0 edges)</li></ul>
 </section>
+
+
 
 <section class="k-card">
   <h2>Reproducing this</h2>
