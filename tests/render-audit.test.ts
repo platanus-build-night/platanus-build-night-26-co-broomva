@@ -212,17 +212,17 @@ describe('render · a report with mixed agreement', () => {
     // `Report` carries no `mintedFrom`, so the renderer cannot know which
     // comparisons are independent. It must not say that it does.
     //
-    // The cross-review noted the first form of this test was narrow enough that
-    // adding "these are independent comparisons" would have passed it. So: the
-    // disclaimer must be present, AND no POSITIVE independence claim may appear
-    // anywhere — matched by looking for "independent" in any sentence that is
-    // not the disclaimer, rather than for one hard-coded phrasing.
+    // Round 1 of the cross-review noted the first form was narrow enough that
+    // adding "these are independent comparisons" would pass. Round 2 noted the
+    // second form still was: it dropped whole SENTENCES containing the
+    // disclaimer, so a positive claim added to that same sentence vanished with
+    // it. Counting occurrences has no such hiding place — every appearance of
+    // "independen" in the document must BE the disclaimer.
     expect(text).toContain('not described as independent');
-    const claims = text
-      .split(/(?<=\.)\s+/)
-      .filter((s) => /\bindependen/i.test(s))
-      .filter((s) => !/not described as independent/.test(s));
-    expect(claims).toEqual([]);
+    const occurrences = text.match(/independen\w*/gi) ?? [];
+    const disclaimers = text.match(/not described as independent/g) ?? [];
+    expect(occurrences).toHaveLength(disclaimers.length);
+    expect(disclaimers.length).toBeGreaterThan(0);
     expect(text).toContain('mintedFrom');
   });
 });
@@ -510,11 +510,18 @@ describe('render · the artifact stays self-contained', () => {
     // about SMELL_THRESHOLD. So: inject each offending element through the
     // template option and assert `render()` refuses to return it.
     const base = loadTemplate();
+    // Every tag the guard names, not a sample of them — the round-2 review
+    // pointed out that claiming seven and testing four leaves three untested.
     for (const offending of [
       '<object data="https://example.com/x.svg"></object>',
       '<embed src="https://example.com/x.swf">',
-      '<video poster="https://example.com/p.png"></video>',
       '<iframe src="https://example.com"></iframe>',
+      '<video poster="https://example.com/p.png"></video>',
+      '<audio src="https://example.com/a.mp3"></audio>',
+      '<source src="https://example.com/v.webm">',
+      '<track src="https://example.com/c.vtt">',
+      '<svg><image href="https://example.com/x.png"></image></svg>',
+      '<meta http-equiv="refresh" content="0;url=https://example.com">',
     ]) {
       const sabotaged = { ...base, scope: `${base.scope}\n${offending}` };
       expect(() =>
@@ -523,6 +530,42 @@ describe('render · the artifact stays self-contained', () => {
         }),
       ).toThrow(/off-origin document reference/);
     }
+  });
+
+  test('a <style> block that fetches off-origin is refused', () => {
+    // The tag guard cannot see this: `url(https://…)` inside CSS is a fetch
+    // with no element attached. Asked only inside <style>, for the reason the
+    // next test demonstrates.
+    const base = loadTemplate();
+    for (const css of [
+      '.x{background-image:url(https://example.com/x.png)}',
+      ".y{background:url('//example.com/y.png')}",
+      '.z{background: URL( "https://example.com/z.png" )}',
+    ]) {
+      const sabotaged = { ...base, 'layout-css': `${base['layout-css']}\n${css}` };
+      expect(() =>
+        render(reportOf([{ id: 's#1', class: 'anchored', decidedBy: 'probe' }]), {
+          template: sabotaged,
+        }),
+      ).toThrow(/off-origin/);
+    }
+  });
+
+  test('a target whose own text contains url(https://…) still renders', () => {
+    // The other half of the scoping decision, and the one that keeps the CSS
+    // check from becoming a check that reads the target instead of the
+    // document. `esc()` does not escape parentheses or colons, so this string
+    // survives into the body verbatim — where it is inert text, not a fetch. A
+    // document-wide scan would refuse this report for a URL its TARGET
+    // mentioned, which is the exact failure mode Keel is named after.
+    const report = reportOf([{ id: 't#1', class: 'anchored', decidedBy: 'probe' }]);
+    // `evidence` is rendered verbatim into the body — `raw` is not, so putting
+    // it there would prove nothing about what reaches the document.
+    (report.verdicts[0] as Verdict).evidence = [
+      'theme.css:12 — .hero{background-image:url(https://cdn.example.com/hero.png)}',
+    ];
+    const html = render(report);
+    expect(html).toContain('url(https://cdn.example.com/hero.png)');
   });
 
   test('a target snippet that MENTIONS such an element is not refused', () => {
@@ -602,6 +645,20 @@ const MALFORMED: Array<[string, unknown]> = [
   ['agreed as 1', { agentClass: 'anchored', agreed: 1, at: 'x' }],
   ['audit: null', null],
   ['audit as a bare string', 'audited'],
+  // `at` is required by the frozen schema. Without this, the card printed
+  // `1 / 1 · rate 1.00` above a per-verdict row whose timestamp read the
+  // literal text `undefined` — a perfect score over a record that cannot say
+  // when it was made.
+  ['no `at` at all', { agentClass: 'anchored', agreed: true }],
+  ['`at` as a number', { agentClass: 'anchored', agreed: true, at: 7 }],
+  ['`at` blank', { agentClass: 'anchored', agreed: true, at: '   ' }],
+  // Self-contradictory records. The verdict under test is `anchored`, so:
+  // "agreed" while naming a DIFFERENT class would hide a real disagreement
+  // inside the agreement count, and "disagreed" while naming the SAME class
+  // makes the artifact's own sentence ("the two classes differ, one of them is
+  // wrong") false on a row where they are identical.
+  ['agreed:true naming a different class', { agentClass: 'unknown', agreed: true, at: 'x' }],
+  ['agreed:false naming the same class', { agentClass: 'anchored', agreed: false, at: 'x' }],
 ];
 
 describe('a malformed audit block is never agreement', () => {

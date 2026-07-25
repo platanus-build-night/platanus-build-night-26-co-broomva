@@ -104,7 +104,23 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * containing `<object` into `&lt;object` long before the guard runs.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:|<(?:object|embed|iframe|video|audio|source|track)\b/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:|<(?:object|embed|iframe|video|audio|source|track|image)\b|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
+
+/**
+ * An off-origin fetch from inside a `<style>` block.
+ *
+ * Checked ONLY within style blocks, and that scoping is the entire point.
+ * `esc()` neutralises markup from a gathered snippet — `<object` becomes
+ * `&lt;object` — but it does not escape parentheses or colons, so a target
+ * whose config happens to contain the text `url(https://example.com)` would
+ * trip a document-wide scan for that pattern. Refusing to render a report
+ * because the repository it measured mentions a URL is precisely the check that
+ * reads something other than what it claims to read, which is the failure this
+ * whole tool is named after. In body text such a string is inert text; it only
+ * fetches inside CSS, so that is where the question is asked.
+ */
+const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+const CSS_EXTERNAL_REF = /url\(\s*["']?\s*(?:https?:|\/\/)/i;
 
 /** The same question asked of an SVG fragment we did not write. */
 const SVG_EXTERNAL_REF =
@@ -283,19 +299,43 @@ export interface AuditTally {
 /**
  * Does this verdict carry an audit block that actually states a comparison?
  *
- * Both halves are required, and neither is a formality: `agentClass` is the
- * class the agent re-decided (without it there is nothing to compare against),
- * and `agreed` must be a real boolean — `"yes"`, `1` and `null` are not
- * verdicts about the world, they are a producer's typo or a probe.
+ * Four conditions, none of them a formality:
+ *
+ *   `agentClass` — the class the agent re-decided. Without it there is nothing
+ *   to compare against.
+ *
+ *   `agreed` — a real boolean. `"yes"`, `1` and `null` are not verdicts about
+ *   the world, they are a producer's typo.
+ *
+ *   `at` — a non-empty string. The frozen schema requires it, and without it
+ *   the per-verdict row printed the literal text `undefined` as the moment the
+ *   comparison happened. A record that cannot say when it was made is not a
+ *   record of a comparison, and a `1 / 1 · rate 1.00` sitting above an
+ *   `undefined` timestamp is the cheap green this card exists to catch.
+ *
+ *   INTERNAL CONSISTENCY — `agreed` must equal `agentClass === v.class`. This
+ *   is the condition the artifact already claims in prose: the disagreement row
+ *   says the two classes differ and that one of them is wrong. A block saying
+ *   `agreed: false` while naming the class the verdict already carries makes
+ *   that sentence false, and a block saying `agreed: true` while naming a
+ *   different class hides a real disagreement inside the agreement count —
+ *   which is the one direction this whole card exists to prevent.
+ *
+ * This last check is arithmetic on two fields that arrived together, not a
+ * judgment about the world: it does not decide which of the two is right, and
+ * it never promotes or demotes a node. It says the record contradicts itself,
+ * and a self-contradictory record states no comparison. Like every other
+ * unreadable shape it is excluded from the denominator and named — because the
+ * honest answer to "these two fields disagree" is to report that, not to pick
+ * a winner.
  */
 export function auditIsWellFormed(v: Verdict): boolean {
   const a = v.audit;
   if (a === null || typeof a !== 'object') return false;
-  return (
-    typeof a.agentClass === 'string' &&
-    isGroundingClass(a.agentClass) &&
-    typeof a.agreed === 'boolean'
-  );
+  if (typeof a.agentClass !== 'string' || !isGroundingClass(a.agentClass)) return false;
+  if (typeof a.agreed !== 'boolean') return false;
+  if (typeof a.at !== 'string' || a.at.trim() === '') return false;
+  return a.agreed === (a.agentClass === v.class);
 }
 
 export function auditTally(verdicts: Verdict[]): AuditTally {
@@ -590,6 +630,15 @@ export function render(report: Report, opts: RenderOptions = {}): string {
     throw new Error(
       `refusing to write: output contains an off-origin document reference (${offending[0]})`,
     );
+  }
+  // The CSS question, asked only where CSS is executed. See CSS_EXTERNAL_REF.
+  for (const [, css] of html.matchAll(STYLE_BLOCK)) {
+    const fetched = (css as string).match(CSS_EXTERNAL_REF);
+    if (fetched) {
+      throw new Error(
+        `refusing to write: a <style> block fetches something off-origin (${fetched[0]})`,
+      );
+    }
   }
   return html;
 }
