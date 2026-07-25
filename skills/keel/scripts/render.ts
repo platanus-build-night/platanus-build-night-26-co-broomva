@@ -103,15 +103,24 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * a subdocument. Gathered target text cannot trip this: `esc()` turns a snippet
  * containing `<object` into `&lt;object` long before the guard runs.
  *
- * `<img>` is the one exception, and it is narrow: a `src="data:…"` image is
- * carried IN the document and fetches nothing, so refusing it would enforce
- * self-containment against something already self-contained — and the error
- * would say "off-origin" about bytes that never leave the file. Every other
- * `<img>` is refused, `src=` or not, because `srcset` and a protocol-relative
- * `//host` both fetch through spellings a `https?:` test does not see.
+ * `<img>` is the one exception, and it is narrow in both directions. A
+ * `src="data:…"` image is carried IN the document and fetches nothing, so
+ * refusing it would enforce self-containment against something already
+ * self-contained — and the error would say "off-origin" about bytes that never
+ * leave the file. Every other `<img>` is refused, `src=` or not, because
+ * `srcset` and a protocol-relative `//host` both fetch through spellings a
+ * `https?:` test does not see.
+ *
+ * The exemption is written as TWO clauses because one is not enough, and the
+ * cross-review demonstrated exactly why: `<img src="data:…"
+ * srcset="https://…">` satisfies "the src is a data URI" while still fetching
+ * through the other attribute. An exemption that inspects one attribute of a
+ * tag that fetches through several is not an exemption, it is a hole. So the
+ * second clause refuses ANY `<img>` carrying `srcset`, however innocent its
+ * `src` looks.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image)\b|<img\b(?![^>]*\bsrc\s*=\s*["']data:)|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image)\b|<img\b(?![^>]*\bsrc\s*=\s*["']data:)|<img\b[^>]*\bsrcset\s*=|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
 
 /**
  * An off-origin fetch from CSS — checked only where CSS is EXECUTED.

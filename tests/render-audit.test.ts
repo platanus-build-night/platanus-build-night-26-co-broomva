@@ -640,11 +640,16 @@ describe('render · the artifact stays self-contained', () => {
     const dataImg =
       '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt="">';
     expect(() => render(report, { template: { ...base, scope: dataImg } })).not.toThrow();
-    // ...while every fetching spelling still is.
+    // ...while every fetching spelling still is — including the COMPOSITION
+    // the review found: a data: src is not a licence for the tag's other
+    // fetching attribute. An exemption that inspects one attribute of a tag
+    // that fetches through several is a hole, not an exemption.
     for (const img of [
       '<img src="https://example.com/x.png">',
       '<img src="//example.com/x.png">',
       '<img srcset="https://example.com/x.png 1x">',
+      '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" srcset="https://example.com/x.png 1x">',
+      '<img srcset="//example.com/x.png 1x" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=">',
     ]) {
       expect(() =>
         render(report, { template: { ...base, scope: img } }),
