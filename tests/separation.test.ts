@@ -549,8 +549,21 @@ describe('the ratio is unreachable from routing', () => {
     expect(dispatch.requests[0]?.candidates.length).toBeGreaterThan(0);
     expect(report.grounding?.ratio).toBeGreaterThan(0);
 
+    // Exhaustive on purpose: a field added to the dispatch has to be declared
+    // here, which is what forces every new field through the walks below.
+    // `effortValues` is the vocabulary `effort` may take — strings only, and
+    // subject to exactly the same numeric and lexical checks as everything
+    // else the agent sees.
     expect(Object.keys(dispatch).sort()).toEqual(
-      ['anchoredIds', 'requests', 'revision', 'sourceReport', 'target', 'warnings'].sort(),
+      [
+        'anchoredIds',
+        'effortValues',
+        'requests',
+        'revision',
+        'sourceReport',
+        'target',
+        'warnings',
+      ].sort(),
     );
 
     const all = leaves(dispatch);
@@ -598,6 +611,35 @@ describe('the ratio is unreachable from routing', () => {
     for (const s of strings) {
       const v = s.value as string;
       expect([s.path, v]).toEqual([s.path, v.replace(/ratio|threshold|objective|optimi[sz]e/gi, '!LEAK!')]);
+    }
+
+    // 4. `effortValues` is held to a STRICTER vocabulary than the rest. The
+    //    regex above has to stay narrow because most strings here are the
+    //    world's words — a target repo is allowed to own a check called
+    //    `grounding-score`, and `sourceReport` is a path the caller chose. But
+    //    `effortValues` is ours, written in this repo and carried verbatim to
+    //    the judging agent, so it is the one string surface where a
+    //    score-flavoured verb could be introduced deliberately and pass. It
+    //    gets the wider list precisely because there is no risk of colliding
+    //    with something the target legitimately named.
+    const ours = all.filter((l) => /^effortValues\./.test(l.path));
+    expect(ours.length).toBeGreaterThan(0);
+    for (const s of ours) {
+      const v = String(s.value);
+      expect([s.path, v]).toEqual([
+        s.path,
+        // `cost|weight|reward|utility` and a bare digit are in the list because
+        // `means` is PROSE, and prose is where a numeric weight can be smuggled
+        // past a check that only looks at JSON leaves. "relative cost 1; prefer
+        // the lowest aggregate cost" contains no numeric leaf and would have
+        // passed the earlier list while stating precisely the objective this
+        // payload may never carry. The digit clause is the load-bearing half:
+        // effort ranks, and a rank the agent can do arithmetic on is a weight.
+        v.replace(
+          /ratio|grounding|score|objective|target|cost|weight|reward|utilit|\d|maximi[sz]|minimi[sz]|optimi[sz]/gi,
+          '!LEAK!',
+        ),
+      ]);
     }
   });
 

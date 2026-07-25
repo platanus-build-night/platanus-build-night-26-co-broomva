@@ -35,20 +35,64 @@ import type { GroundingClass, GroundingRatio, Node, NodeKind } from './keel.ts';
 export type UngroundedClass = Exclude<GroundingClass, 'anchored'>;
 
 /**
+ * One legal value of `effort`, carried WITH the distinction that makes it
+ * choosable. The semantics live in the data rather than in a comment above the
+ * type, because a comment is readable only by whoever opens this file — and the
+ * agent authoring proposals judges from the dispatch payload, which is the one
+ * place it has no reason to open. An enum whose values are documented somewhere
+ * the caller never looks is an undiscoverable enum, and the field gets dropped.
+ */
+export interface RouteEffortOption {
+  /** the literal `effort` a `RouteProposal` may carry */
+  readonly value: RouteEffort;
+  /** one line: how to tell this effort from the other two */
+  readonly means: string;
+}
+
+/**
  * How invasive a proposed change is. Used only to RANK — cheapest on top — and
  * never to score. There is deliberately no numeric weight here: a number would
  * invite summing efforts into a "cost", and a cost sits one short step from an
  * objective function over the ratio, which is the failure this whole layer is
  * built to avoid.
  *
- *   config   — a value in a file that already exists (a flag, a threshold,
- *              a `needs:` edge, an existing job's `if:`).
- *   wiring   — new plumbing between things that already exist (a step that
- *              reads an artifact another step already produces).
- *   process  — a change to how people or systems behave (a required check, a
- *              branch-protection rule, a third party's involvement).
+ * THE SINGLE SOURCE. The legal values are declared once, here, and everything
+ * else is derived from this array: the `RouteEffort` type, the rank order, the
+ * validator's accept-list in `scripts/route.ts`, and the list advertised on
+ * `RouteDispatch.effortValues`. The values an agent is TOLD are legal and the
+ * values the validator ACCEPTS are therefore the same array rather than two
+ * lists that agree today — they cannot drift, because there is only one.
+ *
+ * Declared cheapest-first: the array's own order IS the rank (see
+ * `EFFORT_ORDER`), so the ordering cannot disagree with the list either.
+ *
+ * FROZEN AT RUNTIME, not merely `as const`. `as const` is a compile-time claim
+ * and this array is handed out by reference on every `RouteDispatch` — a
+ * consumer that pushed onto it would make the dispatch advertise a value the
+ * validator still refuses, which is the exact drift this declaration exists to
+ * make impossible. "Cannot drift" has to be enforced to be worth writing down;
+ * `Object.freeze` is what makes the sentence above true rather than hopeful.
  */
-export type RouteEffort = 'config' | 'wiring' | 'process';
+export const ROUTE_EFFORTS = Object.freeze([
+  Object.freeze({
+    value: 'config',
+    means:
+      'a value in a file that already exists — a flag, a limit, a `needs:` edge, an existing job\'s `if:`.',
+  }),
+  Object.freeze({
+    value: 'wiring',
+    means:
+      'new plumbing between things that already exist — a step that reads an artifact another step already produces.',
+  }),
+  Object.freeze({
+    value: 'process',
+    means:
+      "a change to how people or systems behave — a required check, a branch-protection rule, a third party's involvement.",
+  }),
+] as const);
+
+/** Expands to: `'config' | 'wiring' | 'process'`. Derived, never restated. */
+export type RouteEffort = (typeof ROUTE_EFFORTS)[number]['value'];
 
 export interface Binding {
   /** the node that is not anchored today */
@@ -168,6 +212,24 @@ export interface RouteDispatch {
   sourceReport: string;
   /** the ids that `anchoredOn` may legally take. Empty means: no routes exist. */
   anchoredIds: string[];
+  /**
+   * The values `effort` may legally take, each with the distinction that makes
+   * it choosable — the same closed-world courtesy `anchoredIds` extends to
+   * `anchoredOn`. An agent judging from this payload can author a valid
+   * proposal without opening a schema file it has no reason to know about.
+   *
+   * The semantics travel with the values on purpose. A bare list of three
+   * tokens says what is legal but not how to choose, and choosing is precisely
+   * the judgment being asked for — so a bare list would push the agent back to
+   * guessing, which is the failure this field exists to close.
+   *
+   * Strings only, and no number anywhere in it. `effort` ranks; it does not
+   * weigh. A numeric cost here would be summable into an objective over the
+   * ratio, which is the one thing that may never reach the judging agent —
+   * `tests/separation.test.ts` walks this payload and fails on any number that
+   * is not a confidence measured in the source report.
+   */
+  readonly effortValues: readonly RouteEffortOption[];
   requests: RouteRequest[];
   warnings: string[];
 }
@@ -285,9 +347,19 @@ export function projectRatio(
 /**
  * Rank order for `effort`. Cheapest first; an unstated effort sorts last
  * because "we did not say" is not cheap, it is unmeasured.
+ *
+ * Derived from position in `ROUTE_EFFORTS` rather than restated, so the rank
+ * and the list of legal values cannot disagree about which efforts exist.
+ *
+ * Frozen for the same reason the table is: this map is exported, and it is what
+ * `rankBindings` reads. Left mutable, one write to `EFFORT_ORDER.config` would
+ * silently reorder every bindings page while the dispatch went on advertising
+ * cheapest-first — a derived value is only as trustworthy as the thing it is
+ * derived from, so it inherits the freeze rather than just the arithmetic.
  */
-export const EFFORT_ORDER: Record<RouteEffort, number> = {
-  config: 0,
-  wiring: 1,
-  process: 2,
-};
+export const EFFORT_ORDER: Readonly<Record<RouteEffort, number>> = Object.freeze(
+  Object.fromEntries(ROUTE_EFFORTS.map((e, i) => [e.value, i])) as Record<
+    RouteEffort,
+    number
+  >,
+);
