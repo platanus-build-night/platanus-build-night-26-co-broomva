@@ -180,6 +180,23 @@ the dash sits at column 0 while siblings align at 2, so `uses:` read as a child 
 
 ---
 
+## 6b · Units CUT, explicitly, per the degradation ladder
+
+The ladder's order is: drop **F**, then **I₂**'s fallback video, then G's curve,
+then the corpus down to 3 repos. The first two were taken; the last two were not
+needed.
+
+| Unit | Status | Why, and what stands in for it |
+|---|---|---|
+| **W2·F — ε-audit (`skills/keel/scripts/audit.ts`)** | **CUT — not built** | First on the ladder by design. **The mechanism it would automate was exercised by hand** through `corpus.ts next --repeat tiktoken`, and it found real drift (§3). What is missing is the *script* — a sampled, scheduled, agent-blind re-decision across all deciders including agent verdicts (the injection surface). The counter-metric exists as a measurement, not yet as a loop. |
+| **W2·I₂ — fallback video** | **CUT — not recorded** | Second on the ladder, and not agent-executable: it is a screen recording of a human giving the demo. The run sheet (`docs/demo/run-sheet.html`) carries the beats, the commands, and a per-beat fallback, so the recording is a human task with a written script waiting for it. |
+| W1·I's timed rehearsal | **Not done — human task** | Recorded as such per pre-dispatch correction #9, not claimed as a unit gate. |
+
+Everything else in `docs/plans/w*.md` is **built and merged**: W0, W1·A, W1·B,
+W1·C, W1·D, W1·E, W1·G, W1·I, W1·R, W2·H.
+
+---
+
 ## 7 · Known gaps, stated rather than buried
 
 - **Shuffle check incomplete.** Ratio-stability under reordering was never
