@@ -86,6 +86,7 @@ import {
   type BindingReport,
   EFFORT_ORDER,
   type RatioProjection,
+  ROUTE_EFFORTS,
   type RouteCandidate,
   type RouteDispatch,
   type RouteEffort,
@@ -100,7 +101,13 @@ const HERE = import.meta.dir;
 /** The classes that sit in the ratio's denominator without being anchored. */
 const IN_RATIO_UNGROUNDED: UngroundedClass[] = ['self_referential', 'unknown'];
 
-const EFFORTS: RouteEffort[] = ['config', 'wiring', 'process'];
+/**
+ * The accept-list, derived from the same array the dispatch advertises. Not
+ * restated: a hand-written copy here is exactly how the advertised values and
+ * the accepted values drift apart, and a dropped `effort` is a silent
+ * un-ranking rather than a loud failure.
+ */
+const EFFORTS: RouteEffort[] = ROUTE_EFFORTS.map((e) => e.value);
 
 // ---------------------------------------------------------------------------
 // Indexing — the mechanical half
@@ -245,6 +252,10 @@ export function buildDispatch(
     revision: report.revision,
     sourceReport,
     anchoredIds: index.anchoredIds,
+    // Advertised from the same array the validator accepts from, so the legal
+    // values reach the agent that has to author them. Carried through, never
+    // rebuilt here — a second literal in this file would re-open the drift.
+    effortValues: ROUTE_EFFORTS,
     requests,
     warnings,
   };
@@ -327,6 +338,27 @@ const CONSTRUCT_FIELDS = ['pairedWith', 'arbitratedBy', 'auditEvery'] as const;
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === 'object' && x !== null && !Array.isArray(x);
+}
+
+/**
+ * Name a refused `effort` for the warning, in bounded work and without ever
+ * throwing.
+ *
+ * `JSON.stringify` was the obvious choice and is the wrong one: a proposals
+ * file may legally contain a deeply nested value, which parses and then blows
+ * the stack on the way back out. The warning path is the FAIL-SAFE path — an
+ * exception raised while explaining a refusal turns "warn and drop" into
+ * "crash", which is a worse failure than the one being reported. So the shape
+ * is named rather than serialised; the agent needs to know its `effort` was
+ * refused and why, not to read its own payload back.
+ */
+function describeEffort(x: unknown): string {
+  if (typeof x === 'string') return JSON.stringify(x);
+  if (x === null) return 'null';
+  if (Array.isArray(x)) return 'an array';
+  if (typeof x === 'number' || typeof x === 'boolean') return String(x);
+  const t = typeof x;
+  return `${/^[aeiou]/.test(t) ? 'an' : 'a'} ${t}`;
 }
 
 /**
@@ -469,12 +501,24 @@ export function bind(
     if (typeof p.change === 'string' && p.change.trim() !== '') {
       binding.change = p.change;
     }
-    if (typeof p.effort === 'string') {
-      if ((EFFORTS as string[]).includes(p.effort)) {
+    // PRESENT-BUT-INVALID is the condition, not present-and-a-string. Gating on
+    // `typeof === 'string'` let `42`, `true`, `null` and `{}` through the other
+    // side in silence — dropped with no warning at all, which is a worse
+    // version of the very failure this field's discoverability was fixed to
+    // stop. Absent stays legal and silent; anything present that is not an
+    // advertised value is named and refused.
+    if (p.effort !== undefined) {
+      if (typeof p.effort === 'string' && (EFFORTS as string[]).includes(p.effort)) {
         binding.effort = p.effort;
       } else {
+        // Warn and drop — never coerce. Picking a default here would be this
+        // file inventing `config` because an agent said `low`, which is a
+        // judgment plumbing is not allowed to make, and it would silently
+        // corrupt the very ordering the field exists to produce. The legal
+        // values come from the accept-list itself, so this message cannot name
+        // a vocabulary the validator does not actually hold.
         warnings.push(
-          `proposal for "${v.nodeId}" gave effort "${p.effort}", which is not config|wiring|process — dropped`,
+          `proposal for "${v.nodeId}" gave effort ${describeEffort(p.effort)}, which is not ${EFFORTS.join('|')} — dropped, so this route ranks last among the routable`,
         );
       }
     }
@@ -916,11 +960,14 @@ const USAGE = `usage: bun scripts/route.ts <report.json> [options]
 
   --dispatch             emit the RouteDispatch judgment payload on stdout and stop.
                          This is the plumbing half: ungrounded nodes, each with the
-                         full set of anchored candidates. The argument is yours.
+                         full set of anchored candidates, plus the values \`effort\`
+                         may take and what each one means. The argument is yours.
   --proposals <file>     RouteProposal[], { proposals: [...] }, or a BindingReport
                          being re-validated. Every anchor is resolved against the
                          report; one that does not resolve to an \`anchored\` node
-                         becomes null with a reason.
+                         becomes null with a reason. An \`effort\` outside the
+                         dispatched vocabulary is warned about and dropped — never
+                         coerced — and that route then ranks last.
   --out <file>           write the BindingReport JSON here
   --html <file>          write the standalone page here (zero external requests)
   --reports-dir <dir>    write <dir>/<target-slug>.bindings.{json,html}

@@ -187,6 +187,23 @@ point at a node that is present in the same report *and* already classified
 `null` with a reason. "No route found" is a first-class answer and is correct
 whenever the fix needs a policy decision rather than a rewiring.
 
+Route mode runs in three steps: `--dispatch` emits the judgment payload, the
+agent authors `RouteProposal[]` from it, and `--proposals` validates those into
+bindings. Each proposal carries an **`effort`**, and the only legal values are:
+
+| `effort` | means |
+|---|---|
+| `config` | a value in a file that already exists — a flag, a limit, a `needs:` edge, an existing job's `if:` |
+| `wiring` | new plumbing between things that already exist — a step that reads an artifact another step already produces |
+| `process` | a change to how people or systems behave — a required check, a branch-protection rule, a third party's involvement |
+
+`--dispatch` carries that same list, with the same distinctions, in
+`effortValues` — so a proposal can be authored from the payload alone. Effort
+**ranks** cheapest-first and never scores; there is deliberately no numeric
+weight, because a cost is one step from an objective over the ratio. An
+unrecognised value is warned about and dropped, never coerced to a default, and
+the route it came from falls to the bottom of the ranking.
+
 Routing never moves the ratio. A proposal is not a change. The number moves
 only when a human applies one and Keel re-measures **from the target** — the
 world stays in the loop, so a route's claim never asserts its own outcome.
