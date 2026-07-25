@@ -4,6 +4,13 @@
 
 <h1 align="center">Keel</h1>
 
+<p align="center">
+  <a href="https://github.com/broomva/keel/actions/workflows/pages.yml"><img src="https://github.com/broomva/keel/actions/workflows/pages.yml/badge.svg" alt="Pages deploy" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT" /></a>
+  <a href="https://agentskills.io"><img src="https://img.shields.io/badge/agent%20skill-installable-7dd3fc" alt="Agent Skill" /></a>
+  <a href="https://broomva.github.io/keel/"><img src="https://img.shields.io/badge/docs-broomva.github.io%2Fkeel-e8edf2" alt="Docs" /></a>
+</p>
+
 **Your agents are grading their own homework. Keel measures how much.**
 
 ```bash
@@ -92,6 +99,31 @@ not by a promise.
 `keel apply` are specified and not yet built — see
 [`docs/plans/constructive-grounding-layer.md`](docs/plans/constructive-grounding-layer.md).
 
+## Using it
+
+Keel runs **inside your agent harness** — Claude Code, Codex, Cursor, or
+anything that reads [Agent Skills](https://agentskills.io). It does not
+reimplement a harness, and there is no daemon or hosted service.
+
+```bash
+npx skills add broomva/keel     # requires the skills CLI; Bun for local dev
+```
+
+Then point your agent at a target in plain language:
+
+```
+measure the grounding of this repo with keel
+```
+
+The agent gathers the verification edges, classifies each one, and writes a
+`report.json` plus a self-contained HTML report that opens from `file://` and
+survives being emailed. Ask it to `route` afterwards to get a proposal per
+ungrounded check.
+
+Nothing is transmitted anywhere. Classification a probe cannot handle happens
+in whatever model your harness is already running, under your existing
+provider terms.
+
 ## Scope, honestly
 
 Keel measures the *shape* of verification, not its quality. A repo can be 100%
@@ -105,6 +137,20 @@ pass/fail — but the specification was authored inside the write boundary, and
 both can drift together and stay green. Keel classifies the execution axis and
 names the limit rather than silently upgrading it to proof.
 
+## Contributing
+
+The highest-value contribution is **a probe** — a small reviewable script that
+classifies a recurring shape without a model call, making Keel cheaper for
+everyone. A close second: telling us Keel got a classification **wrong**. That
+is the most useful bug report this project can receive.
+
+| | |
+|---|---|
+| [CONTRIBUTING.md](CONTRIBUTING.md) | setup, the frozen schema rule, how to write a probe |
+| [SECURITY.md](SECURITY.md) | private disclosure, and what Keel executes on your machine |
+| [Misclassification issue](https://github.com/broomva/keel/issues/new?template=misclassification.yml) | Keel assigned the wrong class |
+| [Design system](skills/keel/design/README.md) | tokens, components, and the brand rules |
+
 ## License
 
-MIT.
+MIT — see [LICENSE](LICENSE).
