@@ -200,10 +200,12 @@
      (&ldquo;Readable&rdquo; is load-bearing: a block can be present and state no
      comparison, and this state covers that too — see below if so.)</p>
   <p class="k-meta">This run carries <span class="k-mono">{{PROBE_DECIDED}}</span>
-     probe-decided verdict(s), none of them audited. Audit coverage is itself
-     shoppable — audit none of the library and no disagreement can ever be
-     found — so the absence is printed here rather than left to be inferred
-     from a missing section.</p>
+     probe-decided verdict(s), none of them contributing a readable comparison.
+     (&ldquo;Readable&rdquo; rather than &ldquo;audited&rdquo;, because a block
+     can arrive and state nothing — if any did, they are counted below.) Audit
+     coverage is itself shoppable — audit none of the library and no
+     disagreement can ever be found — so the absence is printed here rather
+     than left to be inferred from a missing section.</p>
 {{{MALFORMED}}}
 </div>
 <!--@endblock -->
@@ -216,13 +218,20 @@
      read is not evidence — the same fail-closed move classify.ts makes when it
      drops a probe verdict claiming `unknown`. -->
 <!--@block audit-malformed -->
+  <!--@note This list must stay in step with `auditIsWellFormed` in render.ts.
+       An artifact describing a check narrower than the one it ran is the same
+       defect as a ratio printed without its denominator. -->
   <p class="kr-audit-alert"><strong>{{N}} audit block(s) could not be
-     read.</strong> Each carries no re-decided class, or an
-     <span class="k-mono">agreed</span> that is not a boolean, so it states no
-     comparison. These are excluded from the agreement denominator rather than
-     counted as agreement or as disagreement — an unreadable comparison is not
-     evidence, and neither column would be true. Fix the producer: this is a
-     defect in whatever wrote the report, not a finding about the target.</p>
+     read.</strong> A block states a comparison only when it names a re-decided
+     class from the frozen schema, carries an <span class="k-mono">agreed</span>
+     that is a real boolean, records a non-empty
+     <span class="k-mono">at</span>, and does not contradict itself —
+     <span class="k-mono">agreed</span> has to match whether the re-decided
+     class differs from the one the verdict carries. These fail one of those,
+     so they are excluded from the agreement denominator rather than counted as
+     agreement or as disagreement: an unreadable comparison is not evidence, and
+     neither column would be true. Fix the producer — this is a defect in
+     whatever wrote the report, not a finding about the target.</p>
 <!--@endblock -->
 
 <!--@block audit-coverage -->

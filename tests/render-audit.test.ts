@@ -258,7 +258,9 @@ describe('render · a report with zero audit blocks', () => {
   test('the un-audited population is named, so 0% coverage cannot hide', () => {
     // Audit coverage is shoppable: audit nothing, find nothing. The count of
     // what went un-audited is the disclosure that makes that visible.
-    expect(text).toContain('2 probe-decided verdict(s), none of them audited');
+    expect(text).toContain(
+      '2 probe-decided verdict(s), none of them contributing a readable comparison',
+    );
   });
 
   test('the grounding ratio still renders — the audit state is additive', () => {
