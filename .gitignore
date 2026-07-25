@@ -30,3 +30,4 @@ docs/conversations/
 # fan-out scratch (per-worktree probe dir, corpus clones)
 .keel-probes/
 .keel-corpus/
+.keel-probes-*/

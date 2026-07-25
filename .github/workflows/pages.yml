@@ -19,6 +19,13 @@ concurrency:
 
 jobs:
   deploy:
+    # Pages is enabled on the personal mirror only. The judging org repo cannot
+    # host Pages (org-owned repos are not connectable per the event README), so
+    # running this there produces a permanent red X on every commit that says
+    # nothing about the code. Gate on repository rather than leaving a failing
+    # check: an unexplained red check is the same unaccountable signal Keel exists
+    # to criticise, and a green check that deployed nothing would be worse.
+    if: github.repository == 'broomva/keel'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
