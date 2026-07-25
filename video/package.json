@@ -6,6 +6,7 @@
   "scripts": {
     "studio": "remotion studio",
     "render": "remotion render KeelExplainer out/keel-explainer.mp4",
+    "render:pitch": "remotion render KeelPitch out/keel-pitch-60.mp4",
     "still": "remotion still KeelExplainer out/still.png"
   },
   "dependencies": {

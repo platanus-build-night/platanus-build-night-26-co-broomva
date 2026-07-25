@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Keel — the two-minute pitch · stage sheet</title>
+<script>
+  /* Set before first paint so the stage never sees a flash of the wrong
+     script. Spanish is the default because the room is. */
+  document.documentElement.className =
+    (function () { try { return localStorage.getItem('keel-tm-lang') || 'l-es'; }
+                   catch (e) { return 'l-es'; } })();
+</script>
+<style>
+/* ══════════ KEEL TOKENS — VERBATIM COPY, DO NOT EDIT HERE ══════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — design tokens. THE canonical source. There is no second copy.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Every Keel surface reads these: the report artifact (inlined by render.ts),
+   the marketing site, the agents page, and the governance docs. `site/` gets a
+   byte-identical copy written by `make site-tokens`; `make design-audit`
+   executes a diff and exits non-zero if it has drifted. That check is anchored
+   under Keel's own definition — the signal is a diff exit code, not an
+   assertion this repo also writes.
+
+   WHY ONE FILE AND NOT FIVE. Systems this size usually split color/type/space
+   into separate files behind an @import entry point. Keel cannot: the report
+   must open from file:// with zero external requests, so `render.ts` inlines
+   this text verbatim into a <style> block. One file is one read. The section
+   rules below carry the structure the file split would have carried.
+
+   NAMESPACE. Every token is `--k-*`. Keel's output gets embedded in other
+   people's pages and pasted into other people's docs; an unprefixed `--accent`
+   would collide and silently restyle someone else's surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ═══ CANVAS ══════════════════════════════════════════════════════════════
+     Dark, because Keel is an instrument, not a document. Elevation is
+     expressed as a background step plus a hairline — never a shadow. On a
+     #07090c canvas a shadow is a smudge: it costs paint and reads as nothing.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-bg-0: #07090c;          /* page */
+  --k-bg-1: #0c1015;          /* raised: cards, code blocks, table headers */
+  --k-bg-2: #11161d;          /* nested / hover */
+  --k-bg-3: #171d26;          /* active / selected row */
+
+  --k-line: #1b2027;          /* hairline — the default separator */
+  --k-line-strong: #2a323c;   /* emphasis rule, focused input */
+
+  /* ═══ INK ═════════════════════════════════════════════════════════════════
+     Four steps. --k-ink-3 is BELOW the 4.5:1 text threshold on --k-bg-0 by
+     design; it is for borders, disabled glyphs, and decorative rules. Never
+     set body copy in it. The other three clear 4.5:1 on bg-0 and bg-1.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ink-0: #e8edf2;         /* primary text        ~16:1 on bg-0 */
+  --k-ink-1: #b6c0cb;         /* secondary text      ~10:1 */
+  --k-ink-2: #8b97a5;         /* tertiary / meta      ~6:1 */
+  --k-ink-3: #5b6774;         /* NON-TEXT ONLY        ~2.6:1 */
+
+  /* ═══ KEEL'S OWN VOICE ════════════════════════════════════════════════════
+     One accent, used surgically: links, the emphasized clause in a headline,
+     Keel's own annotations. It is a HUE RESERVED FOR THE NARRATOR — it never
+     encodes a verdict, and no verdict color is ever used for chrome. Mixing
+     the two is how a tool starts congratulating itself in green.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-accent: #7dd3fc;
+  --k-accent-hover: #b6e6ff;
+  --k-accent-line: rgba(125, 211, 252, 0.30);   /* link underline at rest */
+  --k-accent-wash: rgba(125, 211, 252, 0.10);   /* callout fill */
+
+  /* ═══ VERDICTS ════════════════════════════════════════════════════════════
+     Exactly four, matching `GroundingClass` in schemas/keel.ts. The schema is
+     frozen; so is this list. Adding a fifth swatch here without a schema
+     change means someone is inventing a class in CSS.
+
+       anchored          the producer is outside the write boundary
+       self_referential  it is inside
+       unknown           the fork point could not be traced — FAILS CLOSED
+       not_a_check       asserts nothing; excluded from the denominator
+
+     `not_a_check` is deliberately the least attractive swatch in the file. It
+     is the one shoppable class — misfiling a real check there shrinks the
+     denominator and inflates the score — so it gets inert slate and, per
+     `.k-verdict`, a dashed border rather than a solid one. It should never
+     look like a place you want your nodes to land.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-anchored: #4ade80;
+  --k-self-referential: #f87171;
+  --k-unknown: #fbbf24;
+  --k-not-a-check: #94a3b8;
+
+  /* Tints for chip fills and graph marks. Kept as explicit rgba rather than
+     color-mix() so the report renders identically in older embedded viewers
+     (email clients, IDE previews) that never see a modern engine. */
+  --k-anchored-wash: rgba(74, 222, 128, 0.10);
+  --k-self-referential-wash: rgba(248, 113, 113, 0.10);
+  --k-unknown-wash: rgba(251, 191, 36, 0.10);
+  --k-not-a-check-wash: rgba(148, 163, 184, 0.08);
+
+  /* Confidence smell — an `anchored` verdict asserted with confidence < 0.5.
+     Aliased to --k-unknown on purpose: the visual claim is "this is closer to
+     unknown than its color suggests". A separate hue would imply a fifth
+     class, and there is no fifth class. */
+  --k-smell: var(--k-unknown);
+
+  /* ═══ TYPE ════════════════════════════════════════════════════════════════
+     NO WEBFONTS. Not a preference — an invariant. The report must open from
+     file://, survive being emailed, and issue zero external requests, which
+     rules out every hosted face. System stacks are the honest answer; a
+     bundled base64 face would add ~80KB to an artifact whose whole argument
+     is that it depends on nothing.
+
+     The two families carry a PROVENANCE distinction, and this is the rule
+     most worth keeping: MONO IS QUOTED FROM THE WORLD, SANS IS KEEL TALKING.
+     Node names, file paths, commands, exit codes, class names, hashes — mono,
+     because Keel did not write them. Prose, headings, arguments, and
+     annotations — sans, because Keel did. A reader can tell claim from
+     evidence at a glance without reading a word.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, system-ui, sans-serif;
+  --k-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                 "Cascadia Mono", Consolas, monospace;
+
+  --k-fs-ratio: clamp(64px, 13vw, 128px);   /* the grounding ratio, and only it */
+  --k-fs-display: clamp(30px, 5.2vw, 46px); /* page hero */
+  --k-fs-h1: 24px;
+  --k-fs-h2: 19px;
+  --k-fs-h3: 16px;
+  --k-fs-lede: 19px;
+  --k-fs-body: 16px;
+  --k-fs-ui: 15px;                          /* dense report UI */
+  --k-fs-sm: 14px;
+  --k-fs-xs: 12.5px;
+  --k-fs-micro: 11px;                       /* eyebrows, table headers */
+
+  --k-lh-ratio: 0.9;
+  --k-lh-tight: 1.18;
+  --k-lh-snug: 1.35;
+  --k-lh-body: 1.65;
+
+  /* Three weights. There is no 700: on a near-black canvas heavy strokes
+     bloom, and the halation costs more legibility than the emphasis buys. */
+  --k-fw-regular: 400;
+  --k-fw-medium: 500;
+  --k-fw-semibold: 600;
+
+  --k-track-ratio: -0.045em;
+  --k-track-display: -0.022em;
+  --k-track-tight: -0.01em;
+  --k-track-normal: 0;
+  --k-track-eyebrow: 0.18em;   /* uppercase section labels */
+  --k-track-brand: 0.22em;     /* the wordmark only */
+
+  /* ═══ SPACE ═══════════════════════════════════════════════════════════════
+     4px grid. Measures are capped tight: a verdict list read at 1400px wide
+     loses the row it started on, and this artifact is read row by row.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-space-0: 0;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+  --k-space-16: 64px;
+  --k-space-20: 80px;
+  --k-space-24: 96px;
+
+  --k-measure-read: 760px;     /* prose column — site, docs */
+  --k-measure-report: 1080px;  /* report shell: graph + verdict table */
+  --k-measure-prose: 62ch;     /* lede / paragraph wrap */
+
+  /* ═══ RADIUS ══════════════════════════════════════════════════════════════
+     Small. Keel's surfaces are cells, rows, and records — the vocabulary of a
+     ledger. Generous rounding reads as consumer-soft and undersells that the
+     numbers on screen are accounting, not a dashboard.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-r-xs: 3px;
+  --k-r-sm: 4px;
+  --k-r-md: 6px;
+  --k-r-lg: 8px;
+  --k-r-xl: 12px;
+  --k-r-pill: 999px;           /* tags and class chips only */
+
+  /* ═══ MOTION ══════════════════════════════════════════════════════════════
+     Fast and flat. Instruments settle; they do not perform. No overshoot, no
+     bounce, nothing above 200ms. Motion here exists to preserve object
+     continuity across a state change, never to draw attention to one.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ease: cubic-bezier(0.2, 0, 0.38, 1);
+  --k-dur-fast: 90ms;
+  --k-dur-base: 160ms;
+
+  /* ═══ GRAPH MARKS ═════════════════════════════════════════════════════════
+     The node graph is one mark per node. SQUARES, not circles: a circle in a
+     verification UI reads as a status dot, and a status dot is exactly the
+     unaccountable green light Keel exists to criticize. A square reads as a
+     cell in a ledger. Sized to stay legible at 200 nodes.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-mark: 10px;
+  --k-mark-gap: 3px;
+  --k-mark-r: 2px;
+  --k-mark-stroke: 1.5px;      /* smell ring on an anchored mark */
+
+  /* ═══ FOCUS ═══════════════════════════════════════════════════════════════
+     Two-stop ring: a bg-colored inset so the accent never touches the element
+     edge, then the accent. Visible on every surface step without a per-context
+     override. */
+  --k-focus-ring: 0 0 0 2px var(--k-bg-0), 0 0 0 4px var(--k-accent);
+}
+/* ══════════ END TOKENS ══════════ */
+
+/* ══════════ tm-* — stage layer. Arranges tokens. Introduces no palette. ══════════
+   The accent is the narrator's hue and never encodes a verdict. The four class
+   colours are data; nothing here is chrome-coloured with them. Marks are squares.
+   No check glyphs anywhere, including in quoted output. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-0);
+  color: var(--k-ink-1);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-body);
+  line-height: var(--k-lh-body);
+}
+
+.tm-wrap { max-width: 1180px; margin: 0 auto; padding: var(--k-space-10) var(--k-space-6) var(--k-space-20); }
+
+/* ── masthead ────────────────────────────────────────────────────────── */
+.tm-mast { border-bottom: 1px solid var(--k-line-strong); padding-bottom: var(--k-space-6); margin-bottom: var(--k-space-8); }
+.tm-eyebrow {
+  font-size: var(--k-fs-xs); text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--k-accent); font-weight: var(--k-fw-medium); margin-bottom: var(--k-space-3);
+}
+.tm-mast h1 {
+  font-size: var(--k-fs-h1); line-height: var(--k-lh-tight); font-weight: var(--k-fw-semibold);
+  color: var(--k-ink-0); margin: 0 0 var(--k-space-4);
+}
+.tm-lede { font-size: var(--k-fs-lede); line-height: var(--k-lh-snug); color: var(--k-ink-2); max-width: var(--k-measure-prose); margin: 0; }
+
+/* ── budget strip ────────────────────────────────────────────────────── */
+.tm-budget { display: flex; flex-wrap: wrap; gap: var(--k-space-6); margin-top: var(--k-space-6); }
+.tm-budget div { border-left: 2px solid var(--k-accent-line); padding-left: var(--k-space-3); }
+.tm-budget dt { font-size: var(--k-fs-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--k-ink-3); margin: 0 0 2px; }
+.tm-budget dd { margin: 0; font-family: var(--k-font-mono); font-size: var(--k-fs-h3); color: var(--k-ink-0); }
+
+/* ── sections ────────────────────────────────────────────────────────── */
+.tm-sec { margin-top: var(--k-space-12); }
+.tm-sec > h2 {
+  font-size: var(--k-fs-h2); font-weight: var(--k-fw-semibold); color: var(--k-ink-0);
+  margin: 0 0 var(--k-space-2); line-height: var(--k-lh-tight);
+}
+.tm-sec > .tm-sub { color: var(--k-ink-3); font-size: var(--k-fs-sm); margin: 0 0 var(--k-space-5); max-width: var(--k-measure-prose); }
+
+/* ── tables ──────────────────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; font-size: var(--k-fs-sm); }
+th, td { text-align: left; padding: var(--k-space-3) var(--k-space-4) var(--k-space-3) 0; border-bottom: 1px solid var(--k-line); vertical-align: top; }
+th { font-size: var(--k-fs-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--k-ink-3); font-weight: var(--k-fw-medium); border-bottom-color: var(--k-line-strong); }
+td.tm-t, th.tm-t { font-family: var(--k-font-mono); color: var(--k-ink-2); white-space: nowrap; width: 1%; padding-right: var(--k-space-5); }
+tr.tm-peak td { background: var(--k-accent-wash); }
+
+/* ── the script ──────────────────────────────────────────────────────── */
+.tm-beat { border-left: 2px solid var(--k-line-strong); padding: 0 0 var(--k-space-6) var(--k-space-5); margin-bottom: var(--k-space-2); position: relative; }
+.tm-beat:last-child { padding-bottom: 0; }
+.tm-beat.is-peak { border-left-color: var(--k-accent); }
+.tm-beat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--k-space-3); margin-bottom: var(--k-space-3); }
+.tm-clock { font-family: var(--k-font-mono); font-size: var(--k-fs-h3); color: var(--k-ink-0); font-weight: var(--k-fw-medium); }
+.tm-beat-name { font-size: var(--k-fs-ui); color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+.tm-meta { font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-3); }
+.tm-screen {
+  font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2);
+  background: var(--k-bg-2); border: 1px solid var(--k-line); border-radius: var(--k-r-sm);
+  padding: 2px var(--k-space-2); display: inline-block;
+}
+
+/* spoken lines — the thing you actually read on stage */
+.tm-say {
+  font-size: var(--k-fs-lede); line-height: var(--k-lh-snug); color: var(--k-ink-0);
+  max-width: var(--k-measure-read); margin: 0 0 var(--k-space-4);
+  padding-left: var(--k-space-4); border-left: 2px solid var(--k-accent);
+}
+.tm-say em { color: var(--k-accent); font-style: normal; font-weight: var(--k-fw-medium); }
+.tm-cue { font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-3); display: block; margin-bottom: var(--k-space-2); }
+.tm-cue b { color: var(--k-accent); font-weight: var(--k-fw-medium); }
+
+/* ── language toggle ─────────────────────────────────────────────────────
+   Both languages are ALWAYS in the DOM. The toggle only hides one, so a
+   JS-less browser and the printer both show everything rather than silently
+   losing a script. The class is set on <html> by a head script, before first
+   paint, so there is no flash of the wrong language on stage. */
+html.l-es [data-l='en'] { display: none; }
+html.l-en [data-l='es'] { display: none; }
+
+.tm-langbar { display: flex; gap: var(--k-space-2); align-items: center; margin-top: var(--k-space-5); }
+.tm-langbar span { font-size: var(--k-fs-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--k-ink-3); margin-right: var(--k-space-2); }
+.tm-langbar button {
+  font-family: var(--k-font-mono); font-size: var(--k-fs-xs);
+  background: var(--k-bg-1); color: var(--k-ink-2);
+  border: 1px solid var(--k-line-strong); border-radius: var(--k-r-sm);
+  padding: 4px var(--k-space-3); cursor: pointer;
+}
+.tm-langbar button:hover { color: var(--k-ink-0); border-color: var(--k-accent-line); }
+html.l-es #tm-b-es, html.l-en #tm-b-en { color: var(--k-bg-0); background: var(--k-accent); border-color: var(--k-accent); }
+.tm-silent {
+  font-size: var(--k-fs-sm); color: var(--k-ink-3); font-style: italic;
+  max-width: var(--k-measure-read); margin: 0 0 var(--k-space-4); padding-left: var(--k-space-4);
+  border-left: 2px dashed var(--k-line-strong);
+}
+.tm-do { font-size: var(--k-fs-sm); color: var(--k-ink-2); margin: 0 0 var(--k-space-3); max-width: var(--k-measure-prose); }
+.tm-do strong { color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+
+/* ── callouts ────────────────────────────────────────────────────────── */
+.tm-note {
+  border: 1px solid var(--k-accent-line); background: var(--k-accent-wash);
+  border-radius: var(--k-r-md); padding: var(--k-space-4) var(--k-space-5);
+  margin: var(--k-space-5) 0; max-width: var(--k-measure-prose); font-size: var(--k-fs-sm);
+}
+.tm-note b { color: var(--k-ink-0); }
+.tm-warn {
+  border: 1px dashed var(--k-line-strong); background: var(--k-bg-1);
+  border-radius: var(--k-r-md); padding: var(--k-space-4) var(--k-space-5);
+  margin: var(--k-space-5) 0; max-width: var(--k-measure-prose); font-size: var(--k-fs-sm);
+}
+.tm-warn b { color: var(--k-ink-0); }
+
+/* ── marks: squares, never circles, never a status dot ───────────────── */
+.tm-mark { display: inline-block; width: 9px; height: 9px; border-radius: var(--k-mark-r); vertical-align: baseline; margin-right: 6px; }
+.tm-mark.a { background: var(--k-anchored); }
+.tm-mark.s { background: var(--k-self-referential); }
+.tm-mark.u { background: transparent; border: 1px dashed var(--k-unknown, var(--k-ink-3)); }
+.tm-mark.n { background: transparent; border: 1px dashed var(--k-ink-3); }
+
+code, .tm-mono { font-family: var(--k-font-mono); font-size: 0.94em; color: var(--k-ink-1); }
+pre {
+  font-family: var(--k-font-mono); font-size: var(--k-fs-xs); line-height: 1.55;
+  background: var(--k-bg-1); border: 1px solid var(--k-line); border-radius: var(--k-r-md);
+  padding: var(--k-space-4); overflow-x: auto; color: var(--k-ink-2); margin: var(--k-space-3) 0;
+}
+ul, ol { max-width: var(--k-measure-prose); padding-left: var(--k-space-5); }
+li { margin-bottom: var(--k-space-2); }
+.tm-num { font-family: var(--k-font-mono); color: var(--k-ink-0); }
+hr { border: 0; border-top: 1px solid var(--k-line); margin: var(--k-space-8) 0; }
+a { color: var(--k-accent); }
+
+/* ── print: rung 5 of the ladder is paper ────────────────────────────── */
+@media print {
+  body { background: #fff; color: #111; }
+  .tm-wrap { max-width: none; padding: 0; }
+  /* Paper is rung 4. Print BOTH scripts — a paper fallback that dropped the
+     language you needed would be worse than no paper at all. */
+  html.l-es [data-l='en'], html.l-en [data-l='es'] { display: block; }
+  .tm-langbar { display: none; }
+  .tm-say { color: #000; border-left-color: #666; }
+  .tm-note, .tm-warn { background: #fafafa; border-color: #999; }
+  .tm-sec { break-inside: avoid; page-break-inside: avoid; }
+  .tm-beat { break-inside: avoid; page-break-inside: avoid; }
+  pre { background: #f4f4f4; color: #111; }
+  a { color: #111; text-decoration: underline; }
+}
+</style>
+</head>
+<body>
+<div class="tm-wrap">
+
+<header class="tm-mast">
+  <div class="tm-eyebrow">stage sheet · Platanus Build Night</div>
+  <h1>Two minutes. One video you talk over, one page that is already live.</h1>
+  <p class="tm-lede">
+    The 60-second cut is a silent auto-advancing deck — it carries structure and
+    numbers so your voice can carry stakes. Then you stop talking about the tool
+    and show fifteen repositories it already measured.
+  </p>
+  <dl class="tm-budget">
+    <div><dt>stage time</dt><dd>2:00</dd></div>
+    <div><dt>video</dt><dd>0:60.05</dd></div>
+    <div><dt>live model calls</dt><dd>0</dd></div>
+    <div><dt>terminal switches</dt><dd>0</dd></div>
+    <div><dt>minimum viable pitch</dt><dd>cold open + video</dd></div>
+  </dl>
+  <div class="tm-langbar">
+    <span>guion hablado</span>
+    <button id="tm-b-es" type="button" onclick="tmLang('l-es')">Español</button>
+    <button id="tm-b-en" type="button" onclick="tmLang('l-en')">English</button>
+    <span style="margin-left:8px">tecla <code>E</code></span>
+  </div>
+</header>
+
+<div class="tm-note">
+  <b>The one structural fact.</b> The video has <b>no audio track</b> — it is
+  ninety seconds of silent motion graphics, cut to sixty for this. You are not
+  playing a video and then talking. You are talking the entire time, and the
+  video is your slide deck advancing itself on a clock you cannot pause. Every
+  scene ends on a 2–3.5&thinsp;s hold; that hold is your slack.
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>At a glance</h2>
+  <p class="tm-sub">Five segments. One screen switch, at 1:11, from video to browser.</p>
+  <table>
+    <thead>
+      <tr><th class="tm-t">T+</th><th class="tm-t">dur</th><th>screen</th><th>what it does</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="tm-t">0:00</td><td class="tm-t">0:11</td><td><span class="tm-screen">black</span></td><td>The hook. No visual — the room looks at you.</td></tr>
+      <tr><td class="tm-t">0:11</td><td class="tm-t">1:00</td><td><span class="tm-screen">keel-pitch-60.mp4</span></td><td>Problem &rarr; thesis &rarr; classes &rarr; ratio &rarr; close, narrated live.</td></tr>
+      <tr><td class="tm-t">1:11</td><td class="tm-t">0:25</td><td><span class="tm-screen">broomva.github.io/keel/reports/</span></td><td>Fifteen repos, pooled 0.853, and we are the first row.</td></tr>
+      <tr class="tm-peak"><td class="tm-t">1:36</td><td class="tm-t">0:16</td><td><span class="tm-screen">same page</span></td><td><b>The peak.</b> Our own counter-metric caught our own drift.</td></tr>
+      <tr><td class="tm-t">1:52</td><td class="tm-t">0:08</td><td><span class="tm-screen">same page</span></td><td>The zoom-out line. Stop.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>The script</h2>
+  <p class="tm-sub">
+    Accented rules are spoken. Dashed rules are deliberate silence — the screen
+    is doing the work, and talking over a reveal destroys it. Toggle
+    <b>Español / English</b> above, or press <code>E</code>. Word counts are
+    budgeted at <b>2.5&thinsp;w/s for English and 3.0&thinsp;w/s for Spanish</b>;
+    Spanish runs 15–20% longer for the same content, so the two scripts are
+    counted separately and the tight beats are marked.
+  </p>
+
+  <div class="tm-note">
+    <b>Speaking Spanish over English visuals is fine and normal</b> — but it
+    changes one instruction. The on-screen thesis in S2 types at 44
+    characters/second, so it finishes in <b>2.5&thinsp;s</b> while saying it
+    aloud takes about <b>8&thinsp;s</b> in either language. Do not race the
+    typing. Start when it starts, finish long after it has stopped; the sentence
+    sits on screen for the rest of the scene.
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">0:00</span>
+      <span class="tm-beat-name">Cold open · apertura en frío</span>
+      <span class="tm-meta">11s · screen black</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 35 palabras</span>
+      Un agente escribió el código. Un agente escribió los tests. Un agente
+      revisó el pull request. Tu pipeline está en verde.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">— pausa. déjala respirar. —</span>
+      Y ninguna señal de ese loop vino de <em>afuera</em> del sistema que produjo
+      el trabajo.
+    </p>
+
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 34 words</span>
+      An agent wrote the code. An agent wrote the tests. An agent reviewed the
+      pull request. Your pipeline is green.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">— beat. let it sit. —</span>
+      And not one signal in that loop came from <em>outside</em> the system that
+      produced the work.
+    </p>
+
+    <p class="tm-do">Then start the video. <strong>Do not narrate the start</strong> — the hard cut into S1 is the transition.</p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">0:11</span>
+      <span class="tm-beat-name">S1 · el problema</span>
+      <span class="tm-meta">12s</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–6s · cuatro filas verdes en pantalla · 12 palabras</span>
+      Cuatro checks. Todos en verde. Ahora mira qué <em>produjo</em> realmente
+      cada uno.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–6s · four green rows on screen · 13 words</span>
+      Four checks. All green. Now look at what actually <em>produced</em> each one.
+    </p>
+
+    <p class="tm-silent" data-l="es" lang="es">
+      6–12s — silencio. En 7,1&thinsp;s los cuatro chips <code>passed</code> se
+      dan vuelta a <code>self_referential</code> uno por uno; en 8,6&thinsp;s la
+      pantalla imprime <b>&ldquo;Green does not mean verified.&rdquo;</b> Es una
+      revelación visual y un remate. No digas nada encima.
+    </p>
+    <p class="tm-silent" data-l="en" lang="en">
+      6–12s — silence. At 7.1s the four <code>passed</code> chips flip to
+      <code>self_referential</code> one by one; at 8.6s the screen prints
+      <b>&ldquo;Green does not mean verified.&rdquo;</b> That is a visual reveal
+      and a punchline. Say nothing over it.
+    </p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">0:23</span>
+      <span class="tm-beat-name">S2 · la pregunta</span>
+      <span class="tm-meta">10s · the thesis</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–8s · empieza con el tipeo, NO lo persigas · 24 palabras</span>
+      Un check solo es un check si la señal que lee viene de un lugar donde lo
+      que se está verificando <em>no puede escribir</em>.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–8s · start with the type-on, do NOT chase it · 22 words</span>
+      A check is only a check if the signal it reads comes from somewhere the
+      thing being checked <em>cannot write to</em>.
+    </p>
+
+    <p class="tm-silent" data-l="es" lang="es">
+      8–10s — silencio. El diagrama de dos columnas ya está arriba y se lee solo.
+    </p>
+    <p class="tm-silent" data-l="en" lang="en">
+      8–10s — silence. The two-column diagram is already up and reads itself.
+    </p>
+
+    <div class="tm-note">
+      This is the one sentence the room must leave with, so it is the one place
+      where saying what the screen shows is <b>correct</b> rather than wasteful.
+      Everywhere else, reading the screen aloud burns a channel.
+    </div>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">0:33</span>
+      <span class="tm-beat-name">S3 · las cuatro clases</span>
+      <span class="tm-meta">18s</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–3s · 46 palabras en total</span>
+      Cada arista de verificación recibe exactamente una clase.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">6–11s · entran las filas 2 y 3</span>
+      Dos reglas la hacen difícil de manipular. <em>Unknown falla cerrado</em>:
+      cuenta en tu contra exactamente igual que self_referential.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">12–16s · fila 4</span>
+      Y not_a_check es la única clase fuera del denominador, así que carga la
+      misma exigencia de prueba que cualquier veredicto.
+    </p>
+
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–3s · 45 words total</span>
+      Every verification edge gets exactly one class.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">6–11s · rows 2 and 3 landing</span>
+      Two rules make it hard to game. <em>Unknown fails closed</em> — it counts
+      against you exactly like self_referential.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">12–16s · row 4</span>
+      And not_a_check is the only class outside the denominator — so it carries
+      the same burden of proof as any verdict.
+    </p>
+
+    <p class="tm-do" data-l="es" lang="es"><strong>No leas los nombres de las cuatro clases.</strong> Están en pantalla a 44&thinsp;px en mono. Tu voz es para las dos reglas que hacen que el número no se pueda comprar.</p>
+    <p class="tm-do" data-l="en" lang="en"><strong>Do not read the four class names.</strong> They are on screen at 44&thinsp;px in mono. Your voice is for the two rules that make the number unshoppable.</p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">0:51</span>
+      <span class="tm-beat-name">S4 · el ratio</span>
+      <span class="tm-meta">12s · go slow · habla lento</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–4s · 13 palabras en total</span>
+      Lo corrimos sobre nosotros mismos primero.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–4s · 12 words total</span>
+      We ran it on ourselves first.
+    </p>
+
+    <p class="tm-silent" data-l="es" lang="es">
+      4–9s — silencio. Las 13 celdas <code>not_a_check</code> salen del
+      denominador, la fórmula se resuelve, y el número cuenta desde
+      <code>0.000</code> durante 2,9&thinsp;s. <b>Esa animación es tu redoble.</b>
+      Hablar encima de un contador tira a la basura el único suspenso que tiene
+      el video.
+    </p>
+    <p class="tm-silent" data-l="en" lang="en">
+      4–9s — silence. The 13 <code>not_a_check</code> cells drift out of the
+      denominator, the formula resolves, and the number counts up from
+      <code>0.000</code> over 2.9&thinsp;s. <b>That animation is your drumroll.</b>
+      Talking through a count-up throws away the only suspense the reel has.
+    </p>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">9–12s · el número ya aterrizó</span>
+      <em>Cero coma tres cinco siete.</em> Eso es Keel midiéndose a sí mismo.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">9–12s · the number has landed</span>
+      <em>Point three five seven.</em> That is Keel measuring Keel.
+    </p>
+
+    <div class="tm-note">
+      <b>The number on screen is the number on the page.</b> S4 renders
+      <span class="tm-num">0.357</span> from the corpus run — the same figure,
+      under the same 25-node cap, that the live page prints in its first row 25
+      seconds later. So you <i>can</i> say it here, and saying it twice is the
+      point: you name your own number before the room sees it published beside
+      fourteen others.
+      <br /><br />
+      The 20-slide deck still carries <span class="tm-num">0.421</span> on slide
+      8 (the full-population dogfood over all 19 classified edges). If you open
+      the deck in Q&amp;A, the reconciliation is the first card below.
+    </div>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">1:03</span>
+      <span class="tm-beat-name">S7 · cierre de marca</span>
+      <span class="tm-meta">8s</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–8s · la marca y la línea de instalación están en pantalla · 21 palabras</span>
+      Se distribuye como un agent skill. Una línea, dentro del harness que ya
+      usas. No se transmite nada a ninguna parte.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–8s · mark and install line are on screen · 19 words</span>
+      It ships as an agent skill. One line, inside whatever harness you already
+      run. Nothing is transmitted anywhere.
+    </p>
+
+    <p class="tm-do">Visuals here are neutral — no reveal to protect. This is free speaking room, which is why the distribution claim lives here rather than costing its own segment.</p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">1:11</span>
+      <span class="tm-beat-name">El corpus — cambia al navegador</span>
+      <span class="tm-meta">25s</span>
+    </div>
+    <p class="tm-do"><strong>Tab 1, already loaded and scrolled to the top.</strong> The video's last frame holds; take the switch on the hold, not mid-scene.</p>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 0–6s · la página está arriba · 70 palabras en total</span>
+      Esto está en vivo ahora mismo. Quince repositorios, cada arista de
+      verificación clasificada por quién produce la señal.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">6–13s · apunta a la cifra agregada</span>
+      Agregado sobre todo el corpus: <em>cero coma ocho cinco tres</em>. Ciento
+      veintidós aristas ancladas de ciento cuarenta y tres.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue">13–25s · apunta a la primera fila</span>
+      Y la primera fila somos nosotros. Ese mismo <em>cero coma tres cinco
+      siete</em>: el número más bajo de nuestro propio corpus. Flask, requests,
+      commander, todos por encima. Nadie ajustó esto para halagar al autor.
+    </p>
+
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 0–8s · page is up · 58 words total</span>
+      This is live right now. Fifteen repositories, every verification edge
+      classified by who produces the signal.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">8–15s · point at the pooled figure</span>
+      Pooled across the corpus: <em>point eight five three</em>. A hundred and
+      twenty-two anchored edges out of a hundred and forty-three.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue">15–25s · point at row one</span>
+      And the first row is us. That same <em>point three five seven</em> — the
+      lowest number in our own corpus. Flask, requests, commander, all above us.
+      Nobody tuned this to flatter the author.
+    </p>
+
+    <div class="tm-note">
+      <b>Decimales en español.</b> La página imprime <code>0.853</code> con
+      punto, pero en voz alta va con coma: <i>&ldquo;cero coma ocho cinco
+      tres&rdquo;</i>. Decir &ldquo;cero punto&rdquo; también se entiende en la
+      sala; lo que no puedes hacer es dudar a mitad del número. Elige uno en el
+      ensayo y no lo cambies.
+    </div>
+  </div>
+
+  <div class="tm-beat is-peak">
+    <div class="tm-beat-head">
+      <span class="tm-clock">1:36</span>
+      <span class="tm-beat-name">La deriva — este es el clímax</span>
+      <span class="tm-meta">16s · slow down · el beat más apretado</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 47 palabras · 15,6s de 16s — sin margen</span>
+      Después nuestra propia librería de probes se desvió. Empezó a archivar
+      checks reales como &ldquo;no cuenta&rdquo;, lo que <em>achica el
+      denominador y sube el puntaje</em>.
+    </p>
+    <p class="tm-say" data-l="es" lang="es">
+      La auditoría lo detectó antes de que llegara a un número publicado.
+      Nuestro propio modo de falla, detectado por nuestra propia contra-métrica.
+    </p>
+
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 38 words</span>
+      Then our own probe library drifted. It started filing real checks as
+      &ldquo;doesn't count&rdquo; — which <em>shrinks the denominator and raises
+      the score</em>.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      The audit caught it before it reached a published number. Our own failure
+      mode, caught by our own counter-metric.
+    </p>
+
+    <div class="tm-note">
+      <b>Why this beats &ldquo;we came last&rdquo;.</b> Anyone can publish an
+      unflattering number about themselves. Almost nobody can show the mechanism
+      they built to catch themselves <i>actually catching them</i> — in the
+      direction that would have flattered them. This is the hardest claim in the
+      pitch and it is fully measured. If you land one thing, land this.
+    </div>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-clock">1:52</span>
+      <span class="tm-beat-name">Cierre</span>
+      <span class="tm-meta">8s</span>
+    </div>
+
+    <p class="tm-say" data-l="es" lang="es">
+      <span class="tm-cue"><b>ES</b> · 22 palabras</span>
+      La madurez AI-native no es cuánto de tu stack está automatizado. Es qué
+      parte de tu stack tus agentes <em>no pueden escribir</em>.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      <span class="tm-cue"><b>EN</b> · 21 words</span>
+      AI-native maturity is not how much of your stack is automated. It is how
+      much of it your agents <em>cannot author</em>.
+    </p>
+
+    <p class="tm-do" data-l="es" lang="es">Después <strong>para</strong>. Sin resumen, sin &ldquo;gracias por su tiempo&rdquo;. La sala se lleva una sola frase y es esta.</p>
+    <p class="tm-do" data-l="en" lang="en">Then <strong>stop</strong>. No summary, no thank-you-for-your-time. The room remembers one sentence and this is the one.</p>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>Pre-flight</h2>
+  <p class="tm-sub">Six items. There is no terminal in this pitch, so most of the four-minute sheet's failure surface is simply gone.</p>
+  <ol>
+    <li><b>The video file plays.</b> <code>video/out/keel-pitch-60.mp4</code> — 60.05&thinsp;s, 1920&times;1080, 30&thinsp;fps. Open it once, full screen, on the machine that will present. Confirm it ends on the close lockup and does <b>not</b> loop.</li>
+    <li><b>Player will not show chrome.</b> QuickTime full-screen hides controls after a second; a browser tab does not. Use the player, not the tab.</li>
+    <li><b>Tab 1 loaded and scrolled to top:</b> <code>https://broomva.github.io/keel/reports/</code>. Verified 200 at time of writing. Confirm the pooled figure and the first table row are both visible without scrolling at projector resolution — if not, zoom out one step now.</li>
+    <li><b>Tab 2, unopened backup:</b> <code>site/reports/index.html</code> from the clone, openable from <code>file://</code>. This is the whole demo with the network down.</li>
+    <li><b>Rehearse the one switch</b> — player &rarr; browser — on the actual keys, at 1:11. It is the only mechanical risk left.</li>
+    <li><b>Two timed dry runs with a stopwatch.</b> One straight through; one where you deliberately overrun the cold open by five seconds, to feel where the cut list bites. <span class="tm-meta">(Not doable by an agent. Not done.)</span></li>
+  </ol>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>Fallback ladder</h2>
+  <p class="tm-sub">Rung 1 is the pitch. Every rung below is still a complete pitch, one claim smaller. Never climb back up mid-run.</p>
+  <table>
+    <thead><tr><th class="tm-t">rung</th><th>what broke</th><th>what you do</th><th>what you lose</th></tr></thead>
+    <tbody>
+      <tr><td class="tm-t">1</td><td>nothing</td><td>video, then the live page</td><td>&mdash;</td></tr>
+      <tr><td class="tm-t">2</td><td>network gone</td><td>video, then <code>site/reports/index.html</code> from the clone</td><td>&ldquo;this is live right now&rdquo; — so do not say it</td></tr>
+      <tr><td class="tm-t">3</td><td>video will not play</td><td>the corpus page alone, and talk the arc over the table</td><td>the reel; the argument survives intact</td></tr>
+      <tr><td class="tm-t">4</td><td>laptop or projector gone</td><td>the cold open, the thesis, and the three numbers from memory</td><td>the demo — not the argument</td></tr>
+    </tbody>
+  </table>
+  <div class="tm-warn">
+    <b>Rung 2 is one sentence away from a lie.</b> The phrase &ldquo;this is live
+    right now&rdquo; is only true on rung 1. Off-network the same page is a
+    committed file, which is still real and still yours — say <i>&ldquo;this is
+    the published corpus report&rdquo;</i> instead. In a pitch about ungrounded
+    claims, an overclaim in the fallback is the one unrecoverable failure.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>Numbers — all measured</h2>
+  <p class="tm-sub">Source: <code>reports/corpus-summary.json</code>, generated 2026-07-25. A number without its denominator is the move this product exists to expose.</p>
+  <table>
+    <thead><tr><th>figure</th><th class="tm-t">value</th><th>the denominator it travels with</th></tr></thead>
+    <tbody>
+      <tr><td>Pooled corpus grounding ratio</td><td class="tm-t">0.853</td><td>122 anchored / 143 classified edges, 14 repositories, 190 <code>not_a_check</code> excluded</td></tr>
+      <tr><td>Mean of per-repo ratios</td><td class="tm-t">0.867</td><td>14 targets with a denominator. Printed beside the pooled figure because the mean hides size and the pooled hides spread</td></tr>
+      <tr class="tm-peak"><td>Keel, in its own corpus</td><td class="tm-t">0.357</td><td>5 anchored of 14 classified · 25 judged of 32 gathered — 78% of the surface. <b>Lowest in the corpus.</b> This is the number in the video <i>and</i> in the first row of the live page</td></tr>
+      <tr><td>Keel, full-population dogfood</td><td class="tm-t">0.421</td><td>8 anchored of 19 classified · 32 gathered, 13 <code>not_a_check</code>. Not spoken in this pitch; still on slide 8 of the 20-slide deck</td></tr>
+      <tr><td>Corpus size</td><td class="tm-t">15</td><td>declared and pinned by 40-char sha; 14 measured, 1 gathered nothing and says so</td></tr>
+      <tr><td>Probe library growth</td><td class="tm-t">0 &rarr; 29</td><td>across the sequential run, from an empty library. R&sup2; 0.99</td></tr>
+      <tr><td>Estimated tokens per node</td><td class="tm-t">&minus;66.5%</td><td>R&sup2; <b>0.28</b> — noisy, and the chart says so on its face rather than in a footnote</td></tr>
+      <tr><td>ε-audit disagreements</td><td class="tm-t">2 of 13</td><td>verdicts from the over-matching probe; blast radius checked, not assumed; neither reached a published report</td></tr>
+      <tr><td>Test suite</td><td class="tm-t">153 pass</td><td><code>tsc --noEmit</code> clean; CI green on ubuntu <i>and</i> macOS</td></tr>
+    </tbody>
+  </table>
+  <div class="tm-warn">
+    <b>Do not say the corpus proves most verification is ungrounded.</b> Pooled
+    0.853 is a <i>high</i> number, and most of the corpus is mature hand-maintained
+    OSS that scores at or near 1.0. What the table actually shows is spread —
+    from 0.357 to 1.000 — and that the lowest scores cluster in the newest,
+    most-generated repositories. That is an observation over 14 targets at a
+    25-node cap, not a law. State it that way or not at all.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>Cut list</h2>
+  <p class="tm-sub">In order. Cut from the top the moment you are ten seconds down at the 1:11 switch.</p>
+  <ol>
+    <li>&ldquo;Only the position changes.&rdquo; <span class="tm-meta">(S2, ~2s)</span></li>
+    <li>The <code>not_a_check</code> denominator rule. <span class="tm-meta">(S3, ~5s — keep &ldquo;unknown fails closed&rdquo;)</span></li>
+    <li>&ldquo;Flask, requests, commander, all above us.&rdquo; <span class="tm-meta">(corpus, ~4s)</span></li>
+    <li>The mean-of-targets figure, if you were going to add it. <span class="tm-meta">(never in the script; do not add it under time pressure)</span></li>
+    <li>Compress the drift beat to its second sentence only. <span class="tm-meta">(~7s — last resort)</span></li>
+  </ol>
+  <div class="tm-note">
+    <b>Never cut:</b> the thesis sentence at 0:23, the count-up silence at S4, and
+    the fact that the audit caught the drift <i>before it reached a published
+    number</i>. Those three are the pitch; everything else is support.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<section class="tm-sec">
+  <h2>The four questions you will actually get</h2>
+  <p class="tm-sub">Una respiración cada una. Di la línea acentuada y cállate. — One breath each. Say the accented line and stop talking.</p>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-beat-name" data-l="es" lang="es">&ldquo;Tu deck dice 0.421 pero la página dice 0.357.&rdquo;</span>
+      <span class="tm-beat-name" data-l="en" lang="en">&ldquo;Your deck says 0.421 but the page says 0.357.&rdquo;</span>
+    </div>
+    <p class="tm-say" data-l="es" lang="es">
+      Los dos son nuestros y los dos están publicados. <em>0,421</em> es la
+      corrida sobre la población completa, 8 de 19 aristas clasificadas;
+      <em>0,357</em> es la corrida del corpus con el tope de 25 nodos, el mismo
+      que corrió cada repo de esa página. Publicamos los dos en vez de elegir el
+      que nos favorece — que es exactamente la conducta que este proyecto existe
+      para detectar. El número que mostré es el más bajo de los dos.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      Both are ours and both are published. <em>0.421</em> is the full-population
+      run over all 19 classified edges; <em>0.357</em> is the corpus run under
+      the 25-node cap every repo on that page ran under. We publish both rather
+      than picking the flattering one — which is the entire behaviour this
+      project exists to detect. The one I showed you is the lower of the two.
+    </p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-beat-name" data-l="es" lang="es">&ldquo;¿No es subjetivo el clasificador?&rdquo;</span>
+      <span class="tm-beat-name" data-l="en" lang="en">&ldquo;Isn't the classifier subjective?&rdquo;</span>
+    </div>
+    <p class="tm-say" data-l="es" lang="es">
+      Cada veredicto trae un argumento causal falsable: qué produce esta señal, y
+      si el actor puede escribirla. <em>El argumento es la evidencia</em>, y lo
+      puedes verificar en segundos sin confiar en mí ni en el modelo.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      Every verdict ships a falsifiable causal-path argument — what produces this
+      signal, and can the actor write to it. <em>The argument is the evidence</em>,
+      and you can check it in seconds without trusting me or the model.
+    </p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-beat-name" data-l="es" lang="es">&ldquo;¿Un ratio alto significa que el repo está bien testeado?&rdquo;</span>
+      <span class="tm-beat-name" data-l="en" lang="en">&ldquo;Does a high ratio mean the repo is well tested?&rdquo;</span>
+    </div>
+    <p class="tm-say" data-l="es" lang="es">
+      No. Forma, no calidad — <em>un repo puede estar 100% anclado con tests
+      pésimos</em>. El anclaje dice que la señal viene de afuera; no dice que la
+      señal sea suficiente.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      No. Shape, not quality — <em>a repo can be 100% anchored with terrible
+      tests</em>. Anchoring says the signal comes from outside; it does not say
+      the signal is sufficient.
+    </p>
+  </div>
+
+  <div class="tm-beat">
+    <div class="tm-beat-head">
+      <span class="tm-beat-name" data-l="es" lang="es">&ldquo;El mismo agente escribió el código y los tests — ¿qué prueba el verde?&rdquo;</span>
+      <span class="tm-beat-name" data-l="en" lang="en">&ldquo;The same agent wrote the code and the tests — what does green prove?&rdquo;</span>
+    </div>
+    <p class="tm-say" data-l="es" lang="es">
+      Que la ejecución está anclada y <em>el oráculo puede no estarlo</em>. El
+      runtime decide honestamente si pasa o falla, pero las aserciones se
+      escribieron dentro del límite de escritura, así que ambos pueden desviarse
+      juntos y seguir en verde. Clasificamos el eje de ejecución y nombramos ese
+      límite en vez de ascenderlo silenciosamente a prueba.
+    </p>
+    <p class="tm-say" data-l="en" lang="en">
+      That the execution is anchored and <em>the oracle may not be</em>. The
+      runtime honestly decides pass or fail, but the assertions were authored
+      inside the write boundary, so both can drift together and stay green. We
+      classify the execution axis and name that limit rather than silently
+      upgrading it to proof.
+    </p>
+  </div>
+
+  <p class="tm-do">
+    Deeper cards — sandbox behaviour, prompt injection, the <code>Snyk: High Risk</code>
+    panel, the business model — are in
+    <a href="../demo/objections.html">docs/demo/objections.html</a>. The 20-slide
+    deck at <a href="index.html">docs/pitch/index.html</a> is the Q&amp;A backstop:
+    press <code>O</code> for the overview grid and jump to slide 9 (corpus),
+    12 (routing) or 19 (scope).
+  </p>
+</section>
+
+<hr />
+<p class="tm-meta">
+  Keel · two-minute stage sheet · opens from <code>file://</code>, zero external
+  requests, prints to paper as rung 4. Tokens are a verbatim copy of
+  <code>skills/keel/design/tokens.css</code>; this sheet consumes the design
+  system and never edits it.
+</p>
+
+</div>
+<script>
+  /* The toggle only hides; it never removes. Both scripts stay in the DOM so
+     Cmd-F finds a line in either language and the printer gets both. */
+  function tmLang(cls) {
+    document.documentElement.className = cls;
+    try { localStorage.setItem('keel-tm-lang', cls); } catch (e) {}
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'e' || e.key === 'E') {
+      tmLang(document.documentElement.className === 'l-es' ? 'l-en' : 'l-es');
+    }
+  });
+</script>
+</body>
+</html>

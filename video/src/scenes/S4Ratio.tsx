@@ -15,26 +15,45 @@ import {font, fs, fw, k, lh, space, track, verdict} from '../theme';
 /**
  * Scene 4 — THE RATIO (12s)
  *
- * MEASURED. Every number in this scene is Keel's own self-measurement:
- *   anchored 8 · self_referential 11 · unknown 0 · not_a_check 13
- *   32 gathered edges · ratio = 8 / (8 + 11 + 0) = 0.421
+ * MEASURED. Every number in this scene is Keel's own self-measurement, taken
+ * from the corpus run published at broomva.github.io/keel/reports/ —
+ * `reports/corpus-summary.json`, target `keel` at 44f7e8d6cbdf:
+ *   anchored 5 · self_referential 9 · unknown 0 · not_a_check 11
+ *   25 judged of 32 gathered · ratio = 5 / (5 + 9 + 0) = 0.357
  *
- * THE RATIO NEVER TRAVELS ALONE. The absolute anchored count and the gathered
- * surface are on screen with it, always — a 1.0 over one edge and a 0.7 over
- * fifty are different claims, and a bare ratio rewards deleting checks.
+ * WHY THE CORPUS RUN AND NOT THE DOGFOOD RUN. Both are real and both are
+ * published: the full-population dogfood over all 19 classified edges scores
+ * 0.421, and this corpus run under the 25-node cap scores 0.357. The scene
+ * carries the corpus figure because that is the number a viewer can go and
+ * check on the live page, under the same cap every other target on it ran
+ * under. A hero number in the video that disagrees with the hero number on the
+ * site would be, in a product about ungrounded claims, the worst possible
+ * inconsistency to ship — and picking the higher of the two would be the exact
+ * behaviour Keel exists to detect.
+ *
+ * THE RATIO NEVER TRAVELS ALONE. The absolute anchored count and the coverage
+ * are on screen with it, always — a 1.0 over one edge and a 0.7 over fifty are
+ * different claims, and a bare ratio rewards deleting checks. Coverage here is
+ * JUDGED-of-GATHERED, not a whole surface: 7 of the 32 gathered edges carry no
+ * verdict under the cap, so they are in neither column and the label says so.
  */
 
 const COUNTS = {
-  anchored: 8,
-  self_referential: 11,
+  anchored: 5,
+  self_referential: 9,
   unknown: 0,
-  not_a_check: 13,
+  not_a_check: 11,
 } as const;
 
-const TOTAL =
-  COUNTS.anchored + COUNTS.self_referential + COUNTS.unknown + COUNTS.not_a_check; // 32
-const DENOM = COUNTS.anchored + COUNTS.self_referential + COUNTS.unknown; // 19
-const RATIO = COUNTS.anchored / DENOM; // 0.42105…
+/** The surface the gatherer could see. Printed beside the judged count because
+ *  a ratio over a sample must never read as a ratio over a repository. */
+const GATHERED = 32;
+
+const JUDGED =
+  COUNTS.anchored + COUNTS.self_referential + COUNTS.unknown + COUNTS.not_a_check; // 25
+const DENOM = COUNTS.anchored + COUNTS.self_referential + COUNTS.unknown; // 14
+const RATIO = COUNTS.anchored / DENOM; // 0.35714…
+const COVERAGE = Math.round((JUDGED / GATHERED) * 100); // 78
 
 const CELLS: {cls: keyof typeof COUNTS}[] = [
   ...Array.from({length: COUNTS.anchored}, () => ({cls: 'anchored' as const})),
@@ -81,14 +100,18 @@ export const S4Ratio: React.FC = () => {
         {/* ── the gathered surface, one mark per node ──────────────────── */}
         <div style={{width: 620, flex: 'none'}}>
           <Rise delay={F.gridLabel} dur={10} y={0}>
-            <Eyebrow color={k.ink3}>32 verification edges gathered</Eyebrow>
+            <Eyebrow color={k.ink3}>
+              {JUDGED} of {GATHERED} edges judged — {COVERAGE}% of the surface
+            </Eyebrow>
           </Rise>
           <div
             style={{
               marginTop: space.s6,
               display: 'grid',
-              gridTemplateColumns: 'repeat(8, 46px)',
-              gap: 14,
+              /* 25 judged nodes lay out as a clean 5x5. A ragged final row of
+                 one would read as a rendering accident rather than a count. */
+              gridTemplateColumns: 'repeat(5, 58px)',
+              gap: 16,
             }}
           >
             {CELLS.map((c, i) => {
@@ -107,7 +130,7 @@ export const S4Ratio: React.FC = () => {
                 >
                   <Mark
                     color={v.color}
-                    size={46}
+                    size={58}
                     dashed={v.dashed}
                     hollow={v.dashed}
                   />
@@ -123,7 +146,8 @@ export const S4Ratio: React.FC = () => {
             }}
           >
             <Sans size={fs.sm} color={k.ink2}>
-              13 <Mono size={fs.sm} color={k.ink2}>not_a_check</Mono> leave the
+              {COUNTS.not_a_check}{' '}
+              <Mono size={fs.sm} color={k.ink2}>not_a_check</Mono> leave the
               denominator. A node that asserts nothing would be a lie in either
               column.
             </Sans>
@@ -139,7 +163,8 @@ export const S4Ratio: React.FC = () => {
           </div>
           <div style={{marginTop: space.s5, opacity: enterAt(frame, F.substitute, 12)}}>
             <Mono size={fs.h1} color={k.ink0}>
-              8 / (8 + 11 + 0)
+              {COUNTS.anchored} / ({COUNTS.anchored} + {COUNTS.self_referential}{' '}
+              + {COUNTS.unknown})
             </Mono>
           </div>
 
@@ -226,7 +251,7 @@ export const S4Ratio: React.FC = () => {
             ))}
             <div style={{marginTop: space.s3}}>
               <Sans size={fs.xs} color={k.ink3}>
-                {TOTAL} edges gathered · denominator {DENOM}
+                {JUDGED} judged of {GATHERED} gathered · denominator {DENOM}
               </Sans>
             </div>
           </div>
