@@ -178,11 +178,11 @@
       "writeBoundary": {
         "producer": "bash + grep -nE scanning the actual bytes of every file in `git ls-files`, with the script's `fail` flag driving `exit 1`",
         "actorCanWrite": false,
-        "argument": "I appended `/Users/somebody/secret/path` to README.md and the target went from exit 0 to exit 1, naming README.md:73; removing it restored exit 0. The signal is grep's match against committed bytes, so a contributor who commits a machine-specific path cannot make the scan report clean without editing scripts/portability-check.sh itself — and in the CI lane the scan runs on a fresh ubuntu-latest checkout with none of the author's tooling present. Documented limit: the oracle (which paths count, and the is_exempt list at lines 40-46 covering docs/handoffs/*, docs/decisions/* and the script itself) is authored inside the write boundary, so quietly widening an exemption shrinks what gets scanned without turning the gate red."
+        "argument": "I appended `/Users/<someone>/secret/path` to README.md and the target went from exit 0 to exit 1, naming README.md:73; removing it restored exit 0. The signal is grep's match against committed bytes, so a contributor who commits a machine-specific path cannot make the scan report clean without editing scripts/portability-check.sh itself — and in the CI lane the scan runs on a fresh ubuntu-latest checkout with none of the author's tooling present. Documented limit: the oracle (which paths count, and the is_exempt list at lines 40-46 covering docs/handoffs/*, docs/decisions/* and the script itself) is authored inside the write boundary, so quietly widening an exemption shrinks what gets scanned without turning the gate red."
       },
       "evidence": [
         "Makefile:52-53 — `@bash scripts/portability-check.sh`",
-        "MEASURED (negative control): appended `/Users/somebody/...` to README.md -> exit 1, output `README.md:73 absolute home path: /Users/somebody` + `[portability] FAIL`; restored -> exit 0",
+        "MEASURED (negative control): appended `/Users/<someone>/...` to README.md -> exit 1, output `README.md:73 absolute home path: /Users/<someone>` + `[portability] FAIL`; restored -> exit 0",
         "scripts/portability-check.sh:69-70 — `grep -nE '/Users/[A-Za-z0-9._-]+|/home/[A-Za-z0-9._-]+'` over `git ls-files` output",
         "scripts/portability-check.sh:86-94 — `if [ \"$fail\" -ne 0 ]; then ... exit 1`",
         ".github/workflows/portability.yml:19-26 — job `paths` on ubuntu-latest, step `run: bash scripts/portability-check.sh`; the step's exit code is the job conclusion",
@@ -301,7 +301,7 @@
         "scripts/bstack-rule-of-three.py:29-30 — inputs are AGENTS.md and research/entities/pattern/bstack-engine.md, both in-repo markdown",
         "scripts/bstack-rule-of-three.py:102-118 — has_three_or_more_instances() regexes 'N+' / 'N instances' / 'meets rule-of-three' out of a table cell the promoter typed",
         "scripts/bstack-rule-of-three.py:148-150 — `if not BSTACK_ENGINE.exists(): return 1`",
-        "Empirical: `python3 scripts/bstack-rule-of-three.py` → '[FAIL] /Users/broomva/keel/research/entities/pattern/bstack-engine.md not found', exit=1",
+        "Empirical: `python3 scripts/bstack-rule-of-three.py` → '[FAIL] <repo>/research/entities/pattern/bstack-engine.md not found', exit=1",
         "`ls research/entities/pattern/` → No such file or directory (the whole research/ tree is absent)",
         "Makefile:73-93 — documented scope-out; the target is not a prerequisite of bstack-l3-trust and appears in no workflow (.github/workflows/ = l3-stability.yml, pages.yml, portability.yml)"
       ],
