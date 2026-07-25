@@ -6,10 +6,14 @@ import {font, fs, fw, k, space, track} from '../theme';
 /**
  * Scene 7 — CLOSE (8s)
  *
- * The mark assembles: the block of ledger cells first, then the one cell that
- * lands outside it. Same size, same shape, same grid — one step beyond. The
- * empty slot between them is the cell that would have been inside, and it stays
- * empty on purpose.
+ * The keel-blade settles in, then the wordmark, then the thesis and the install
+ * line. The mark is loaded from skills/keel/design/mark.png rather than redrawn
+ * — the brand rules forbid re-rendering the emblem, and a hand-coded copy in a
+ * video is the silently-drifting second copy those rules exist to prevent.
+ *
+ * `blockReveal` and `outsider` kept their names from the vector mark's API and
+ * now drive the settle and the final resolve. Renaming them would touch the
+ * timing constants below for no behavioural gain.
  */
 
 const F = {

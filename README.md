@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="skills/keel/design/mark.svg" alt="Keel" width="180" />
+  <img src="skills/keel/design/mark.png" alt="Keel" width="180" />
 </p>
 
 <h1 align="center">Keel</h1>
