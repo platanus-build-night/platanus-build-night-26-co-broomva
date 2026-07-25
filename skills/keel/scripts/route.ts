@@ -513,7 +513,17 @@ export function bind(
     // version of the very failure this field's discoverability was fixed to
     // stop. Absent stays legal and silent; anything present that is not an
     // advertised value is named and refused.
-    if (p.effort !== undefined) {
+    //
+    // OWN property, not `!== undefined`. `p` is parsed from a proposals file
+    // the agent wrote, but `bind` is exported and runs in whatever process the
+    // host provides, and `p.effort` walks the prototype chain: with an ambient
+    // `Object.prototype.effort = 'process'`, a proposal that declared no effort
+    // at all silently acquired one and was RANKED by it, with no warning —
+    // verified by executing `bind` under that pollution. An effort nobody
+    // authored steering the order is the same defect class as a verdict nobody
+    // argued: a value arriving from outside the record and being treated as
+    // part of it.
+    if (Object.hasOwn(p, 'effort') && p.effort !== undefined) {
       if (typeof p.effort === 'string' && (EFFORTS as string[]).includes(p.effort)) {
         binding.effort = p.effort;
       } else {

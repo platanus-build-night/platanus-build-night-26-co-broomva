@@ -628,7 +628,17 @@ describe('the ratio is unreachable from routing', () => {
       const v = String(s.value);
       expect([s.path, v]).toEqual([
         s.path,
-        v.replace(/ratio|grounding|score|objective|target|maximi[sz]|minimi[sz]|optimi[sz]/gi, '!LEAK!'),
+        // `cost|weight|reward|utility` and a bare digit are in the list because
+        // `means` is PROSE, and prose is where a numeric weight can be smuggled
+        // past a check that only looks at JSON leaves. "relative cost 1; prefer
+        // the lowest aggregate cost" contains no numeric leaf and would have
+        // passed the earlier list while stating precisely the objective this
+        // payload may never carry. The digit clause is the load-bearing half:
+        // effort ranks, and a rank the agent can do arithmetic on is a weight.
+        v.replace(
+          /ratio|grounding|score|objective|target|cost|weight|reward|utilit|\d|maximi[sz]|minimi[sz]|optimi[sz]/gi,
+          '!LEAK!',
+        ),
       ]);
     }
   });

@@ -36,7 +36,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { EFFORT_ORDER, ROUTE_EFFORTS } from '../skills/keel/schemas/route.ts';
-import { buildDispatch } from '../skills/keel/scripts/route.ts';
+import { bind, buildDispatch } from '../skills/keel/scripts/route.ts';
 
 const ROUTE = resolve(import.meta.dir, '../skills/keel/scripts/route.ts');
 const FIXTURE = resolve(import.meta.dir, 'fixtures/report.sample.json');
@@ -399,5 +399,69 @@ describe('the effort vocabulary reaches the agent that has to author it', () => 
     expect(bindings[iDropped]?.effort).toBeUndefined();
 
     expect(iCheap).toBeLessThan(iDropped);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// An effort nobody authored must not rank a route.
+//
+// These call `bind` IN-PROCESS on purpose. The helpers above spawn the CLI as a
+// child, and a polluted `Object.prototype` in this process does not cross that
+// boundary — a child-process test would pass while the defect sat untouched.
+// `bind` is exported and runs in whatever process the host provides, which is
+// exactly the situation this guards.
+//
+// Reading `p.effort` with `!== undefined` walked the prototype chain, so under
+// an ambient `Object.prototype.effort` a proposal that declared no effort
+// acquired one and was ranked by it, silently. Same defect class as a verdict
+// nobody argued: a value arriving from outside the record, treated as part of
+// it.
+// ---------------------------------------------------------------------------
+
+describe('only an effort the proposal itself declares is honoured', () => {
+  const report = JSON.parse(readFileSync(FIXTURE, 'utf8'));
+  const d = dispatch();
+  const loop = d.requests[0]?.node.id as string;
+  const anchor = d.anchoredIds[0] as string;
+  const ARG = 'the anchor is an exit code the PR author cannot write to';
+
+  /** Run `bind` with `Object.prototype.effort` set, always restoring it. */
+  function bindUnderPollution(proposals: unknown[], polluted: unknown) {
+    try {
+      (Object.prototype as Record<string, unknown>).effort = polluted;
+      return bind(report, proposals as never, { sourceReport: 'r.json' });
+    } finally {
+      delete (Object.prototype as Record<string, unknown>).effort;
+    }
+  }
+
+  for (const polluted of ['process', 'config', 'nonsense', null]) {
+    test(`Object.prototype.effort = ${JSON.stringify(polluted)} does not reach a binding`, () => {
+      const out = bindUnderPollution(
+        [{ loop, anchoredOn: anchor, argument: ARG }],
+        polluted,
+      );
+      // Absent stays absent: not inherited, not defaulted, and not warned
+      // about — a warning would itself be a claim that the agent said something.
+      expect(out.bindings[0]?.effort).toBeUndefined();
+      expect(out.warnings.filter((w: string) => w.includes('effort'))).toHaveLength(0);
+    });
+  }
+
+  test('a declared effort still wins while the prototype carries another', () => {
+    const out = bindUnderPollution(
+      [{ loop, anchoredOn: anchor, effort: 'config', argument: ARG }],
+      'process',
+    );
+    expect(out.bindings[0]?.effort).toBe('config');
+  });
+
+  test('an own effort of undefined is absent, not present-and-invalid', () => {
+    const out = bindUnderPollution(
+      [{ loop, anchoredOn: anchor, effort: undefined, argument: ARG }],
+      'process',
+    );
+    expect(out.bindings[0]?.effort).toBeUndefined();
+    expect(out.warnings.filter((w: string) => w.includes('effort'))).toHaveLength(0);
   });
 });
