@@ -6,7 +6,8 @@ audience).
 
 | File | Audience | What it is |
 |---|---|---|
-| [`two-minute.html`](two-minute.html) | presenter, on stage | **the 2:00 stage sheet** — five segments, the full spoken script in **ES and EN**, cued against the video's frame beats, plus cut list and fallback ladder |
+| [`dos-minutos.html`](dos-minutos.html) | presenter, on stage | **the 2:00 stage sheet, ES-only, "audita sus propios libros" storyline** — nine blocks, word-for-word, each cued to what is on screen, plus pre-flight, trim ladder, seven objections, and a do-not-say list. Written from scratch against a different opening (the audit analogy) from `two-minute.html`; the two are alternatives, not a pair — pick one before stage day |
+| [`two-minute.html`](two-minute.html) | presenter, on stage | the earlier 2:00 stage sheet — five segments, the full spoken script in **ES and EN**, cued against the video's frame beats, plus cut list and fallback ladder |
 | [`index.html`](index.html) | the room, on a projector | 20-slide standalone deck — problem → insight → mechanism → proof → economics → routing → real output → business model → scope |
 
 Companion material already in the repo:
