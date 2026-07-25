@@ -209,6 +209,19 @@ export interface RatioProjection {
   unknown: number;
   notACheck: number;
   ratio: number;
+  /**
+   * How many of the applied routes were RE-GROUNDINGS: an existing check whose
+   * signal moves to a producer outside the write boundary. The proposition the
+   * check asserts is unchanged; only its producer moves.
+   */
+  regrounded: number;
+  /**
+   * How many were CONSTRUCTIONS: a `not_a_check` node that becomes a check.
+   * A different claim with a different cost, so it is counted separately and
+   * rendered separately. Merging the two into one headline delta would let a
+   * run that built six new checks read as if six checks had been re-grounded.
+   */
+  constructed: number;
 }
 
 /**
@@ -221,6 +234,12 @@ export interface RatioProjection {
  * `route.ts` leaves those nodes out of scope unless asked for them explicitly.
  * When they are in scope the arithmetic here keeps them honest rather than
  * letting them arrive as free numerator.
+ *
+ * The two kinds are counted apart (`regrounded` / `constructed`) and counted
+ * HERE rather than re-derived by the renderer, so the split can never drift
+ * from the arithmetic it describes: both come out of the same loop, including
+ * the `> 0` floors, so a binding the projection declined to apply is not
+ * reported to a reader as though it had been.
  */
 export function projectRatio(
   current: Pick<
@@ -230,19 +249,24 @@ export function projectRatio(
   bindings: Binding[],
 ): RatioProjection {
   let { anchored, selfReferential, unknown, notACheck } = current;
+  let regrounded = 0;
+  let constructed = 0;
 
   for (const b of bindings) {
     if (b.anchoredOn === null) continue;
     if (b.from === 'self_referential' && selfReferential > 0) {
       selfReferential--;
       anchored++;
+      regrounded++;
     } else if (b.from === 'unknown' && unknown > 0) {
       unknown--;
       anchored++;
+      regrounded++;
     } else if (b.from === 'not_a_check' && notACheck > 0) {
       // leaves the excluded bucket and enters the ratio as a real check
       notACheck--;
       anchored++;
+      constructed++;
     }
   }
 
@@ -253,6 +277,8 @@ export function projectRatio(
     unknown,
     notACheck,
     ratio: total === 0 ? 0 : anchored / total,
+    regrounded,
+    constructed,
   };
 }
 

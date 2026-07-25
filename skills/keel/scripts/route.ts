@@ -36,10 +36,29 @@
  *  4. `status` is always `'proposed'`, forced here regardless of input.
  *     Applying a change is out of scope for this mode and for any agent.
  *
- * The source `Report` is opened READ-ONLY and is never rewritten. The
- * projection has no path back into the measurement layer;
- * `tests/separation.test.ts` executes the measurement path with and without an
- * adversarial bindings file and asserts the verdicts are identical.
+ * "Mechanically" is a strong word and it was once doing more work here than the
+ * tests were. Each of the four is now an executed assertion in
+ * `tests/separation.test.ts`, and property 3 — the one the whole unit rests on,
+ * and the one whose direction is hardest to test — is held by three:
+ *
+ *   - the `RouteDispatch` the agent judges from is walked field by field, and
+ *     every number in it must be a confidence measured in the source report;
+ *     a `currentRatio`, a `targetRatio` or a `nodesNeededToHitTarget` fails;
+ *   - `buildDispatch` and `bind` are run against a report whose `grounding`
+ *     block has been forged to 1.0, and the requests, the candidate list and
+ *     every binding must come back byte-identical — the ratio is not merely
+ *     unused, it is unreachable;
+ *   - `rankBindings` is run over the same bindings with every `from` permuted,
+ *     and the order must not move — an ordering that consulted ratio impact
+ *     would change; and a fixture where the CHEAPEST route has the SMALLEST
+ *     ratio impact asserts the cheap one still sorts first.
+ *
+ * The source `Report` is opened READ-ONLY and is never rewritten. That is
+ * enforced in `run()`, not asserted: `--out`/`--html` pointed at the input exit
+ * 1 having written nothing. The projection has no path back into the
+ * measurement layer; `tests/separation.test.ts` executes the measurement path
+ * with and without an adversarial bindings file and asserts the verdicts are
+ * identical.
  *
  * ---------------------------------------------------------------------------
  * USAGE SHAPE
@@ -521,8 +540,19 @@ function esc(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
-/** Verbatim, per the design contract. Both files are written to be inlined. */
-export function loadStyles(dir = join(HERE, '..', 'design')): string {
+/** The design system this unit inlines. Owned by another unit; read, never written. */
+export const DESIGN_DIR = join(HERE, '..', 'design');
+
+/**
+ * Verbatim, per the design contract. Both files are written to be inlined.
+ *
+ * THROWS when the design system is not readable. That is deliberate and the CLI
+ * handles it rather than swallowing it here: a page rendered without the tokens
+ * would look like a page, so the honest degradation is to skip the page and say
+ * so — which only the caller that knows whether the JSON already landed can
+ * decide. See `run()`.
+ */
+export function loadStyles(dir = DESIGN_DIR): string {
   const tokens = readFileSync(join(dir, 'tokens.css'), 'utf8');
   const keel = readFileSync(join(dir, 'keel.css'), 'utf8');
   return `${tokens}\n${keel}`;
@@ -636,7 +666,51 @@ export function renderBindingsHtml(
   const projected = projectRatio(current, rep.bindings);
   const n2 = (x: number) => x.toFixed(2);
 
-  const rows = rep.bindings.map((b) => bindingRow(b, index)).join('\n');
+  // Two different claims, so two tables. A re-grounding moves an existing
+  // check's signal outside the write boundary; a construction turns a
+  // `not_a_check` node INTO a check. Both raise the ratio and only one of them
+  // re-grounds anything, so merging them under a single "routes" heading would
+  // let six new checks read as six repaired ones. The second table appears only
+  // when `--include-not-a-check` put such nodes in scope.
+  const regroundBindings = rep.bindings.filter((b) => b.from !== 'not_a_check');
+  const constructedBindings = rep.bindings.filter((b) => b.from === 'not_a_check');
+  const rows = regroundBindings.map((b) => bindingRow(b, index)).join('\n');
+  const builtRows = constructedBindings.map((b) => bindingRow(b, index)).join('\n');
+  const regroundRoutable = regroundBindings.filter((b) => b.anchoredOn !== null).length;
+  const builtRoutable = constructedBindings.filter((b) => b.anchoredOn !== null).length;
+
+  const table = (body: string) => `<table class="k-table k-route__table">
+    <colgroup>
+      <col class="k-route__col--loop">
+      <col class="k-route__col--anchor">
+      <col class="k-route__col--why">
+      <col class="k-route__col--effort">
+    </colgroup>
+    <thead><tr>
+      <th>what's ungrounded</th>
+      <th>route to</th>
+      <th>why that's anchored</th>
+      <th>effort</th>
+    </tr></thead>
+    <tbody>
+${body}
+    </tbody>
+  </table>`;
+
+  const constructedSection =
+    constructedBindings.length === 0
+      ? ''
+      : `<section>
+  <p class="k-eyebrow">Construction — ${builtRoutable} of ${constructedBindings.length} not_a_check nodes could become checks</p>
+  <p class="k-lede">These nodes are <span class="k-mono">not_a_check</span> today, so they sit
+    outside the ratio entirely. Routing one does not re-ground an existing check —
+    it <em>builds a new one</em>, which enters the denominator as well as the
+    numerator. Different claim, different cost, counted apart from the routes
+    above and never folded into them.</p>
+  ${table(builtRows)}
+</section>
+
+`;
 
   const constructRows = rep.bindings
     .filter((b) => b.anchoredOn !== null)
@@ -685,7 +759,8 @@ export function renderBindingsHtml(
     <span class="k-route__sep">·</span>
     <div class="k-route__side">
       <span class="k-ratio__value k-route__projected">${n2(rep.summary.projectedRatio)}</span>
-      <p class="k-meta"><span class="k-tag">projection</span> if applied</p>
+      <p class="k-meta"><span class="k-tag">projection</span> if applied —
+        ${projected.regrounded} re-grounded · ${projected.constructed} constructed</p>
     </div>
   </div>
   <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown)</p>
@@ -697,35 +772,27 @@ export function renderBindingsHtml(
     hypothetical. It is not written to any report, it is not fed back into the
     grounding ratio, and no proposal on this page has been applied. Projected
     counts, for the same conditional:
-    <span class="k-mono">anchored ${projected.anchored} · self_referential ${projected.selfReferential} · unknown ${projected.unknown} · not_a_check ${projected.notACheck}</span>.</p>
+    <span class="k-mono">anchored ${projected.anchored} · self_referential ${projected.selfReferential} · unknown ${projected.unknown} · not_a_check ${projected.notACheck}</span>.
+    The delta is two different claims and is reported as two:
+    <strong>${projected.regrounded} re-grounded</strong> — an existing check whose
+    signal moves outside the write boundary, the proposition it asserts unchanged —
+    and <strong>${projected.constructed} constructed</strong> — a
+    <span class="k-mono">not_a_check</span> node that becomes a check, entering the
+    denominator as well as the numerator. Only the first repairs something that was
+    already being claimed.</p>
   ${SCOPE_NOTE}
 </section>
 
 <section>
-  <p class="k-eyebrow">Routes — ${rep.summary.routable} routable · ${rep.summary.unroutable} unroutable</p>
-  <p class="k-lede">Cheapest effort on top. <span class="k-mono">no route</span> is a
+  <p class="k-eyebrow">Routes — ${regroundRoutable} routable · ${regroundBindings.length - regroundRoutable} unroutable</p>
+  <p class="k-lede">Existing checks whose signal could come from somewhere they cannot
+    write. Cheapest effort on top. <span class="k-mono">no route</span> is a
     first-class answer: it means the fix needs a policy decision rather than a
     rewiring, and it is reported here rather than dropped.</p>
-  <table class="k-table k-route__table">
-    <colgroup>
-      <col class="k-route__col--loop">
-      <col class="k-route__col--anchor">
-      <col class="k-route__col--why">
-      <col class="k-route__col--effort">
-    </colgroup>
-    <thead><tr>
-      <th>what's ungrounded</th>
-      <th>route to</th>
-      <th>why that's anchored</th>
-      <th>effort</th>
-    </tr></thead>
-    <tbody>
-${rows}
-    </tbody>
-  </table>
+  ${table(rows)}
 </section>
 
-<section>
+${constructedSection}<section>
   <p class="k-eyebrow">Construct — not yet.</p>
   <p class="k-lede">A route makes a check read a signal from outside itself. It does
     not pair that check with a counter-metric, name who arbitrates when the pair
@@ -781,25 +848,54 @@ ${body}
 
 const STRIP_CSS_COMMENTS = /\/\*[\s\S]*?\*\//g;
 const STRIP_HTML_COMMENTS = /<!--[\s\S]*?-->/g;
+const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+const STYLE_ATTR = /\sstyle\s*=\s*("[^"]*"|'[^']*')/gi;
+/** A `>` and everything up to the next `<`: one run of rendered TEXT. */
+const TEXT_RUN = />[^<]*/g;
 
 /**
- * The document must fetch nothing. Content may legitimately contain URLs — a
- * gathered `raw` often does — so this looks for FETCHING CONSTRUCTS, not for
- * the substring `http`. Comments are stripped first: `tokens.css` explains in
- * prose why the system is not split behind an `@import`, and a check that reads
- * that sentence as a violation would be measuring text about text.
+ * The document must fetch nothing.
+ *
+ * The distinction this function has to hold, and got wrong once: a page may
+ * legitimately *mention* a URL — a gathered `raw` often does, a node can be
+ * named `build css: @import bundles`, and a write-boundary argument frequently
+ * has to say which host a signal is pulled from — while the document itself
+ * fetches nothing. So the probes never read rendered text. They read only the
+ * two places a browser will actually act on:
+ *
+ *  - the MARKUP SKELETON (tags and attributes, every text run removed), where
+ *    `<script src>`, `<link href>` and media `src` would have to live;
+ *  - the CSS the browser executes (`<style>` bodies and `style=` attributes),
+ *    where `@import` and `url()` would have to live.
+ *
+ * Removing the text runs is exact rather than heuristic because `esc()` turns
+ * every `<` and `>` in content into an entity, so a run between a `>` and the
+ * next `<` cannot contain markup. CSS comments are stripped from style bodies
+ * only: `tokens.css` explains in prose why the system is *not* split behind an
+ * `@import`, and a check that read that sentence as a violation would be
+ * measuring text about text — the exact error this file exists to detect.
  */
 export function externalRefs(html: string): string[] {
-  const live = html.replace(STRIP_CSS_COMMENTS, '').replace(STRIP_HTML_COMMENTS, '');
+  const live = html.replace(STRIP_HTML_COMMENTS, '');
+
+  const css: string[] = [];
+  const skeleton = live.replace(STYLE_BLOCK, (_m, body: string) => {
+    css.push(String(body).replace(STRIP_CSS_COMMENTS, ''));
+    return '<style></style>';
+  });
+  const markup = skeleton.replace(TEXT_RUN, '>');
+  for (const m of markup.matchAll(STYLE_ATTR)) css.push(m[1] ?? '');
+  const styles = css.join('\n');
+
   const found: string[] = [];
-  const probes: Array<[RegExp, string]> = [
-    [/<script[^>]*\ssrc=/i, '<script src=>'],
-    [/<link[^>]*\shref=/i, '<link href=>'],
-    [/<(img|iframe|video|audio|source|embed|object)[^>]*\ssrc=/i, 'embedded media src'],
-    [/@import/i, '@import'],
-    [/url\(\s*['"]?(?!data:|#)/i, 'css url()'],
+  const probes: Array<[RegExp, string, string]> = [
+    [/<script[^>]*\ssrc=/i, markup, '<script src=>'],
+    [/<link[^>]*\shref=/i, markup, '<link href=>'],
+    [/<(img|iframe|video|audio|source|embed|object)[^>]*\ssrc=/i, markup, 'embedded media src'],
+    [/@import/i, styles, '@import'],
+    [/url\(\s*['"]?(?!data:|#)/i, styles, 'css url()'],
   ];
-  for (const [re, label] of probes) if (re.test(live)) found.push(label);
+  for (const [re, text, label] of probes) if (re.test(text)) found.push(label);
   return found;
 }
 
@@ -828,6 +924,9 @@ const USAGE = `usage: bun scripts/route.ts <report.json> [options]
   --out <file>           write the BindingReport JSON here
   --html <file>          write the standalone page here (zero external requests)
   --reports-dir <dir>    write <dir>/<target-slug>.bindings.{json,html}
+  --design-dir <dir>     read tokens.css + keel.css from here (default: ../design).
+                         If they are unreadable the JSON is still written and the
+                         page is skipped with a message; the run does not crash.
   --include-not-a-check  also route nodes classified not_a_check. Off by default:
                          those sit outside the ratio, so routing one adds a check
                          rather than re-grounding one. Different claim.
@@ -837,12 +936,13 @@ const USAGE = `usage: bun scripts/route.ts <report.json> [options]
 With no --out/--html/--reports-dir the BindingReport goes to stdout.
 With no --proposals every binding is null with a reason: it fails closed.`;
 
-interface Args {
+export interface Args {
   input: string;
   proposals: string;
   out: string;
   html: string;
   reportsDir: string;
+  designDir: string;
   dispatch: boolean;
   includeNotACheck: boolean;
   strict: boolean;
@@ -856,6 +956,7 @@ export function parseArgs(argv: string[]): Args | { error: string } {
     out: '',
     html: '',
     reportsDir: '',
+    designDir: '',
     dispatch: false,
     includeNotACheck: false,
     strict: false,
@@ -878,6 +979,7 @@ export function parseArgs(argv: string[]): Args | { error: string } {
       arg === '-o' ||
       arg === '--html' ||
       arg === '--reports-dir' ||
+      arg === '--design-dir' ||
       arg === '--generated-at'
     ) {
       const v = value(arg);
@@ -885,6 +987,7 @@ export function parseArgs(argv: string[]): Args | { error: string } {
       if (arg === '--proposals') a.proposals = v;
       else if (arg === '--html') a.html = v;
       else if (arg === '--reports-dir') a.reportsDir = v;
+      else if (arg === '--design-dir') a.designDir = v;
       else if (arg === '--generated-at') a.generatedAt = v;
       else a.out = v;
     } else if (arg.startsWith('-')) {
@@ -904,8 +1007,17 @@ function writeOut(path: string, text: string): void {
   writeFileSync(path, text);
 }
 
-function main(argv: string[]): number {
-  const args = argv.slice(2);
+/**
+ * The whole CLI, as a function that returns an exit code instead of taking one.
+ *
+ * Exported on purpose: every write in this unit happens below this line, so a
+ * test that drove only the pure functions would be asserting the read-onlyness
+ * of code that structurally cannot write. `tests/separation.test.ts` drives
+ * THIS.
+ *
+ * Takes the arguments, not `process.argv` — the slice belongs to the caller.
+ */
+export function run(args: string[]): number {
   if (args.length === 0 || args.includes('-h') || args.includes('--help')) {
     console.log(USAGE);
     return args.length === 0 ? 1 : 0;
@@ -979,13 +1091,48 @@ function main(argv: string[]): number {
   const outPath = parsed.out || (parsed.reportsDir ? join(parsed.reportsDir, `${targetSlug(report.target)}.bindings.json`) : '');
   const htmlPath = parsed.html || (parsed.reportsDir ? join(parsed.reportsDir, `${targetSlug(report.target)}.bindings.html`) : '');
 
+  // "Opened READ-ONLY, always" is an invariant, so it is enforced rather than
+  // asserted. Without this, `--out <the report>` replaced a 30 KB measurement
+  // with a 2 KB BindingReport, exit 0, no warning — `nodes` and `verdicts` gone
+  // and unrecoverable. A projection destroying the measurement it was derived
+  // from is the worst version of the failure this whole unit is built against.
+  const source = resolve(parsed.input);
+  for (const [flag, path] of [
+    ['--out', outPath],
+    ['--html', htmlPath],
+  ] as const) {
+    if (path && resolve(path) === source) {
+      console.error(
+        `route: refusing to write over the source report — ${flag} points at ${parsed.input}, which is opened read-only. Nothing was written.`,
+      );
+      return 1;
+    }
+  }
+
   if (outPath) {
     writeOut(outPath, json);
     console.error(`route: wrote ${outPath}`);
     wroteSomething = true;
   }
   if (htmlPath) {
-    const html = renderBindingsHtml(bindings, report);
+    const designDir = parsed.designDir || DESIGN_DIR;
+    let styles: string;
+    try {
+      styles = loadStyles(designDir);
+    } catch (err) {
+      // Degradation, per the plan's ladder: ship the JSON without the page.
+      // A page rendered without the tokens would still look like a page.
+      console.error(
+        `route: design system not readable at ${designDir} — ${(err as Error).message}`,
+      );
+      if (wroteSomething) {
+        console.error('route: JSON written, page skipped');
+        return parsed.strict && bindings.warnings.length > 0 ? 1 : 0;
+      }
+      console.error('route: nothing was written');
+      return 1;
+    }
+    const html = renderBindingsHtml(bindings, report, styles);
     const refs = externalRefs(html);
     if (refs.length > 0) {
       console.error(
@@ -1003,5 +1150,5 @@ function main(argv: string[]): number {
 }
 
 if (import.meta.main) {
-  process.exit(main(process.argv));
+  process.exit(run(process.argv.slice(2)));
 }

@@ -1,0 +1,56 @@
+{
+  "target": "https://github.com/broomva/keel",
+  "revision": "ad47c37008cd1f3d12430ff1a45e943d84913f32",
+  "generatedAt": "2026-07-25T01:20:05.305Z",
+  "sourceReport": "tests/fixtures/report.sample.json",
+  "bindings": [
+    {
+      "loop": "package.json#test",
+      "from": "self_referential",
+      "anchoredOn": "Makefile#portability-check",
+      "argument": "This node's verdict names two limits, and exactly one of them is a wiring problem. Limit 2 is that nothing executes `bun test` at merge time, so the merge-time signal is a hand-ticked checkbox in the PR template — a status field the actor sets, which is the textbook self-referential shape. `Makefile#portability-check` is anchored in this same report for a reason that is reusable here and is about the producer, not about grep: its verdict establishes that the `paths` job runs on a fresh ubuntu-latest checkout with none of the author's tooling present, and that the step's exit code IS the job conclusion. That conclusion is emitted by GitHub's runner, which a contributor can trigger but cannot author, so moving the test's exit code into that job replaces an author-set field with a producer outside the write boundary. The proposition being asserted does not change — it is still 'the tests in this repo pass' — only who produces the signal at merge time. Residual, stated because it is not routable: limit 1 stands untouched. The oracle (tests/grounding-ratio.test.ts asserting that not_a_check leaves the denominator and unknown fails closed) was authored in this repo alongside the implementation, so a green run still proves the code does what the test says rather than that the test says the right thing. Re-measurement should be expected to weigh that residual; this route removes the checkbox surrogate, not the same-author oracle.",
+      "status": "proposed",
+      "change": "Add a `bun test` step to the existing GitHub-hosted job that already runs `bash scripts/portability-check.sh` (.github/workflows/portability.yml, job `paths`, ubuntu-latest), and make that job a required check. Then delete the `- [ ] bun test` line from .github/PULL_REQUEST_TEMPLATE.md so the checkbox cannot stand in for the run.",
+      "effort": "wiring"
+    },
+    {
+      "loop": "Makefile#bstack-check",
+      "from": "self_referential",
+      "anchoredOn": null,
+      "argument": "The ungroundedness here has two independent halves and no anchored node in this report addresses either. Half one is provenance: Makefile:16-22 discovers the producer at run time by scanning four writable roots under $HOME and taking the first hit, with no pin, no checksum and no vendored copy, so the script that decides is a file the same actor can edit. Half two is the operands: the gaps doctor.sh --strict counts are reads of governance markdown and state stamps the actor writes, which is paperwork against paperwork regardless of where the script came from. The four anchored producers available are grep over committed bytes, a python literal/token scan, a token-vs-mark comparison, and GitHub's Pages deployment service; none of them emits a signal about whether this workspace complies with the primitive contract.",
+      "status": "proposed",
+      "noRouteReason": "Both halves need decisions rather than rewiring. Vendoring bstack into the repo with a checksum is a supply-chain policy choice, and even once taken it fixes only the provenance half — the check would still be comparing documents the author wrote in the same commit, so it would not measure as anchored. Grounding the claim needs an outside referent for the primitive contract (a published spec, an executed behaviour per primitive, or a third-party consumer), which is a change to what the check asserts. Note also that the CI surface that would matter here was not measured: the fixture sampled 15 of 69 nodes and .github/workflows/portability.yml's own steps are absent, so a route onto the runner cannot be proposed from this graph even if one exists. That is a gap in coverage, and it is reported rather than guessed."
+    },
+    {
+      "loop": "Makefile#bstack-l3-trust",
+      "from": "self_referential",
+      "anchoredOn": null,
+      "argument": "A cheap route is available here and it should be refused, which is the whole reason this row is worth reading. The target's recipe is three @echo lines, so all of its force comes from one self-referential prerequisite; adding `portability-check` — anchored in this report at 0.88 — to the prerequisite list is a one-word Makefile change that would make the gate's exit code depend on grep over committed bytes on a fresh runner. It would also be padding. This gate asserts one proposition: that a governance change is structurally valid. The anchored producers on offer assert nothing about that proposition — portability-check reports whether committed files hardcode machine paths, design-audit reports whether governed surfaces carry raw literals, the Pages action reports whether a deployment succeeded. Bundling one in would move the exit code outside the write boundary while leaving the claim exactly as unverified as it is now, and would make the ratio rise without anything becoming known. The distinction this row records: a route changes who produces the signal for the same proposition; padding changes the proposition to one that already has a producer.",
+      "status": "proposed",
+      "noRouteReason": "Every available anchored producer asserts a different proposition than this gate does, so wiring one in would raise the number without grounding the claim. The honest fix descends to the child — per grounding-classes.md:41-43, do not classify the wrapper — and the child (Makefile#bstack-primitive-lint) is unroutable for the same reason it is: its operands, not its producer, sit inside the boundary."
+    },
+    {
+      "loop": "Makefile#bstack-primitive-lint",
+      "from": "self_referential",
+      "anchoredOn": null,
+      "argument": "The producer is honest and the signal genuinely varies — python executes, and a mutated header word makes it return 1. What sits inside the write boundary is the pair of operands: AGENTS.md and CLAUDE.md are both edited by the same governance PR this gate polices, and the rule list (REQUIRED_SECTIONS at lines 33-40) is edited there too. Routing cannot help, because routing changes who produces the signal and the producer is not the defect. Pointing this node at `Makefile#design-audit` would look like a route and would not be one: design-audit's producer is the same python-reading-files-on-disk, and the reason it is anchored is a fact about what it compares, not about the interpreter.",
+      "status": "proposed",
+      "noRouteReason": "The defect is the operands, not the producer, so no rewiring reaches it. Grounding this claim means giving the primitive contract an outside referent — a per-primitive executed behaviour, or a consumer that breaks when the contract is wrong — which changes what the check asserts and is therefore a policy decision, not a route."
+    },
+    {
+      "loop": "Makefile#bstack-rule-of-three",
+      "from": "self_referential",
+      "anchoredOn": null,
+      "argument": "Two defects, neither of them a wiring defect. The intended oracle regexes a string like '30+ instances' out of a markdown table cell that the promoter typed, so the claim and its evidence are the same write. And today the ledger path does not exist at all, so main() returns 1 from a missing-file guard before parsing anything — a permanently red signal, which carries no information in either direction and is a different failure from an ungrounded one.",
+      "status": "proposed",
+      "noRouteReason": "There is no producer in this report that emits evidence of pattern recurrence, and there could not be: recurrence is a fact about sessions and repositories outside this tree. The decision to make is whether the ledger's instance counts should come from something the promoter cannot write — commit history, other repositories, a dated session log — or whether the target should be deleted rather than left permanently red. Both are policy, not rewiring."
+    }
+  ],
+  "summary": {
+    "currentRatio": 0.4444444444444444,
+    "projectedRatio": 0.5555555555555556,
+    "routable": 1,
+    "unroutable": 4
+  },
+  "warnings": []
+}
