@@ -1,5 +1,5 @@
 import React from 'react';
-import {interpolate, useCurrentFrame, Easing} from 'remotion';
+import {interpolate, useCurrentFrame, Easing, Img, staticFile} from 'remotion';
 import {
   k,
   font,
@@ -309,57 +309,65 @@ export const TypeOn: React.FC<{
 
 /* ════════════════════════════════════════════════════════════════════════════
    THE KEEL MARK
-   A block of ledger cells — the verification surface — and one cell outside it.
-   Same size, same shape, same grid. Only its position differs, and position is
-   the whole argument. Geometry copied from skills/keel/design/mark.svg.
+   The rendered keel-blade: a faceted blade cutting down through a lit
+   waterline. The pale portion rides above the surface; the luminous portion
+   below is the part doing the structural work, where you cannot see it.
+
+   This is `skills/keel/design/mark.png` itself, not a redraw of it. The brand
+   rules in skills/keel/design/README.md forbid re-rendering the emblem at
+   another angle or recolouring it, and a hand-coded approximation in a video
+   is exactly the silently-drifting second copy those rules exist to prevent —
+   so the mark is LOADED, never reconstructed.
+
+   It carries its own near-black canvas, so it composites onto --k-bg-0 without
+   a matte. Sized square, because the source is 512×512 and the rules forbid
+   stretching it.
    ══════════════════════════════════════════════════════════════════════════ */
 
 export const KeelMark: React.FC<{
   width?: number;
-  /** 0 → block only, 1 → the outsider has landed. */
+  /** Retained from the vector mark's API. Drives the final settle. */
   outsider?: number;
+  /** 0 → absent, 1 → fully present. */
   blockReveal?: number;
   style?: React.CSSProperties;
 }> = ({width = 200, outsider = 1, blockReveal = 1, style}) => {
-  const cells = [0, 23, 46].flatMap((y) => [0, 23, 46].map((x) => ({x, y})));
+  // A rendered emblem cannot assemble the way a grid of cells could, so the
+  // reveal is a settle: it rises a little and resolves. No spin, no bounce —
+  // tokens.css: instruments settle, they do not perform.
+  const lift = interpolate(blockReveal, [0, 1], [10, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+  const scale = interpolate(blockReveal, [0, 1], [0.965, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.out(Easing.cubic),
+  });
+
   return (
-    <svg
-      viewBox="0 0 100 64"
-      width={width}
-      height={(width * 64) / 100}
-      style={style}
-      role="img"
-      aria-label="Keel"
-    >
-      {cells.map((c, i) => {
-        const t = interpolate(blockReveal, [i / cells.length, (i + 1) / cells.length], [0, 1], {
+    <Img
+      src={staticFile('mark.png')}
+      alt="Keel"
+      style={{
+        width,
+        height: width,
+        display: 'block',
+        opacity: blockReveal * interpolate(outsider, [0, 1], [0.85, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
-        });
-        return (
-          <rect
-            key={`${c.x}-${c.y}`}
-            x={c.x}
-            y={c.y}
-            width={18}
-            height={18}
-            rx={3}
-            fill={k.ink0}
-            opacity={t}
-          />
-        );
-      })}
-      {/* The empty slot the outsider passes through is left empty on purpose. */}
-      <rect
-        x={interpolate(outsider, [0, 1], [64, 82])}
-        y={23}
-        width={18}
-        height={18}
-        rx={3}
-        fill={k.accent}
-        opacity={outsider}
-      />
-    </svg>
+        }),
+        transform: `translateY(${lift}px) scale(${scale})`,
+        // The emblem ships on its own near-black canvas so it can composite
+        // onto surfaces Keel does not control. That canvas is very slightly
+        // lighter than --k-bg-0, so on OUR canvas it reads as a visible square.
+        // Screen blend drops the black and keeps the glow — it composites the
+        // mark, it does not recolour it, so the brand rule holds.
+        mixBlendMode: 'screen',
+        ...style,
+      }}
+    />
   );
 };
 
