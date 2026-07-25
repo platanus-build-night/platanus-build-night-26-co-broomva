@@ -1,0 +1,307 @@
+{
+  "target": "platanus-build-night-26-co-jdcastro2",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.694Z",
+  "nodes": [
+    {
+      "id": "vercel.json#vercel-json",
+      "kind": "deploy_gate",
+      "name": "deploy config (vercel.json)",
+      "source": "vercel.json",
+      "raw": "{\n  \"$schema\": \"https://openapi.vercel.sh/vercel.json\",\n  \"buildCommand\": \"npm run build:web\",\n  \"outputDirectory\": \"web\",\n  \"framework\": null,\n  \"headers\": [\n    {\n      \"source\": \"/events.ndjson\",\n      \"headers\": [{ \"key\": \"content-type\", \"value\": \"application/x-ndjson; charset=utf-8\" }]\n    }\n  ]\n}\n"
+    },
+    {
+      "id": "package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "package.json",
+      "raw": "\"dev\": \"tsx watch src/server.ts\""
+    },
+    {
+      "id": "package.json#check",
+      "kind": "script",
+      "name": "check",
+      "source": "package.json",
+      "raw": "\"check\": \"tsx scripts/check-schemas.ts && tsx scripts/check-ingest.ts && tsx scripts/check-evolution.ts\""
+    },
+    {
+      "id": "package.json#check-ingest",
+      "kind": "script",
+      "name": "check:ingest",
+      "source": "package.json",
+      "raw": "\"check:ingest\": \"tsx scripts/check-ingest.ts\""
+    },
+    {
+      "id": "package.json#check-evolution",
+      "kind": "script",
+      "name": "check:evolution",
+      "source": "package.json",
+      "raw": "\"check:evolution\": \"tsx scripts/check-evolution.ts\""
+    },
+    {
+      "id": "package.json#typecheck",
+      "kind": "script",
+      "name": "typecheck",
+      "source": "package.json",
+      "raw": "\"typecheck\": \"tsc --noEmit\""
+    },
+    {
+      "id": "package.json#build-web",
+      "kind": "script",
+      "name": "build:web",
+      "source": "package.json",
+      "raw": "\"build:web\": \"bash scripts/build-web.sh\""
+    },
+    {
+      "id": "package.json#check-fetch",
+      "kind": "script",
+      "name": "check:fetch",
+      "source": "package.json",
+      "raw": "\"check:fetch\": \"tsx scripts/check-fetch.ts\""
+    },
+    {
+      "id": "package.json#check-keys",
+      "kind": "script",
+      "name": "check:keys",
+      "source": "package.json",
+      "raw": "\"check:keys\": \"tsx scripts/check-keys.ts\""
+    },
+    {
+      "id": "package.json#check-models",
+      "kind": "script",
+      "name": "check:models",
+      "source": "package.json",
+      "raw": "\"check:models\": \"tsx scripts/check-models.ts\""
+    },
+    {
+      "id": "package.json#check-privacy",
+      "kind": "script",
+      "name": "check:privacy",
+      "source": "package.json",
+      "raw": "\"check:privacy\": \"tsx scripts/check-privacy.ts\""
+    },
+    {
+      "id": "presentation/darwin-hyperframes/package.json#check",
+      "kind": "script",
+      "name": "check",
+      "source": "presentation/darwin-hyperframes/package.json",
+      "raw": "\"check\": \"npx --yes hyperframes@0.7.71 check\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "package.json#build-web",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "bash + coreutils exit status inside the Vercel builder container, running scripts/build-web.sh",
+        "actorCanWrite": false,
+        "argument": "This is the only edge in the repo that is actually wired to something: vercel.json sets buildCommand to `npm run build:web`, so every Vercel deploy executes scripts/build-web.sh under `set -euo pipefail`. The script is not merely an artifact producer — it contains two falsifiable guards whose signal is emitted by the shell, not by the author. (1) `[ -f runs/demo/events.ndjson ] || exit 1` — a filesystem stat in the build sandbox decides it. (2) after the site is assembled it runs `grep -rqF \"$secret\" web/` for SUPABASE_SERVICE_ROLE_KEY / OPENROUTER_API_KEY / ANTHROPIC_API_KEY, pulled from Vercel project env, and on a hit does `rm -rf web; exit 1`. The developer cannot write the grep result — it is a byte scan of the artifact the build just produced, compared against secrets held outside the repo. A leaked key therefore aborts the deploy. Scope limit worth naming: it asserts absence-of-secret and presence-of-fixture, nothing about whether the app works.",
+        "note": "Grounding is about shape, not sufficiency: this build gate says nothing about product correctness."
+      },
+      "evidence": [
+        "vercel.json: \"buildCommand\": \"npm run build:web\"",
+        "scripts/build-web.sh: set -euo pipefail",
+        "scripts/build-web.sh: [ -f \"$FIXTURE\" ] || { echo ... ; exit 1; }",
+        "scripts/build-web.sh: for secret in ...; do if [ -n \"$secret\" ] && grep -rqF \"$secret\" web/; then rm -rf web; exit 1; fi; done"
+      ],
+      "confidence": 0.83,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "vercel.json#vercel-json",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Vercel deploy pipeline configuration (buildCommand, outputDirectory, response headers)",
+        "actorCanWrite": true,
+        "argument": "The file itself asserts nothing about correctness. It names an output directory, sets a content-type header on /events.ndjson, and points at a build command. Whatever the build emits is what ships; there is no condition here that can reject a bad revision. The one falsifiable thing in the deploy path lives inside scripts/build-web.sh and is judged as package.json#build-web — crediting this node too would double-count the same shell exit code."
+      },
+      "evidence": [
+        "vercel.json has no `github`, no `checks`, no ignoreCommand and no test invocation",
+        "framework: null, outputDirectory: web"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node/tsx runtime executing three assertion scripts and returning a real exit code — but no configured caller",
+        "actorCanWrite": null,
+        "argument": "The execution axis looks strong: check-schemas.ts round-trips ten Zod schemas through z.toJSONSchema and rejects invented enum members, ending in `process.exit(bad === 0 ? 0 : 1)`. Chained with && to check-ingest and check-evolution, so a failure genuinely propagates. What I cannot establish is that any edge ever reads that exit code. The repo has no .github/ directory at all, no CI config of any kind, no husky/lint-staged, and vercel.json's buildCommand is build:web — which does not call `npm run check`. The only .git/hook present is a pre-push branch-name filter installed by the auditing environment, not versioned in the repo, and it runs no tests. So this is an assertion file that a human may or may not type before pushing; the merge/deploy path is not conditioned on it. Fork point untraceable, fails closed.",
+        "note": "Oracle limit also applies: assertions and the schemas they check were plausibly co-authored."
+      },
+      "evidence": [
+        "no .github/ directory in repo root",
+        "package.json: \"check\": \"tsx scripts/check-schemas.ts && tsx scripts/check-ingest.ts && tsx scripts/check-evolution.ts\"",
+        "scripts/check-schemas.ts ends: process.exit(bad === 0 ? 0 : 1)",
+        "vercel.json buildCommand invokes build:web only"
+      ],
+      "confidence": 0.78,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-ingest",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node runtime executing the real WhatsApp-export parser (src/pipeline/ingest) against fixtures written to a temp dir; exit code from process.exit",
+        "actorCanWrite": null,
+        "argument": "Substantively the best assertion suite in the repo — it feeds iOS and Android WhatsApp export formats, invisible marks, multiline and system messages through the actual ingest() and redact() code, and asserts the fine PII boundary (a phone number is scrubbed, a price of 45.000 is not). The runtime, not the author, decides whether redact() emits '[tel]'. But same wall as #check: nothing invokes it. No workflow, no hook, no build step. A parser regression would land and deploy green. I cannot trace an edge that consumes this exit code, so the honest class is unknown rather than crediting a signal nobody reads."
+      },
+      "evidence": [
+        "scripts/check-ingest.ts imports { ingest, parsePosts, parseReviews, redact } from ../src/pipeline/ingest",
+        "assertions: redact(\"llámame al 3001234567\").text.includes(\"[tel]\"); redact(\"son 45.000 pesos\").text === \"son 45.000 pesos\"",
+        "process.exit(bad === 0 ? 0 : 1)",
+        "no CI config anywhere in the repo"
+      ],
+      "confidence": 0.75,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-evolution",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node runtime executing runSimulation with fixed seeds; exit code from process.exit",
+        "actorCanWrite": null,
+        "argument": "It asserts a genuine property of the seeded evolutionary simulator — same seed reproduces, different seed diverges (JSON.stringify comparison of ad sparks), seedAd yields positive CTR. Determinism under a PRNG is decided by executing mulberry32, not by an assertion about it. Still: no invoker. No .github/workflows, no pre-commit, not in the Vercel build command. The signal exists but no edge is conditioned on it, so I cannot place a fork point between the actor and anything that would block on this."
+      },
+      "evidence": [
+        "scripts/check-evolution.ts: runSimulation(batch(), { seed: 8, emit: false }) and seed-equality/inequality assertions",
+        "process.exit(bad === 0 ? 0 : 1)",
+        "no CI"
+      ],
+      "confidence": 0.75,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-privacy",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node runtime running regex scans over the actual outbound payload assembled from a real customer file supplied as argv[2]",
+        "actorCanWrite": null,
+        "argument": "This one has the most interesting producer in the repo: it reconstructs exactly the text that would travel to a third-party model, then greps it for emails, Colombian mobile numbers, and every customer name it harvested from the source file, exiting 1 on any hit. The oracle is the real input file, not a fixture the author wrote — that is a signal from outside the code. But it requires a human to pass a file path (`if (!file) process.exit(1)`), and nothing in the repo passes one. It is a hand-run safety tool, not an edge in any pipeline; no deploy or merge is conditioned on it. Unknown, failing closed."
+      },
+      "evidence": [
+        "scripts/check-privacy.ts: const file = process.argv[2]; if (!file) { ...; process.exit(1); }",
+        "outgoing = res.conversations.flatMap(c => c.messages.map(m => m.text)).join(\"\\n\") then regex scans for emails/tels/names",
+        "invoked nowhere: not in build:web, not in `check`, no CI"
+      ],
+      "confidence": 0.72,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#typecheck",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "tsc --noEmit — deterministic static analysis of the source, exit code owned by the compiler",
+        "actorCanWrite": null,
+        "argument": "The producer here is textbook anchored: the TypeScript compiler decides, and no amount of authoring intent changes a type error. The problem is purely wiring. `tsc --noEmit` appears in package.json and in nothing else — the Vercel build runs bash scripts/build-web.sh, which copies static files and never compiles; the runtime uses tsx, which strips types without checking them. So a type error ships. Classifying this anchored would be exactly the mistake the guidance names: crediting the file that could gate rather than the edge that does."
+      },
+      "evidence": [
+        "package.json: \"typecheck\": \"tsc --noEmit\"",
+        "scripts/build-web.sh performs cp/rename/node -e only — no tsc invocation",
+        "all runtime scripts use tsx (transpile-only)",
+        "no .github/workflows"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-models",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "third-party LLM providers (Anthropic / OpenRouter) answering live requests over the network",
+        "actorCanWrite": null,
+        "argument": "The signal source is genuinely foreign — a remote API that the developer cannot write to decides whether each configured model id resolves and returns a long-enough completion, and the script exits 1 on any failure. That is the strongest write-boundary story in the repo. It is nonetheless not an edge: it needs API keys from a local .env, is invoked by no workflow, build step or hook, and its result reaches no gate. It also probes availability, not correctness of this codebase. Unknown, because I cannot establish that anything consumes it."
+      },
+      "evidence": [
+        "scripts/check-models.ts issues live provider calls in a try/catch per model, incrementing `bad` on throw",
+        "process.exit(bad === 0 ? 0 : 1)",
+        ".env.example carries ANTHROPIC_API_KEY / OPENROUTER_API_KEY",
+        "not referenced by build:web, `check`, or any CI"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-keys",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "a live Supabase instance — it accepts or rejects a real test-row insert with the service-role key, then the row is deleted",
+        "actorCanWrite": null,
+        "argument": "Round-tripping an insert against a hosted Postgres is a signal the developer cannot fabricate locally: RLS, schema and credentials all have to be genuinely correct or the call fails. External producer. But the tail of the script degenerates into printing configured env vars (provider, judge model, hard stop) which assert nothing, and — decisively — no edge runs it. Deploys proceed with broken or absent keys; the Vercel build only warns to stdout when SUPABASE_ANON_KEY is missing and still exits 0. So the connectivity signal is real and unconsumed."
+      },
+      "evidence": [
+        "scripts/check-keys.ts inserts a probe row then deletes it: \"(fila de prueba borrada)\"",
+        "ok(false, \"faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY\") branch",
+        "build-web.sh on missing anon key: prints \"⚠ sin SUPABASE_ANON_KEY\" and continues (exit 0)"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check-fetch",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "a live HTTP fetch, whose output is printed to stdout",
+        "actorCanWrite": true,
+        "argument": "Despite the check: prefix this script contains no assertion at all. It fetches a URL, prints the status code, the elapsed ms, the html→text length and the first 600 characters, and ends. There is no `bad` counter, no comparison, no process.exit with a nonzero path — a 404 or an empty extraction prints just as happily as a success. A step whose outcome cannot vary in any consequential way asserts nothing; this is a developer's eyeball tool for the HTML extractor, correctly excluded from the ratio rather than counted as a weak check."
+      },
+      "evidence": [
+        "scripts/check-fetch.ts tail is console.log of status, lengths and a text preview",
+        "grep for `exit` and `ok(` in check-fetch.ts returns nothing"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "tsx watch — a long-running dev server process",
+        "actorCanWrite": true,
+        "argument": "`tsx watch src/server.ts` starts a process and keeps it alive; tsx strips types without checking them, so it does not even reject malformed types. It produces a running server, never a pass/fail verdict about the code. Nothing downstream reads its status. Excluded from the ratio."
+      },
+      "evidence": [
+        "package.json: \"dev\": \"tsx watch src/server.ts\""
+      ],
+      "confidence": 0.93,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "presentation/darwin-hyperframes/package.json#check",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "hyperframes@0.7.71, fetched at run time by `npx --yes` from the npm registry",
+        "actorCanWrite": null,
+        "argument": "The implementation of this check lives entirely outside the repo — a pinned but unvendored npm package downloaded on each invocation. I cannot descend into it to see what it validates or whether it can fail, and the guidance is explicit that a wrapper you cannot descend into is unknown, not anchored. Two further facts keep it there: the package is pulled from a registry the author could in principle publish to, and nothing in the repo or in any pipeline invokes this script — the presentation directory has no build wiring and there is no CI."
+      },
+      "evidence": [
+        "presentation/darwin-hyperframes/package.json: \"check\": \"npx --yes hyperframes@0.7.71 check\"",
+        "no node_modules or vendored source for hyperframes in the repo",
+        "no .github/workflows anywhere"
+      ],
+      "confidence": 0.68,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 1,
+    "selfReferential": 0,
+    "unknown": 8,
+    "notACheck": 3,
+    "ratio": 0.1111111111111111
+  },
+  "economics": {
+    "nodesTotal": 22,
+    "nodesSampled": 12,
+    "decidedByProbe": 0,
+    "decidedByAgent": 12,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}

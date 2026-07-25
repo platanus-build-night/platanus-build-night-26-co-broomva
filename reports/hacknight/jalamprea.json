@@ -1,0 +1,308 @@
+{
+  "target": "platanus-build-night-26-co-jalamprea",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.696Z",
+  "nodes": [
+    {
+      "id": "render.yaml#render-yaml",
+      "kind": "deploy_gate",
+      "name": "deploy config (render.yaml)",
+      "source": "render.yaml",
+      "raw": "# Render blueprint — https://render.com/docs/blueprint-spec\n#\n# Three services: the Fastify API as a long-lived Node process, the built SPA as a\n# static site, and Postgres with pgvector. The runbook that goes with this file, in the\n# order the steps must happen, is docs/deploy.md — read it before applying the blueprint.\n#\n# Why the API is a real process and not a serverless function: routes/coaches.ts fires\n# the corpus clone detached from the request, and routes/messages.ts writes SSE straight\n# to the socket after reply.hijack(). Both need the process to outlive the response.\n\nservices:\n  - type: web\n    name: sourced-api\n    runtime: node\n    # NOT free. A free web service sleeps after 15 minutes of inactivity and takes about\n    # a minute to wake up — that minute would land in the middle of the demo.\n    plan: starter\n    region: ohio\n    # Deploys are manual on purpose: on demo day a pushed README fix must not restart the\n    # API. Deploy from the dashboard (\"Manual Deploy\") when you actually mean it.\n    autoDeployTrigger: off\n    # --prod=false is load-bearing: tsx, typescript and vite live in devDependencies, and\n    # a NODE_ENV=production install would skip them and break both the start command and\n    # the web build. Node version comes from .nvmrc (22.20.0).\n    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false\n    startCommand: pnpm --filter api start\n    healthCheckPath: /health\n    envVars:\n      # Internal connection string — same region as the database, so no public hop.\n      - key: DATABASE_URL\n        fromDatabase:\n          name: sourced-db\n          property: connectionString\n      - key: ANTHROPIC_API_KEY\n        sync: false\n      - key: OPENAI_API_KEY\n        sync: false\n\n  - type: web\n    name: sourced-web\n    runtime: static\n    autoDeployTrigger: off\n    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter web build\n    staticPublishPath: apps/web/dist\n    envVars:\n      # Vite inlines this at BUILD time. Changing it requires a rebuild, not a restart.\n      # Must point at the API origin, and the API domain must already resolve before the\n      # build that bakes it in — see docs/deploy.md.\n      - key: VITE_API_URL\n        value: https://api.trysourced.co\n    routes:\n      # Single-page app: every path resolves to the shell.\n      - type: rewrite\n        source: /*\n        destination: /index.html\n    headers:\n      # vite-plugin-pwa runs in autoUpdate mode. If the service worker itself gets cached\n      # by the CDN, a stale frontend stays pinned to the old API origin and a plain reload\n      # will not fix it. If the blueprint validator rejects this block, delete it and add\n      # the same rule from the dashboard — it is a safety net, not a requirement.\n      - path: /sw.js\n        name: Cache-Control\n        value: no-cache, no-store, must-revalidate\n\ndatabases:\n  - name: sourced-db\n    # Free Postgres expires 30 days after creation (14 more days to rescue it by\n    # upgrading, then it is deleted with the corpus inside). Enough for the judging\n    # window. Switch to basic-256mb to keep it alive.\n    plan: free\n    region: ohio\n    # Matches the local pgvector/pgvector:pg16 image, so migrations behave identically.\n    postgresMajorVersion: \"16\"\n    ipAllowList:\n      # Needed to run migrations and load the corpus from outside Render. Tighten this to\n      # your own IP — or empty it — once the 296 chunks are in.\n      - source: 0.0.0.0/0\n        description: laptop access for migrations and ingest\n"
+    },
+    {
+      "id": "package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "package.json",
+      "raw": "\"dev\": \"concurrently -n api,web -c cyan,magenta \"pnpm --filter api dev\" \"pnpm --filter web dev\"\""
+    },
+    {
+      "id": "package.json#db-up",
+      "kind": "script",
+      "name": "db:up",
+      "source": "package.json",
+      "raw": "\"db:up\": \"docker compose up -d\""
+    },
+    {
+      "id": "package.json#db-migrate",
+      "kind": "script",
+      "name": "db:migrate",
+      "source": "package.json",
+      "raw": "\"db:migrate\": \"./scripts/migrate.sh\""
+    },
+    {
+      "id": "package.json#ingest",
+      "kind": "script",
+      "name": "ingest",
+      "source": "package.json",
+      "raw": "\"ingest\": \"pnpm --filter api ingest\""
+    },
+    {
+      "id": "apps/web/package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "apps/web/package.json",
+      "raw": "\"dev\": \"vite --host\""
+    },
+    {
+      "id": "apps/web/package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "apps/web/package.json",
+      "raw": "\"build\": \"vite build\""
+    },
+    {
+      "id": "apps/web/package.json#typecheck",
+      "kind": "script",
+      "name": "typecheck",
+      "source": "apps/web/package.json",
+      "raw": "\"typecheck\": \"tsc --noEmit\""
+    },
+    {
+      "id": "apps/api/package.json#start",
+      "kind": "script",
+      "name": "start",
+      "source": "apps/api/package.json",
+      "raw": "\"start\": \"tsx src/server.ts\""
+    },
+    {
+      "id": "apps/api/package.json#demo-reset",
+      "kind": "script",
+      "name": "demo:reset",
+      "source": "apps/api/package.json",
+      "raw": "\"demo:reset\": \"tsx src/scripts/demo.ts\""
+    },
+    {
+      "id": "apps/api/package.json#test",
+      "kind": "script",
+      "name": "test",
+      "source": "apps/api/package.json",
+      "raw": "\"test\": \"tsx src/ingest/vtt.smoke.ts\""
+    },
+    {
+      "id": "apps/api/package.json#typecheck",
+      "kind": "script",
+      "name": "typecheck",
+      "source": "apps/api/package.json",
+      "raw": "\"typecheck\": \"tsc --noEmit\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "render.yaml#render-yaml",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "Render's build container executing `corepack enable && pnpm install --frozen-lockfile --prod=false` (and `pnpm --filter web build` for the static site); exit code decides whether the release is published",
+        "actorCanWrite": false,
+        "argument": "The only part of this blueprint that can emit a failing signal is the build command, and it runs on Render's builder from the committed pnpm-lock.yaml. `--frozen-lockfile` makes pnpm's resolver compare package.json against the lockfile and abort on drift — the repo author cannot talk pnpm out of a mismatch, and the static-site leg additionally fails on any module vite cannot resolve. That producer sits outside the actor's write boundary. Two limits belong in the same breath: `autoDeployTrigger: off` means this gate only fires on deploys a human clicks, so it blocks no push and no merge; and `healthCheckPath: /health` contributes nothing, because the handler in apps/api/src/server.ts returns HTTP 200 with `{ok:false}` when the database is unreachable, so the only status code Render ever reads is invariant to the condition being probed. What survives is dependency-integrity and bundling, not correctness.",
+        "note": "anchored on the build axis only; the health gate is separately vacuous"
+      },
+      "evidence": [
+        "render.yaml: buildCommand `corepack enable && pnpm install --frozen-lockfile --prod=false`",
+        "render.yaml: `autoDeployTrigger: off` on both services, with a comment saying deploys are manual on purpose",
+        "render.yaml: `healthCheckPath: /health`",
+        "apps/api/src/server.ts:26-29 — `const db = await isDbReachable(); return { ok: db, db };` (always 200)"
+      ],
+      "confidence": 0.55,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/api/package.json#test",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node/tsx process exit code from apps/api/src/ingest/vtt.smoke.ts — but no automated consumer of that exit code exists anywhere in the repo",
+        "actorCanWrite": null,
+        "argument": "There is no `.github/workflows/`, no CI config of any kind, no git hook, and Render's buildCommand never calls `pnpm test` — the API is started with `tsx src/server.ts`, which does not run tests. So the exit code this script produces is read only by whichever human happens to type the command, and I cannot establish that anyone did. This is the file-versus-edge distinction: the repo has a test, not a check. The irony is worth recording — the test itself is the best-grounded artifact in the repository. It parses two caption tracks of the same video, one hand-authored and one produced by YouTube's ASR, and asserts >0.9 token agreement between them. The auto track's content was generated by a third party the authors cannot write to, so the oracle is genuinely external rather than co-authored with the parser. The moment any pipeline invoked this, it would be a strong `anchored`. Nothing invokes it.",
+        "note": "would be anchored if any pipeline consumed the exit code"
+      },
+      "evidence": [
+        "no .github/ directory in the repo root (ls -a)",
+        "apps/api/package.json: \"test\": \"tsx src/ingest/vtt.smoke.ts\"",
+        "render.yaml startCommand `pnpm --filter api start` -> `tsx src/server.ts`; buildCommand is install-only",
+        "apps/api/src/ingest/vtt.smoke.ts: `assert.ok(agreement > 0.9, ...)` comparing manual.es.vtt against auto.es.vtt",
+        "CLAUDE.md:36 — 'the VTT parser smoke test — the only test in the repo'"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/api/package.json#typecheck",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "tsc --noEmit — deterministic compiler analysis, but nothing in the repo invokes it",
+        "actorCanWrite": null,
+        "argument": "The producer would be the TypeScript compiler, which the author cannot argue with. But the API ships through `tsx`, which strips types and performs no checking, and Render's buildCommand for sourced-api is a bare pnpm install. No workflow, hook, or deploy step runs `tsc`. Whether a type error would ever have blocked anything is not traceable from disk, so the fork point for this edge — who reads the compiler's exit code — cannot be established.",
+        "note": null
+      },
+      "evidence": [
+        "apps/api/package.json: \"typecheck\": \"tsc --noEmit\"",
+        "apps/api/package.json: \"start\": \"tsx src/server.ts\" (type-stripping, no check)",
+        "render.yaml sourced-api buildCommand contains no typecheck invocation",
+        "no CI directory"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/web/package.json#typecheck",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "tsc --noEmit over the React app; no automated caller found",
+        "actorCanWrite": null,
+        "argument": "Same shape as the API typecheck, and the near-miss is sharper here because the web service does run a build on Render. But that build is `vite build` with @vitejs/plugin-react, which transpiles via esbuild and does not typecheck — a file full of type errors bundles cleanly. So the compiler's verdict is emitted only on demand by a developer, and no path from a commit to a deploy consumes it.",
+        "note": null
+      },
+      "evidence": [
+        "apps/web/package.json: \"typecheck\": \"tsc --noEmit\", \"build\": \"vite build\"",
+        "render.yaml sourced-web buildCommand: `... && pnpm --filter web build` — build only",
+        "no CI directory"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/web/package.json#build",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "vite/esbuild bundler writing apps/web/dist",
+        "actorCanWrite": null,
+        "argument": "A build produces an artifact; it asserts nothing about whether the artifact behaves correctly. It fails on unresolvable imports and syntax errors, which is a packaging precondition, not a correctness claim — and with plugin-react's esbuild transform it will not even reject a type error. Excluded from the ratio as a production step; the deploy-blocking aspect of running it on Render is already carried by the render.yaml node.",
+        "note": "excluded from ratio; correctness content is zero"
+      },
+      "evidence": [
+        "apps/web/package.json: \"build\": \"vite build\""
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/web/package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "vite dev server process",
+        "actorCanWrite": null,
+        "argument": "A long-lived dev server has no terminating exit code and no assertion. It serves files until killed. Nothing about correctness is claimed or could be refuted.",
+        "note": null
+      },
+      "evidence": [
+        "apps/web/package.json: \"dev\": \"vite --host\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/api/package.json#start",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "tsx running the Fastify server as a long-lived process",
+        "actorCanWrite": null,
+        "argument": "This is the production entrypoint, not a verification edge. It boots a server; it does not assert anything about the code it is serving. The only signal adjacent to it is Render's health probe, which is judged with render.yaml and is vacuous there.",
+        "note": null
+      },
+      "evidence": [
+        "apps/api/package.json: \"start\": \"tsx src/server.ts\"",
+        "render.yaml: startCommand `pnpm --filter api start`"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "concurrently supervising two dev servers",
+        "actorCanWrite": null,
+        "argument": "A supervisor around two `dev` processes inherits their nature: it starts things. There is no assertion, no oracle, and no terminating verdict.",
+        "note": null
+      },
+      "evidence": [
+        "package.json: \"dev\": \"concurrently -n api,web ... \\\"pnpm --filter api dev\\\" \\\"pnpm --filter web dev\\\"\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#db-migrate",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "scripts/migrate.sh -> psql applying migrations/*.sql; Postgres emits the exit code",
+        "actorCanWrite": null,
+        "argument": "Postgres genuinely decides whether the SQL applies, and the script is careful — `set -euo pipefail`, a real `select 1` probe rather than pg_isready, explicit failure paths. But the step is a state mutation: its failure means 'the migration did not land', not 'the code is wrong'. It carries no assertion about the behaviour of the system being deployed, and nothing consumes its result as a gate. Filed here because it asserts nothing, not because it is hard.",
+        "note": "readiness probe inside is real but is a precondition, not an oracle"
+      },
+      "evidence": [
+        "package.json: \"db:migrate\": \"./scripts/migrate.sh\"",
+        "scripts/migrate.sh: `set -euo pipefail`; readiness loop on `run_psql -c 'select 1'`; 'Migrations must be idempotent'"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#db-up",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "docker compose bringing up the pgvector container",
+        "actorCanWrite": null,
+        "argument": "Provisions local infrastructure. The compose file does define a real healthcheck (`psql -c \"select 1\"`), but that governs container restart policy for a developer's laptop database — it verifies the database is up, never that the application is correct, and it gates no release.",
+        "note": null
+      },
+      "evidence": [
+        "package.json: \"db:up\": \"docker compose up -d\"",
+        "docker-compose.yml healthcheck: `psql -U coach -d coach -c \"select 1\" || exit 1`"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#ingest",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "tsx running apps/api/src/ingest/cli.ts against the database",
+        "actorCanWrite": null,
+        "argument": "A data-loading pipeline. It writes transcript chunks into Postgres; a non-zero exit means ingestion broke, not that anything under test is wrong. No assertion about correctness is made, and the loaded corpus is the actor's own output — reading it back would be self-referential, but as an edge this simply asserts nothing.",
+        "note": null
+      },
+      "evidence": [
+        "package.json: \"ingest\": \"pnpm --filter api ingest\"",
+        "apps/api/package.json: \"ingest\": \"tsx src/ingest/cli.ts\""
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "apps/api/package.json#demo-reset",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "tsx running apps/api/src/scripts/demo.ts, mutating demo state",
+        "actorCanWrite": null,
+        "argument": "A fixture-reset utility for demo day. It puts the database into a known state so a person can show the product; it makes no claim that anything works and produces no verdict a reviewer or pipeline reads.",
+        "note": null
+      },
+      "evidence": [
+        "apps/api/package.json: \"demo:reset\": \"tsx src/scripts/demo.ts\""
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 1,
+    "selfReferential": 0,
+    "unknown": 3,
+    "notACheck": 8,
+    "ratio": 0.25
+  },
+  "economics": {
+    "nodesTotal": 20,
+    "nodesSampled": 12,
+    "decidedByProbe": 0,
+    "decidedByAgent": 12,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}
