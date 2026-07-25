@@ -19,6 +19,9 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { homedir } from 'node:os';
+
+const HOME = homedir();
 
 const REPO = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const REPORTS = join(REPO, 'reports');
@@ -36,6 +39,27 @@ mkdirSync(OUT, { recursive: true });
 const css = readFileSync(join(REPO, 'skills/keel/design/tokens.css'), 'utf8') +
   '\n' + readFileSync(join(REPO, 'skills/keel/design/keel.css'), 'utf8');
 
+// Below this many classified edges, a ratio is reported but flagged: it is too
+// few for the decimals to mean much. Not a cutoff for publishing — suppressing a
+// thin number would be its own dishonesty — just a cutoff for presenting it as
+// though it were solid.
+const THIN_DENOMINATOR = 10;
+
+/**
+ * Machine-local absolute paths leak into GENERATED artifacts through diagnostic
+ * strings — a probe-shadow warning naming its probe dir, a curve disclosure
+ * naming the reports dir, a verdict quoting a command's output. They are true
+ * on the machine that wrote them and meaningless anywhere else, and committing
+ * them fails scripts/portability-check.sh for good reason: a path that exists
+ * only on one laptop is exactly the kind of unreproducible detail this project
+ * argues against publishing.
+ *
+ * Rewritten to a repo-relative form rather than deleted, so the diagnostic still
+ * says which file it meant.
+ */
+const scrub = (text: string): string =>
+  text.split(REPO + '/').join('<repo>/').split(REPO).join('<repo>').split(HOME + '/').join('<home>/');
+
 const esc = (s: unknown) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -52,7 +76,12 @@ for (const e of summary.entries ?? []) {
     stdout: 'pipe',
     stderr: 'pipe',
   });
-  if (r.exitCode === 0 && existsSync(dst)) rendered.push(e.name);
+  if (r.exitCode === 0 && existsSync(dst)) {
+    // The renderer faithfully carries whatever the report contained, so the scrub
+    // belongs here — at the boundary where an artifact stops being local.
+    writeFileSync(dst, scrub(readFileSync(dst, 'utf8')), 'utf8');
+    rendered.push(e.name);
+  }
   else {
     failedRender.push(e.name);
     console.error(`publish: render failed for ${e.name}: ${new TextDecoder().decode(r.stderr).slice(0, 300)}`);
@@ -93,7 +122,14 @@ function row(e: any): string {
       ? `<span class="k-nothing">nothing gathered</span>`
       : classified === 0
         ? `<span class="k-nothing">no denominator — every judged edge is not_a_check</span>`
-        : `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>`;
+        : // A ratio over a handful of edges is a weak claim however precise the
+          // decimals look, and 1.000 over 7 is the shape most likely to be quoted
+          // and least able to bear it. Mark it in the number itself: a reader who
+          // sees only this cell must still see the weakness.
+          `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>` +
+          (classified < THIN_DENOMINATOR
+            ? `<div class="k-thin">thin — ${classified} classified edge${classified === 1 ? '' : 's'}</div>`
+            : '');
 
   // Two independent disclosures, and a target can trip either or both:
   //  - `capped`: the run judged fewer nodes than it gathered (a sampling cap)
@@ -102,7 +138,12 @@ function row(e: any): string {
   //    disclosure indefensible, and it is right.
   const notes: string[] = [];
   if (e.capped || (e.nodesSampled != null && e.nodesTotal != null && e.nodesSampled !== e.nodesTotal)) {
-    notes.push(`sampled ${e.nodesSampled} of ${e.nodesTotal}`);
+    // The fraction, not just the pair. "sampled 25 of 1014" is technically a
+    // disclosure and reads like a footnote; "2%" reads like what it is. A ratio
+    // computed over 2% of a surface and one computed over 78% are different
+    // claims, and the number that makes them different has to be legible.
+    const pct = e.nodesTotal ? Math.round((e.nodesSampled / e.nodesTotal) * 100) : null;
+    notes.push(`sampled ${e.nodesSampled} of ${e.nodesTotal}${pct !== null ? ` — ${pct}% of the surface` : ''}`);
   }
   if (e.partial || (e.nodesUnjudged ?? 0) > 0) {
     const frac = typeof e.judgedFraction === 'number' ? ` (${(e.judgedFraction * 100).toFixed(0)}% judged)` : '';
@@ -159,6 +200,7 @@ const html = `<!doctype html>
 .k-sub{font-size:var(--k-fs-xs);color:var(--k-ink-2)}
 .k-cap{display:inline-block;margin-left:var(--k-space-2);color:var(--k-unknown)}
 .k-nothing{color:var(--k-ink-2);font-style:italic}
+.k-thin{color:var(--k-unknown);font-size:var(--k-fs-xs);font-weight:400}
 .k-ratio-inline{font-size:var(--k-fs-ratio);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse}
 th,td{padding:var(--k-space-2);border-bottom:1px solid var(--k-line);vertical-align:top}
@@ -243,7 +285,7 @@ measure is shopping its own denominator.</p>
 </html>
 `;
 
-writeFileSync(join(OUT, 'index.html'), html, 'utf8');
+writeFileSync(join(OUT, 'index.html'), scrub(html), 'utf8');
 
 console.log(`publish: ${rendered.length} report(s) → ${OUT}`);
 if (failedRender.length) console.log(`publish: ${failedRender.length} render failure(s): ${failedRender.join(', ')}`);

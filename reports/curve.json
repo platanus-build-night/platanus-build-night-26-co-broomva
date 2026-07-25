@@ -1,0 +1,573 @@
+{
+  "schema": "keel.curve/1",
+  "generatedAt": "2026-07-25T03:25:29.500Z",
+  "source": {
+    "dir": "<repo>/reports",
+    "reportFiles": 10,
+    "skippedFiles": [
+      "corpus-summary.json (no string \"target\")",
+      "curve.json (no string \"target\")",
+      "keel.bindings.json (no \"nodes\" array)"
+    ],
+    "provenance": "measured",
+    "provenanceSource": "cli",
+    "label": "Keel corpus, 10 real repositories, 2026-07-24",
+    "labelSource": "cli",
+    "note": "",
+    "orderSource": "generatedAt",
+    "orderNote": "run order derived from Report.generatedAt (ascending, filename as tiebreak) — no order.json manifest present"
+  },
+  "runOrder": [
+    {
+      "index": 0,
+      "file": "keel.json",
+      "target": "keel"
+    },
+    {
+      "index": 1,
+      "file": "anthropic-sdk-python.json",
+      "target": "anthropic-sdk-python"
+    },
+    {
+      "index": 2,
+      "file": "openai-python.json",
+      "target": "openai-python"
+    },
+    {
+      "index": 3,
+      "file": "vercel-ai.json",
+      "target": "vercel-ai"
+    },
+    {
+      "index": 4,
+      "file": "aider.json",
+      "target": "aider"
+    },
+    {
+      "index": 5,
+      "file": "browser-use.json",
+      "target": "browser-use"
+    },
+    {
+      "index": 6,
+      "file": "mcp-python-sdk.json",
+      "target": "mcp-python-sdk"
+    },
+    {
+      "index": 7,
+      "file": "simonw-llm.json",
+      "target": "simonw-llm"
+    },
+    {
+      "index": 8,
+      "file": "tiktoken.json",
+      "target": "tiktoken"
+    },
+    {
+      "index": 9,
+      "file": "requests.json",
+      "target": "requests"
+    }
+  ],
+  "totals": {
+    "runs": 10,
+    "runsWithNodes": 10,
+    "nodesGathered": 1625,
+    "nodesJudged": 237,
+    "anchored": 78,
+    "tokensEstimatedInAllRuns": true
+  },
+  "disclosures": [
+    "Skipped 3 file(s) that are not usable run reports: corpus-summary.json (no string \"target\"); curve.json (no string \"target\"); keel.bindings.json (no \"nodes\" array).",
+    "Run 0 (keel) judged 25 of 32 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 1 (anthropic-sdk-python) judged 25 of 41 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 2 (openai-python) judged 25 of 95 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 3 (vercel-ai) judged 25 of 1014 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 4 (aider) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 5 (browser-use) judged 25 of 104 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 6 (mcp-python-sdk) judged 25 of 121 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 7 (simonw-llm) judged 25 of 38 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Run 9 (requests) judged 25 of 106 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
+    "Provenance \"measured\" was declared on the COMMAND LINE (--provenance), not in <repo>/reports/corpus.meta.json. The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.",
+    "Token counts are ESTIMATES in 10 of 10 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill, so the token axis reads \"estimated tokens\" and nothing here claims a measured token count."
+  ],
+  "points": [
+    {
+      "index": 0,
+      "file": "keel.json",
+      "target": "keel",
+      "revision": "44f7e8d6cbdfaee7d0e4ff281d59a236ecf0c747",
+      "generatedAt": "2026-07-25T01:28:17.000Z",
+      "status": "measured",
+      "nodesTotal": 32,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 0,
+      "decidedByAgent": 25,
+      "probesMinted": 0,
+      "probeLibrarySize": 0,
+      "tokensIn": 2927,
+      "tokensOut": 9511,
+      "tokensEstimated": true,
+      "wallClockMs": 1849,
+      "estTokensPerNode": 497.52,
+      "secondsPerNode": 0.07396,
+      "probeDecidedShare": 0,
+      "grounding": {
+        "anchored": 5,
+        "selfReferential": 9,
+        "unknown": 0,
+        "notACheck": 11,
+        "ratio": 0.35714285714285715
+      },
+      "anchored": 5,
+      "coverageByKind": {
+        "script": 12,
+        "ci_step": 13
+      }
+    },
+    {
+      "index": 1,
+      "file": "anthropic-sdk-python.json",
+      "target": "anthropic-sdk-python",
+      "revision": "60c64fba5c2bf340567f627328e57cf0196b868f",
+      "generatedAt": "2026-07-25T01:35:15.174Z",
+      "status": "measured",
+      "nodesTotal": 41,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 0,
+      "decidedByAgent": 25,
+      "probesMinted": 3,
+      "probeLibrarySize": 3,
+      "tokensIn": 3990,
+      "tokensOut": 5233,
+      "tokensEstimated": true,
+      "wallClockMs": 395067,
+      "estTokensPerNode": 368.92,
+      "secondsPerNode": 15.80268,
+      "probeDecidedShare": 0,
+      "grounding": {
+        "anchored": 8,
+        "selfReferential": 2,
+        "unknown": 2,
+        "notACheck": 13,
+        "ratio": 0.6666666666666666
+      },
+      "anchored": 8,
+      "coverageByKind": {
+        "test_target": 2,
+        "ci_step": 22,
+        "review_gate": 1
+      }
+    },
+    {
+      "index": 2,
+      "file": "openai-python.json",
+      "target": "openai-python",
+      "revision": "d4c151d92ba713e56518a4483d3b7918dd1be838",
+      "generatedAt": "2026-07-25T01:42:13.604Z",
+      "status": "measured",
+      "nodesTotal": 95,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 4,
+      "decidedByAgent": 21,
+      "probesMinted": 2,
+      "probeLibrarySize": 5,
+      "tokensIn": 5036,
+      "tokensOut": 4913,
+      "tokensEstimated": true,
+      "wallClockMs": 385324,
+      "estTokensPerNode": 397.96,
+      "secondsPerNode": 15.41296,
+      "probeDecidedShare": 0.16,
+      "grounding": {
+        "anchored": 10,
+        "selfReferential": 2,
+        "unknown": 1,
+        "notACheck": 12,
+        "ratio": 0.7692307692307693
+      },
+      "anchored": 10,
+      "coverageByKind": {
+        "test_target": 2,
+        "ci_step": 22,
+        "review_gate": 1
+      }
+    },
+    {
+      "index": 3,
+      "file": "vercel-ai.json",
+      "target": "vercel-ai",
+      "revision": "e29788dd545f8bf2300db0885658e639b4fd91bd",
+      "generatedAt": "2026-07-25T02:26:49.454Z",
+      "status": "measured",
+      "nodesTotal": 1014,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 2,
+      "decidedByAgent": 23,
+      "probesMinted": 3,
+      "probeLibrarySize": 8,
+      "tokensIn": 3243,
+      "tokensOut": 7000,
+      "tokensEstimated": true,
+      "wallClockMs": 2646476,
+      "estTokensPerNode": 409.72,
+      "secondsPerNode": 105.85904000000001,
+      "probeDecidedShare": 0.08,
+      "grounding": {
+        "anchored": 8,
+        "selfReferential": 0,
+        "unknown": 2,
+        "notACheck": 15,
+        "ratio": 0.8
+      },
+      "anchored": 8,
+      "coverageByKind": {
+        "script": 8,
+        "test_target": 8,
+        "ci_step": 8,
+        "deploy_gate": 1
+      }
+    },
+    {
+      "index": 4,
+      "file": "aider.json",
+      "target": "aider",
+      "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "generatedAt": "2026-07-25T02:36:32.279Z",
+      "status": "measured",
+      "nodesTotal": 62,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 14,
+      "decidedByAgent": 11,
+      "probesMinted": 2,
+      "probeLibrarySize": 10,
+      "tokensIn": 1459,
+      "tokensOut": 3641,
+      "tokensEstimated": true,
+      "wallClockMs": 531836,
+      "estTokensPerNode": 204,
+      "secondsPerNode": 21.27344,
+      "probeDecidedShare": 0.56,
+      "grounding": {
+        "anchored": 7,
+        "selfReferential": 0,
+        "unknown": 0,
+        "notACheck": 18,
+        "ratio": 1
+      },
+      "anchored": 7,
+      "coverageByKind": {
+        "test_target": 1,
+        "review_gate": 1,
+        "ci_step": 23
+      }
+    },
+    {
+      "index": 5,
+      "file": "browser-use.json",
+      "target": "browser-use",
+      "revision": "b909fbfba0ae42790f8402dd3daecc8f265be246",
+      "generatedAt": "2026-07-25T02:46:11.681Z",
+      "status": "measured",
+      "nodesTotal": 104,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 8,
+      "decidedByAgent": 17,
+      "probesMinted": 2,
+      "probeLibrarySize": 12,
+      "tokensIn": 4501,
+      "tokensOut": 4939,
+      "tokensEstimated": true,
+      "wallClockMs": 543632,
+      "estTokensPerNode": 377.6,
+      "secondsPerNode": 21.745279999999998,
+      "probeDecidedShare": 0.32,
+      "grounding": {
+        "anchored": 7,
+        "selfReferential": 0,
+        "unknown": 0,
+        "notACheck": 18,
+        "ratio": 1
+      },
+      "anchored": 7,
+      "coverageByKind": {
+        "review_gate": 1,
+        "ci_step": 22,
+        "test_target": 2
+      }
+    },
+    {
+      "index": 6,
+      "file": "mcp-python-sdk.json",
+      "target": "mcp-python-sdk",
+      "revision": "00a70148bcd39b40ee0b0745e0b468eac0a44efb",
+      "generatedAt": "2026-07-25T02:55:11.583Z",
+      "status": "measured",
+      "nodesTotal": 121,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 0,
+      "decidedByAgent": 25,
+      "probesMinted": 1,
+      "probeLibrarySize": 13,
+      "tokensIn": 7501,
+      "tokensOut": 7309,
+      "tokensEstimated": true,
+      "wallClockMs": 503738,
+      "estTokensPerNode": 592.4,
+      "secondsPerNode": 20.14952,
+      "probeDecidedShare": 0,
+      "grounding": {
+        "anchored": 15,
+        "selfReferential": 0,
+        "unknown": 0,
+        "notACheck": 10,
+        "ratio": 1
+      },
+      "anchored": 15,
+      "coverageByKind": {
+        "review_gate": 1,
+        "ci_step": 16,
+        "test_target": 8
+      }
+    },
+    {
+      "index": 7,
+      "file": "simonw-llm.json",
+      "target": "simonw-llm",
+      "revision": "0392226e6630746ef51ffd309c2bee6a5f72b58e",
+      "generatedAt": "2026-07-25T03:00:47.827Z",
+      "status": "measured",
+      "nodesTotal": 38,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 14,
+      "decidedByAgent": 11,
+      "probesMinted": 2,
+      "probeLibrarySize": 15,
+      "tokensIn": 2088,
+      "tokensOut": 2644,
+      "tokensEstimated": true,
+      "wallClockMs": 293889,
+      "estTokensPerNode": 189.28,
+      "secondsPerNode": 11.755560000000001,
+      "probeDecidedShare": 0.56,
+      "grounding": {
+        "anchored": 3,
+        "selfReferential": 1,
+        "unknown": 0,
+        "notACheck": 21,
+        "ratio": 0.75
+      },
+      "anchored": 3,
+      "coverageByKind": {
+        "test_target": 2,
+        "script": 2,
+        "ci_step": 21
+      }
+    },
+    {
+      "index": 8,
+      "file": "tiktoken.json",
+      "target": "tiktoken",
+      "revision": "08a5f3b2c987ada4fc5aa1f16c643c203fa8acaa",
+      "generatedAt": "2026-07-25T03:06:06.073Z",
+      "status": "measured",
+      "nodesTotal": 12,
+      "nodesSampled": 12,
+      "capped": false,
+      "decidedByProbe": 7,
+      "decidedByAgent": 5,
+      "probesMinted": 2,
+      "probeLibrarySize": 17,
+      "tokensIn": 892,
+      "tokensOut": 1987,
+      "tokensEstimated": true,
+      "wallClockMs": 284519,
+      "estTokensPerNode": 239.91666666666666,
+      "secondsPerNode": 23.70991666666667,
+      "probeDecidedShare": 0.5833333333333334,
+      "grounding": {
+        "anchored": 4,
+        "selfReferential": 0,
+        "unknown": 0,
+        "notACheck": 8,
+        "ratio": 1
+      },
+      "anchored": 4,
+      "coverageByKind": {
+        "ci_step": 12
+      }
+    },
+    {
+      "index": 9,
+      "file": "requests.json",
+      "target": "requests",
+      "revision": "69f84847045bef7a849cc994a26fe7ba8a169e95",
+      "generatedAt": "2026-07-25T03:13:36.804Z",
+      "status": "measured",
+      "nodesTotal": 106,
+      "nodesSampled": 25,
+      "capped": true,
+      "decidedByProbe": 7,
+      "decidedByAgent": 18,
+      "probesMinted": 2,
+      "probeLibrarySize": 19,
+      "tokensIn": 2479,
+      "tokensOut": 4775,
+      "tokensEstimated": true,
+      "wallClockMs": 418864,
+      "estTokensPerNode": 290.16,
+      "secondsPerNode": 16.754559999999998,
+      "probeDecidedShare": 0.28,
+      "grounding": {
+        "anchored": 11,
+        "selfReferential": 0,
+        "unknown": 1,
+        "notACheck": 13,
+        "ratio": 0.9166666666666666
+      },
+      "anchored": 11,
+      "coverageByKind": {
+        "review_gate": 2,
+        "script": 10,
+        "ci_step": 10,
+        "test_target": 3
+      }
+    }
+  ],
+  "trends": {
+    "estTokensPerNode": {
+      "series": "estTokensPerNode",
+      "label": "estimated tokens per node",
+      "unit": "estimated tokens / judged node",
+      "runs": 10,
+      "usable": 10,
+      "mean": 356.7476666666667,
+      "slopePerRun": -18.733474747474748,
+      "normalizedSlope": -0.4726065185026374,
+      "flatBand": 0.15,
+      "verdict": "falls",
+      "firstValue": 497.52,
+      "lastValue": 290.16,
+      "fit": {
+        "x0": 0,
+        "y0": 441.0483030303031,
+        "x1": 9,
+        "y1": 272.4470303030304
+      },
+      "r2": 0.19315125669097222,
+      "fitCaveat": "",
+      "note": "falls — total fitted change -47.3% of the mean across 10 runs (R^2 0.19, so the line explains less than half the variance — read the raw squares)"
+    },
+    "secondsPerNode": {
+      "series": "secondsPerNode",
+      "label": "seconds per node",
+      "unit": "measured s / judged node",
+      "runs": 10,
+      "usable": 10,
+      "mean": 25.253691666666665,
+      "slopePerRun": -0.42101614141414184,
+      "normalizedSlope": -0.15004322230356196,
+      "flatBand": 0.15,
+      "verdict": "falls",
+      "firstValue": 0.07396,
+      "lastValue": 16.754559999999998,
+      "fit": {
+        "x0": 0,
+        "y0": 27.148264303030302,
+        "x1": 9,
+        "y1": 23.359119030303027
+      },
+      "r2": 0.0019169755819683498,
+      "fitCaveat": "",
+      "note": "falls — total fitted change -15.0% of the mean across 10 runs (R^2 0.00, so the line explains less than half the variance — read the raw squares)"
+    },
+    "probeDecidedShare": {
+      "series": "probeDecidedShare",
+      "label": "probe-decided share",
+      "unit": "measured share of decided nodes",
+      "runs": 10,
+      "usable": 10,
+      "mean": 0.2543333333333334,
+      "slopePerRun": 0.04923232323232324,
+      "normalizedSlope": 1.7421660907899437,
+      "flatBand": 0.15,
+      "verdict": "rises",
+      "firstValue": 0,
+      "lastValue": 0.28,
+      "fit": {
+        "x0": 0,
+        "y0": 0.03278787878787884,
+        "x1": 9,
+        "y1": 0.475878787878788
+      },
+      "r2": 0.3748716520248825,
+      "fitCaveat": "",
+      "note": "rises — total fitted change 174.2% of the mean across 10 runs (R^2 0.37, so the line explains less than half the variance — read the raw squares)"
+    },
+    "probeLibrarySize": {
+      "series": "probeLibrarySize",
+      "label": "probe library size",
+      "unit": "measured probes in library",
+      "runs": 10,
+      "usable": 10,
+      "mean": 10.2,
+      "slopePerRun": 2.036363636363636,
+      "normalizedSlope": 1.7967914438502672,
+      "flatBand": 0.15,
+      "verdict": "rises",
+      "firstValue": 0,
+      "lastValue": 19,
+      "fit": {
+        "x0": 0,
+        "y0": 1.036363636363637,
+        "x1": 9,
+        "y1": 19.36363636363636
+      },
+      "r2": 0.98989898989899,
+      "fitCaveat": "",
+      "note": "rises — total fitted change 179.7% of the mean across 10 runs (R^2 0.99)"
+    }
+  },
+  "shuffleCheck": {
+    "permutation": {
+      "ran": true,
+      "iterations": 400,
+      "seed": 20260724,
+      "baselineNormalizedSlope": -0.4726065185026374,
+      "medianAbsDelta": 0.441951288377754,
+      "fractionMaterial": 0.81,
+      "threshold": 0.15,
+      "curveChanged": true,
+      "caveat": "A permutation reorders ALREADY-RECORDED runs; it cannot reproduce what a genuine re-run in a different order would have cost, because the probe library would have accumulated differently. It is a sanity signal on order-dependence, never a substitute for the empirical re-run."
+    },
+    "empirical": {
+      "ran": false,
+      "reason": "no re-run supplied (--shuffled) and none declared in corpus.meta.json",
+      "baselineDir": "<repo>/reports",
+      "shuffledDir": null,
+      "matchedTargets": 0,
+      "unmatched": [],
+      "perTarget": [],
+      "medianRelativeCostDelta": null,
+      "maxRelativeCostDelta": null,
+      "costBand": 0.15,
+      "curveOrderDependent": null,
+      "maxRatioDelta": null,
+      "ratioTolerance": 0.05,
+      "ratiosStable": null
+    },
+    "findings": [
+      "Ratio stability under shuffle was NOT checked: no re-run supplied (--shuffled) and none declared in corpus.meta.json. Permuting recorded runs cannot move a per-target ratio, so the permutation result below says nothing about it. Supply a re-run with --shuffled <dir>."
+    ],
+    "passesBothDirections": null,
+    "summary": "shuffle check INCOMPLETE — the curve direction ran, the ratio direction did not"
+  }
+}

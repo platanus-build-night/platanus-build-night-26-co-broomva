@@ -37,10 +37,26 @@ fi
 # rewriting them would falsify the record. They ship as prose, and no tool reads
 # a path out of them. This script is exempt because it contains the patterns it
 # searches for.
+#
+# Measurement artifacts are exempt for a different and stronger reason. Keel's
+# whole method is to carry the LITERAL snippet of a target's verification edge
+# into `raw` and reason over the real text, because a summary is already a
+# judgment. So a report legitimately quotes whatever the measured repository
+# contained — openai-python's CI really does reference `/home/codex`, and
+# rewriting that would falsify the evidence a reader is meant to check the
+# verdict against. The same applies to a verdict argument quoting the output of
+# a command it actually ran.
+#
+# The machine-local paths that DID leak here (a probe-dir warning, a curve
+# disclosure naming the reports dir) are a real defect and are fixed at the
+# source: `scripts/publish-reports.ts` rewrites the repo root and $HOME to
+# `<repo>`/`<home>` before anything is published. This exemption covers quoted
+# CONTENT, never our own paths.
 is_exempt() {
     case "$1" in
         scripts/portability-check.sh)   return 0 ;;
         docs/handoffs/*|docs/decisions/*) return 0 ;;
+        reports/*|site/reports/*)       return 0 ;;
         *) return 1 ;;
     esac
 }

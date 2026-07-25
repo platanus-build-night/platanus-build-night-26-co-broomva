@@ -57,9 +57,6 @@ const NOT_THIS = ['required_approving_review_count', 'reviewers:', 'codeowners']
  */
 const ADVISORY = ['continue-on-error: true', '|| true', 'mode: comment', 'comment-only'];
 
-/** A `name:` line in a YAML step — the author's label, not the author's command. */
-const LABEL_LINE = /^\s*-?\s*name\s*:/;
-
 /**
  * WHAT THE STEP DOES. For a CI step that is the `uses:` action reference, the
  * `run:` command, and the `with:` inputs that configure them. Two things are
@@ -80,13 +77,61 @@ const LABEL_LINE = /^\s*-?\s*name\s*:/;
  * honest text: a `review_gate` is a configuration object, and the gate's own
  * identity is part of what is configured rather than a label on top of it.
  */
+/**
+ * Step keys that describe WHAT THE STEP DOES. Everything else in a step block —
+ * `env:`, `if:`, `id:`, `name:`, `timeout-minutes:`, YAML comments — is context
+ * or commentary ABOUT the step, and letting it into the matched text reproduces
+ * the FIXED DEFECT above through a different field: a step carrying
+ * `OPENAI_API_KEY` in `env:` and `if: ... pull_request_review ...` while running
+ * `pytest -q` would match a probe about LLM review gates and be confidently
+ * called self_referential, which is false about pytest.
+ *
+ * The header of this file claims the probe reads "the `uses:` reference, the
+ * `run:` command, the `with:` inputs — and nothing else". This is that sentence
+ * implemented, rather than asserted.
+ */
+const DOING_KEYS = /^(uses|run|with|entrypoint|args)$/;
+/** `[1]` = text before the key, `[2]` = the key. In `- name: x` the dash is in [1]. */
+const KEY_LINE = /^(\s*(?:-\s+)?)([A-Za-z][\w-]*)\s*:/;
+
+/** The column the key itself starts at — NOT the line's indent. In a YAML list
+ *  item the first key sits after `- `, and its siblings align with it, so keying
+ *  off the raw indent would read every sibling as a child of the first key. */
+function keyColumn(line: string): { col: number; key: string } | null {
+  const m = KEY_LINE.exec(line);
+  return m ? { col: m[1].length, key: m[2].toLowerCase() } : null;
+}
+
 function haystack(node: Node): string {
   if (node.kind !== 'ci_step') return [node.name, node.raw].join('\n').toLowerCase();
-  return node.raw
-    .split('\n')
-    .filter((line) => !LABEL_LINE.test(line))
-    .join('\n')
-    .toLowerCase();
+
+  const lines = node.raw.split('\n');
+  // The column this step's own keys sit at. A block key's children are indented
+  // deeper, so a key's block runs until the next key at or left of that column.
+  let base: number | null = null;
+  for (const line of lines) {
+    const k = keyColumn(line);
+    if (k) {
+      base = k.col;
+      break;
+    }
+  }
+  if (base === null) return node.raw.toLowerCase();
+
+  const kept: string[] = [];
+  let keeping = false;
+  for (const line of lines) {
+    if (!line.trim() || /^\s*#/.test(line)) continue; // blank or YAML comment
+    const k = keyColumn(line);
+    if (k && k.col <= base) {
+      // A key of the step itself: does its block describe what the step DOES?
+      keeping = DOING_KEYS.test(k.key);
+      if (keeping) kept.push(line);
+      continue;
+    }
+    if (keeping) kept.push(line); // continuation of a kept block
+  }
+  return kept.join('\n').toLowerCase();
 }
 
 function signature(node: Node): boolean {
