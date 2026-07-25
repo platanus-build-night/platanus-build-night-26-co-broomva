@@ -1,0 +1,214 @@
+{
+  "target": "platanus-build-night-26-co-maarojasga",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.699Z",
+  "nodes": [
+    {
+      "id": "render.yaml#render-yaml",
+      "kind": "deploy_gate",
+      "name": "deploy config (render.yaml)",
+      "source": "render.yaml",
+      "raw": "# Blueprint de Render para el backend (plan FREE).\n#   1. Subí este repo a GitHub.\n#   2. En Render: New > Blueprint > apuntá a este repo y elegí la rama.\n#   3. Render construye el Dockerfile y expone la URL pública.\n#   4. Pegá esa URL en el frontend (NEXT_PUBLIC_API_URL) al desplegar en Vercel.\n#\n# Notas del free tier:\n#   - El servicio se DUERME tras ~15 min sin tráfico; la primera petición\n#     después tarda ~1 min en despertar.\n#   - No admite disco persistente: la caché de cubos (CUBY_CACHE_ROOT) vive en\n#     el disco efímero y se pierde en cada reinicio. Funciona igual, solo que\n#     no reaprovecha cubos entre reinicios.\n#   - 512 MB RAM: para rangos muy largos o parcelas muy grandes puede quedarse\n#     sin memoria; bajá el rango, subí el intervalo, o pasá a `starter`.\nservices:\n  - type: web\n    name: cuby-api\n    runtime: docker\n    dockerfilePath: ./Dockerfile\n    plan: free\n    healthCheckPath: /health\n    envVars:\n      - key: CUBY_CORS_ORIGINS\n        value: \"*\"          # restringí al dominio de Vercel en producción\n      - key: CUBY_DEFAULT_YEARS\n        value: \"3\"\n      - key: CUBY_LIVE\n        value: \"1\"          # 1 = habilita /analyze ; 0 = lo apaga (mantenimiento)\n"
+    },
+    {
+      "id": "web/vercel.json#vercel-json",
+      "kind": "deploy_gate",
+      "name": "deploy config (vercel.json)",
+      "source": "web/vercel.json",
+      "raw": "{\n  \"$schema\": \"https://openapi.vercel.sh/vercel.json\",\n  \"framework\": \"nextjs\",\n  \"buildCommand\": \"next build\",\n  \"installCommand\": \"npm install\"\n}\n"
+    },
+    {
+      "id": "web/package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "web/package.json",
+      "raw": "\"dev\": \"next dev\""
+    },
+    {
+      "id": "web/package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "web/package.json",
+      "raw": "\"build\": \"next build\""
+    },
+    {
+      "id": "web/package.json#start",
+      "kind": "script",
+      "name": "start",
+      "source": "web/package.json",
+      "raw": "\"start\": \"next start\""
+    },
+    {
+      "id": "web/package.json#lint",
+      "kind": "script",
+      "name": "lint",
+      "source": "web/package.json",
+      "raw": "\"lint\": \"next lint\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "web/vercel.json#vercel-json",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "tsc, run inside `next build` on Vercel's builder; Vercel refuses to promote a deployment whose build exits non-zero",
+        "actorCanWrite": false,
+        "argument": "vercel.json pins buildCommand `next build` and web/tsconfig.json exists with no `typescript.ignoreBuildErrors` or `eslint.ignoreDuringBuilds` escape in next.config.mjs (it contains only reactStrictMode). Next 14 therefore type-checks the whole app during build, and the type checker's exit code is emitted by the compiler on Vercel's machine, not by any file the authors can edit to say 'ok'. A type error in web/app or web/components blocks the promotion. Limit worth naming: this asserts type-consistency only — the assertions being checked are the authors' own annotations, and no behavioural test runs on this path.",
+        "confidenceNote": "build-time typecheck is the Next default; nothing in the repo disables it"
+      },
+      "evidence": [
+        "web/vercel.json: {\"framework\":\"nextjs\",\"buildCommand\":\"next build\",\"installCommand\":\"npm install\"}",
+        "web/next.config.mjs: only `reactStrictMode: true` — no typescript/eslint ignore flags",
+        "web/tsconfig.json present"
+      ],
+      "confidence": 0.72,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "tests/#pytest-suite",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "pytest's process exit code — but no traceable edge causes that process to run before anything ships",
+        "actorCanWrite": null,
+        "argument": "540 lines across 8 test files (test_api, test_score, test_alerts, test_indices, test_aoi, test_cache, test_thin, test_analysis) with real assertions against api.main via fastapi TestClient. Executed, pytest would be an anchored producer. But the repo has NO .github/ directory, no CI config of any kind, no pre-commit hook, no Makefile target, and neither Dockerfile nor render.yaml invokes pytest — the Dockerfile only pip-installs requirements.txt + api/requirements.txt (pytest lives in requirements-dev.txt, which is never copied into the image). The only reference is a human instruction in README.md:150 (`python -m pytest tests -q`). So whether the artifact Render deploys was ever confronted with this suite is at the author's discretion and not establishable from the repo. This is a test file, not a check; the fork point for the gating edge does not exist, so it fails closed.",
+        "confidenceNote": "high confidence in the absence of a runner; the class reflects the missing gate, not the missing tests"
+      },
+      "evidence": [
+        "`ls -a` at repo root shows no .github",
+        "requirements-dev.txt: `pytest>=8`, `httpx>=0.27` — never referenced by Dockerfile or render.yaml",
+        "Dockerfile COPY lines: ingest, analysis, api, data only",
+        "README.md:150 `python -m pytest tests -q` (manual instruction)"
+      ],
+      "confidence": 0.88,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "render.yaml#healthCheckPath",
+      "class": "self_referential",
+      "writeBoundary": {
+        "producer": "the /health handler in api/main.py:102, which the deploying actor authors",
+        "actorCanWrite": true,
+        "argument": "render.yaml sets `healthCheckPath: /health`, so Render's prober decides whether a new container is promoted. The prober itself is outside the write boundary, but what it reads is `return {\"status\": \"ok\", \"live_enabled\": ..., \"recomendaciones\": ...}` — a literal, unconditional dict. There is no branch in which the handler reports unhealthy. The only failure it can express is the process not being up at all, which is a liveness property of the reporter, and the response body is a string the authors can change at will. The claim and the check are the same write.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "render.yaml: `healthCheckPath: /health`",
+        "api/main.py:102-108: @app.get(\"/health\") returning a hardcoded status literal"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "render.yaml#render-yaml",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Render's Docker builder — pip install + image build",
+        "actorCanWrite": false,
+        "argument": "The blueprint declares a web service that builds ./Dockerfile from a chosen branch and exposes it. Nothing in the path conditions promotion on any assertion about correctness: no test command, no lint, no gate other than the build succeeding and the hardcoded health probe (judged separately). Whatever is pushed to the tracked branch ships. The builder is genuinely outside the write boundary, but an edge that only says 'the image assembled' carries no information about whether the software is right, so it is excluded from the ratio rather than credited as grounding.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "render.yaml: type web, runtime docker, dockerfilePath ./Dockerfile, plan free — no build/test command",
+        "Dockerfile CMD is `uvicorn api.main:app` — no verification step in the image build"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "Dockerfile#image-build",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "docker build / pip's dependency resolver",
+        "actorCanWrite": false,
+        "argument": "The build installs system libs and both requirements files, copies four source dirs, and sets a uvicorn CMD. It produces an artifact; it asserts nothing about behaviour. It would fail on an unresolvable dependency pin — a real external signal — but that is a property of requirements.txt, not of the code under verification, and the image is never exercised during the build (no `python -c 'import api.main'` smoke, no pytest). Artifact production, not verification.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "Dockerfile: RUN pip install -r requirements.txt -r api-requirements.txt; COPY ingest analysis api data; CMD uvicorn"
+      ],
+      "confidence": 0.86,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "web/package.json#build",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next.js compiler, invoked manually",
+        "actorCanWrite": false,
+        "argument": "`next build` as a bare package script produces the .next bundle. As a local convenience command it gates nothing — no hook, no CI, no branch protection invokes it. The same command does carry a real gate when Vercel runs it (judged at web/vercel.json#vercel-json); this node is the script definition itself, which asserts nothing on its own and would otherwise double-count that edge.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "web/package.json: \"build\": \"next build\"",
+        "no .github/, no husky, no pre-commit config anywhere in the repo"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "web/package.json#lint",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "would be ESLint — but no ESLint configuration exists in web/",
+        "actorCanWrite": false,
+        "argument": "`next lint` is defined but web/ contains no .eslintrc*, no eslintConfig key in package.json, and no eslint dependency in devDependencies. Invoked, it would drop into Next's interactive setup rather than evaluate rules, and nothing invokes it in any case — no CI, no hook, and next.config.mjs does not opt lint into the build. An edge with no ruleset and no caller cannot fail, so it cannot assert.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "web/package.json: \"lint\": \"next lint\"; devDependencies list contains no eslint or eslint-config-next",
+        "`ls -a web` shows no .eslintrc file"
+      ],
+      "confidence": 0.82,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "web/package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next dev server process",
+        "actorCanWrite": false,
+        "argument": "`next dev` starts a long-running server for a human to look at. It has no terminating exit code in normal use and evaluates no assertion about correctness. Pure developer entry point.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "web/package.json: \"dev\": \"next dev\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "web/package.json#start",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next production server process",
+        "actorCanWrite": false,
+        "argument": "`next start` serves an already-built bundle. Runtime invocation, no assertion, no pass/fail semantics.",
+        "confidenceNote": ""
+      },
+      "evidence": [
+        "web/package.json: \"start\": \"next start\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 1,
+    "selfReferential": 1,
+    "unknown": 1,
+    "notACheck": 6,
+    "ratio": 0.3333333333333333
+  },
+  "economics": {
+    "nodesTotal": 6,
+    "nodesSampled": 6,
+    "decidedByProbe": 0,
+    "decidedByAgent": 9,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}

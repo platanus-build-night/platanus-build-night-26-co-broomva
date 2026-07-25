@@ -1,0 +1,294 @@
+{
+  "target": "platanus-build-night-26-co-Yosoyepa",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.697Z",
+  "nodes": [
+    {
+      "id": "product/web/vercel.json#vercel-json",
+      "kind": "deploy_gate",
+      "name": "deploy config (vercel.json)",
+      "source": "product/web/vercel.json",
+      "raw": "{\n  \"rewrites\": [\n    {\n      \"source\": \"/(.*)\",\n      \"destination\": \"/index.html\"\n    }\n  ]\n}\n"
+    },
+    {
+      "id": "product/web/package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "product/web/package.json",
+      "raw": "\"dev\": \"vite --port 5173\""
+    },
+    {
+      "id": "product/web/package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "product/web/package.json",
+      "raw": "\"build\": \"tsc --noEmit && vite build\""
+    },
+    {
+      "id": "product/web/package.json#smoke",
+      "kind": "script",
+      "name": "smoke",
+      "source": "product/web/package.json",
+      "raw": "\"smoke\": \"playwright test\""
+    },
+    {
+      "id": "product/web/package.json#typecheck",
+      "kind": "script",
+      "name": "typecheck",
+      "source": "product/web/package.json",
+      "raw": "\"typecheck\": \"tsc --noEmit\""
+    },
+    {
+      "id": "product/web/package.json#test",
+      "kind": "script",
+      "name": "test",
+      "source": "product/web/package.json",
+      "raw": "\"test\": \"vitest run\""
+    },
+    {
+      "id": "product/web/package.json#contracts-check",
+      "kind": "script",
+      "name": "contracts:check",
+      "source": "product/web/package.json",
+      "raw": "\"contracts:check\": \"node scripts/sync-contracts.mjs --check\""
+    },
+    {
+      "id": "product/web/playwright.config.ts#playwright-config-ts",
+      "kind": "test_target",
+      "name": "test runner config (playwright.config.ts)",
+      "source": "product/web/playwright.config.ts",
+      "raw": "import { defineConfig } from \"@playwright/test\";\n\nexport default defineConfig({\n  testDir: \"./tests/e2e\",\n  fullyParallel: false,\n  workers: 1,\n  retries: 0,\n  timeout: 30_000,\n  expect: {\n    timeout: 8_000,\n  },\n  use: {\n    baseURL: \"http://localhost:15173\",\n    trace: \"retain-on-failure\",\n    screenshot: \"only-on-failure\",\n    video: \"retain-on-failure\",\n  },\n  projects: [\n    {\n      name: \"chromium\",\n      use: {\n        browserName: \"chromium\",\n      },\n    },\n  ],\n  webServer: [\n    {\n      command:\n        \"uv run --directory ../api uvicorn cloudpath_api.main:app --host 127.0.0.1 --port 18000\",\n      url: \"http://127.0.0.1:18000/api/health\",\n      reuseExistingServer: false,\n      timeout: 30_000,\n      env: {\n        ...process.env,\n        CLOUDPATH_DEMO_MODE: \"true\",\n        CLOUDPATH_ALLOWED_ORIGINS: '[\"http://localhost:15173\"]',\n      },\n    },\n    {\n      command: \"pnpm exec vite --port 15173\",\n      url: \"http://localhost:15173\",\n      reuseExistingServer: false,\n      timeout: 30_000,\n      env: {\n        ...process.env,\n        VITE_API_BASE_URL: \"http://127.0.0.1:18000\",\n      },\n    },\n  ],\n});\n"
+    },
+    {
+      "id": "product/api/pyproject.toml#tool-pytest-ini-options",
+      "kind": "test_target",
+      "name": "pytest config ([tool.pytest.ini_options])",
+      "source": "product/api/pyproject.toml:33",
+      "raw": "[tool.pytest.ini_options]\ntestpaths = [\"tests\"]\nasyncio_mode = \"auto\""
+    },
+    {
+      "id": "product/api/tests/conftest.py#conftest-py",
+      "kind": "test_target",
+      "name": "pytest config (conftest.py)",
+      "source": "product/api/tests/conftest.py",
+      "raw": "\"\"\"Shared test fixtures.\n\nTests run in deterministic mode by default: no credentials, no outbound calls.\nThat is the same mode the rehearsed demo falls back to, so the suite exercises\nthe path that must never break.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom collections.abc import Iterator\n\nimport pytest\nfrom fastapi.testclient import TestClient\n\nfrom cloudpath_api.config import Settings\nfrom cloudpath_api.config import get_settings as real_get_settings\nfrom cloudpath_api.deps import reset_budget_tracker\nfrom cloudpath_api.main import create_app\n\n\n@pytest.fixture\ndef demo_settings() -> Settings:\n    \"\"\"Deterministic settings: demo mode on, no provider credentials.\"\"\"\n    return Settings(\n        environment=\"local\",\n        demo_mode=True,\n        anthropic_api_key=None,\n        minimax_api_key=None,\n        gemini_api_key=None,\n        allowed_origins=[\"http://localhost:5173\"],\n    )\n\n\n@pytest.fixture\ndef live_settings() -> Settings:\n    \"\"\"Settings that look configured, for adapter-level tests with fakes.\"\"\"\n    return Settings(\n        environment=\"local\",\n        demo_mode=False,\n        anthropic_api_key=\"test-only-not-a-real-key\",\n        minimax_api_key=None,\n        gemini_api_key=\"test-only-not-a-real-key\",\n        allowed_origins=[\"http://localhost:5173\"],\n    )\n\n\n@pytest.fixture\ndef client(demo_settings: Settings) -> Iterator[TestClient]:\n    reset_budget_tracker()\n    app = create_app(demo_settings)\n    app.dependency_overrides[real_get_settings] = lambda: demo_settings\n    with TestClient(app) as test_client:\n        yield test_client\n    app.dependency_overrides.clear()\n    reset_budget_tracker()\n"
+    },
+    {
+      "id": "package.json#verify",
+      "kind": "script",
+      "name": "verify",
+      "source": "package.json",
+      "raw": "\"verify\": \"node scripts/hackathon.mjs verify --\""
+    },
+    {
+      "id": "package.json#check",
+      "kind": "script",
+      "name": "check",
+      "source": "package.json",
+      "raw": "\"check\": \"pnpm check:skills && pnpm check:setup && pnpm test\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "product/web/vercel.json#vercel-json",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Vercel routing layer applying an SPA rewrite rule",
+        "actorCanWrite": null,
+        "argument": "The file contains only a catch-all rewrite of /(.*) to /index.html. No build command, no ignored-build-step, no check condition — nothing here can return a failing status. It changes how requests are routed after a deploy; it never observes the artifact and cannot refuse one, so it emits no correctness signal to classify."
+      },
+      "evidence": [
+        "product/web/vercel.json: sole key is \"rewrites\""
+      ],
+      "confidence": 0.92,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "vite dev server process",
+        "actorCanWrite": null,
+        "argument": "`vite --port 5173` starts a long-lived server. Its exit code is produced by whoever presses Ctrl-C, not by any assertion about the code. It produces a running process, asserts nothing, and cannot fail in a way anyone reads."
+      },
+      "evidence": [
+        "product/web/package.json: \"dev\": \"vite --port 5173\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#build",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "tsc 7.0.2 in --noEmit mode, then the vite bundler — both real processes whose exit codes the author cannot dictate",
+        "actorCanWrite": null,
+        "argument": "The tsc half is genuinely falsifiable, so this is not merely artifact production. But I could not find the invoker. There is no .github/workflows directory anywhere in the repo, the Railway Dockerfile builds only the Python API (uv sync of product/api; it never copies product/web or runs pnpm), and .git/hooks/pre-push only inspects branch names. The only automated consumer of any repo command would be the agent stop-gate, and its activation artifacts (.claude/settings.local.json, .codex/hooks.json) are absent, so it is off. A type error therefore blocks nothing I can trace — but a human may run it before demoing, which I cannot rule out. Fork point untraceable, so it fails closed."
+      },
+      "evidence": [
+        "no .github/ directory in repo root (ls -a)",
+        "Dockerfile: COPY product/api, COPY product/contracts only; no web stage",
+        "product/web/package.json: \"build\": \"tsc --noEmit && vite build\""
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#smoke",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "Playwright driving real chromium against a real uvicorn + vite pair booted by the config's webServer block",
+        "actorCanWrite": null,
+        "argument": "On the execution axis this is the strongest edge in the repo: the browser really renders, the API really answers, and the assertions cannot be talked into passing. But execution independence only pays out if something executes it. Nothing in the repo invokes `pnpm smoke`: no CI, the Railway image has no node/pnpm/browser layer, and the stop-gate that lists `pnpm smoke` under verification.required is not installed. I cannot establish an enforcing path, so unknown, not anchored."
+      },
+      "evidence": [
+        ".hackathon/capabilities.json: required[] includes {\"stage\":\"declared-smoke\",\"command\":[\"pnpm smoke\"]}",
+        "no .claude/settings.local.json and no .codex/hooks.json — stop-gate never activated",
+        "product/web/tests/e2e/smoke.spec.ts exists and drives a seeded session"
+      ],
+      "confidence": 0.82,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#typecheck",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "the TypeScript compiler, a deterministic analyzer of the source",
+        "actorCanWrite": null,
+        "argument": "tsc's verdict is not authorable by the code it analyzes, so the producer would sit outside the boundary if it ran. No pipeline calls it: no workflow files, no pre-commit hook (only .git/hooks/pre-push, which greps branch names), no Docker layer. This is a command that could check, not a check that runs."
+      },
+      "evidence": [
+        "product/web/package.json: \"typecheck\": \"tsc --noEmit\"",
+        "ls .git/hooks -> pre-push only"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#test",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "the vitest runner in jsdom; assertions decided by execution",
+        "actorCanWrite": null,
+        "argument": "vitest run really executes React components under jsdom, so a crash cannot be argued away — but the oracle was co-authored with the implementation, and more decisively, nothing runs it. There is no CI in this repository at all. A test suite with no invoker is a test file, not a check; classifying it anchored would score the file rather than the edge."
+      },
+      "evidence": [
+        "product/web/package.json: \"test\": \"vitest run\"",
+        "no .github/workflows anywhere in the clone"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/package.json#contracts-check",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "node running sync-contracts.mjs --check, which hashes checked-in JSON schemas against regenerated TypeScript",
+        "actorCanWrite": null,
+        "argument": "The comparison is mechanical — a hash mismatch is not negotiable — and both sides of it are files the actor writes, but drift between them is still a fact the actor cannot assert away without editing both. The blocker is invocation: no workflow, no hook, no Docker step calls it, and the top-level `check` script that would chain to it is itself uninvoked. The enforcing edge does not exist in the repo I can read."
+      },
+      "evidence": [
+        "product/web/package.json: \"contracts:check\": \"node scripts/sync-contracts.mjs --check\"",
+        "package.json: \"web:contracts:check\" wraps it; no automated caller of either"
+      ],
+      "confidence": 0.78,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/web/playwright.config.ts#playwright-config-ts",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "Playwright's webServer supervisor, which boots uvicorn on :18000 and vite on :15173 and polls /api/health before any test runs",
+        "actorCanWrite": null,
+        "argument": "reuseExistingServer:false means the servers are genuinely started, not assumed — a boot failure aborts the run, which is real outside-the-code signal. Still unclassifiable as anchored because no scheduler ever triggers this config: the only reference to it is the `smoke` script, which nothing calls. Also worth naming: the run pins CLOUDPATH_DEMO_MODE=true, so the API answers from checked-in fixtures rather than live providers — the outermost dependency is stubbed by the actor even when the harness does run."
+      },
+      "evidence": [
+        "playwright.config.ts: webServer[0].env CLOUDPATH_DEMO_MODE=\"true\"",
+        "playwright.config.ts: reuseExistingServer: false, url health-gated"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/api/pyproject.toml#tool-pytest-ini-options",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "pytest collecting testpaths=[\"tests\"] with asyncio_mode=auto; verdicts come from the CPython runtime",
+        "actorCanWrite": null,
+        "argument": "Thirteen test modules exist and pytest's pass/fail is produced by execution, not by claim. But the Dockerfile installs with --no-dev, so pytest is not even present in the deployed image, and there is no workflow, hook, or make target that runs `uv run pytest`. The suite is reachable only by a human typing `pnpm api:test`. No traceable enforcing edge -> fails closed."
+      },
+      "evidence": [
+        "product/api/pyproject.toml:33 [tool.pytest.ini_options]",
+        "Dockerfile: `uv sync --directory product/api --frozen --no-dev`",
+        "13 test_*.py files under product/api/tests/"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "product/api/tests/conftest.py#conftest-py",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "pytest fixture module — constructs Settings objects and a TestClient",
+        "actorCanWrite": null,
+        "argument": "conftest.py contains no assertion and no exit path. It builds demo_settings/live_settings/client fixtures and resets the budget tracker. It cannot fail in a way that means anything about the product; it is scaffolding the real tests consume. Excluded from the ratio because there is no signal here to be grounded — the classification belongs on the suite that uses it, judged separately."
+      },
+      "evidence": [
+        "product/api/tests/conftest.py: only @pytest.fixture definitions, zero assert statements"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#check",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "a chain of three node processes: sync-skills --check, validate-setup.mjs, and `node --test test/*.test.mjs`",
+        "actorCanWrite": null,
+        "argument": "This is the repo's own designated canonical gate — .hackathon/capabilities.json names `pnpm check` as canonical and required — and two of its three legs (validate-setup, node --test) are genuine executed assertions. It is nonetheless unknown on two counts. First, it is an aggregate; per the descend rule its grounding is only that of its children, and validate-setup.mjs mostly asserts that governance files exist and parse — paperwork checked against paperwork. Second, nothing invokes it: the only mechanism that would enforce `required` is the stop-gate hook, and its activation files were never written."
+      },
+      "evidence": [
+        ".hackathon/capabilities.json: canonical = {\"command\":[\"pnpm\",\"check\"]}",
+        "package.json: \"check\": \"pnpm check:skills && pnpm check:setup && pnpm test\"",
+        "scripts/validate-setup.mjs asserts file existence + JSON parseability + CLAUDE.md contains \"@AGENTS.md\""
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#verify",
+      "class": "self_referential",
+      "writeBoundary": {
+        "producer": "nominally spawnSync's child exit code; durably, the verificationReceipts array inside .hackathon/state.json",
+        "actorCanWrite": true,
+        "argument": "hackathon.mjs verify() spawns the named command and refuses to write a receipt unless status===0, and it stamps the receipt with a workspace fingerprint and the capability-plan timestamp — a real attempt at anchoring. But the artifact that any consumer reads is a JSON file in the working tree, and the actor being verified is an agent with write access to that tree. stop-gate.mjs only re-reads state.json; it never re-executes anything, so a receipt appended by hand is indistinguishable from one earned, and the agent also chooses which command to pass after `--`. The claim and the check land in the same write. Compounding it, the consuming hook is not even installed here, so today the receipt gates nothing at all."
+      },
+      "evidence": [
+        "scripts/hackathon.mjs:416-437 — receipt written to .hackathon/state.json only when exitCode===0",
+        "scripts/hooks/stop-gate.mjs — reads state.json + capabilities.json, re-runs nothing",
+        "scripts/bootstrap.mjs:32-43 — hook activation writes .claude/settings.local.json / .codex/hooks.json; neither file exists in this clone"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 0,
+    "selfReferential": 1,
+    "unknown": 8,
+    "notACheck": 3,
+    "ratio": 0
+  },
+  "economics": {
+    "nodesTotal": 37,
+    "nodesSampled": 12,
+    "decidedByProbe": 0,
+    "decidedByAgent": 12,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}

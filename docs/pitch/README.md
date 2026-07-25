@@ -6,6 +6,7 @@ audience).
 
 | File | Audience | What it is |
 |---|---|---|
+| [`two-minute.html`](two-minute.html) | presenter, on stage | **the 2:00 stage sheet** — five segments, the full spoken script in **ES and EN**, cued against the video's frame beats, plus cut list and fallback ladder |
 | [`index.html`](index.html) | the room, on a projector | 20-slide standalone deck — problem → insight → mechanism → proof → economics → routing → real output → business model → scope |
 
 Companion material already in the repo:
@@ -14,6 +15,71 @@ Companion material already in the repo:
 |---|---|
 | [`../demo/run-sheet.html`](../demo/run-sheet.html) | if the live 3-beat demo runs instead of / alongside the deck |
 | [`../demo/objections.html`](../demo/objections.html) | Q&A, seven cards answerable in one breath |
+
+## The two-minute format
+
+Different artifact, different clock. The deck is a four-minute walk; the stage
+sheet is a two-minute performance built on the **60-second cut** of the Remotion
+explainer (`KeelPitch` → `video/out/keel-pitch-60.mp4`).
+
+The structural fact the format turns on: **the video has no audio track.** It is
+silent motion graphics, so the presenter is not playing a video and then
+talking — the presenter talks the whole way and the video is a deck that
+advances itself. Both channels run for the full sixty seconds, which is the only
+reason a two-minute slot fits a ninety-second story *plus* a live demo.
+
+| | |
+|---|---|
+| 0:00 | cold open, screen black — the hook |
+| 0:11 | the 60s cut, narrated live |
+| 1:11 | the live corpus page — 15 repos, pooled 0.853, keel first row at 0.357 |
+| 1:36 | the ε-audit catching its own drift — the peak |
+| 1:52 | close |
+
+`S5` (economics) and `S6` (routing) drop out of the cut. Selection is by **whole
+scene** and this is load-bearing: every scene keys its animation to absolute
+frames inside its own `Sequence`, so shortening `durationInFrames` truncates that
+scene's last beats mid-move. Dropping a scene only shifts the offsets after it.
+See the comment on `PITCH_SCENE_IDS` in `video/src/Video.tsx`.
+
+Re-render after a scene change:
+
+```bash
+cd video && bun install && bun run render:pitch
+```
+
+**The demo is a browser tab, not a terminal.** Zero live model calls, zero
+terminal switches — which deletes the whole `npx` failure surface the four-minute
+run sheet has to carry: the Node version floor, the cold npx cache, and the
+`Snyk: High Risk` panel that must be narrated before anyone reads it aloud. Those
+stay in [`../demo/objections.html`](../demo/objections.html) for Q&A.
+
+**Bilingual.** The sheet ships the spoken script in Spanish and English, toggled
+with `E` (or the header buttons); the default is Spanish, because the room is.
+Both languages are always in the DOM, so print and a JS-less browser show both
+rather than losing one. Spanish runs roughly 15–20% longer than English for the
+same content — the per-beat word budgets on the sheet are counted separately for
+each language, and the beats with the least headroom are marked.
+
+**The hero number matches the live page.** `S4Ratio.tsx` renders the **corpus**
+figure — `0.357`, 5 anchored of 14 classified, 25 judged of 32 gathered — and
+not the full-population dogfood `0.421` it used to carry. Both are real and both
+stay published, but the scene now shows the number a viewer can go and verify in
+the first row of `broomva.github.io/keel/reports/`, under the same 25-node cap
+every other target on that page ran under.
+
+A hero number in the video that disagreed with the hero number on the site would
+be, in a product about ungrounded claims, the worst inconsistency to ship — and
+picking the higher of the two would be the exact behaviour Keel exists to
+detect. It is also the lower number, which is the right way for that tie to
+break. Slide 8 of the 20-slide deck still carries `0.421`; the reconciliation is
+the first Q&A card on the stage sheet.
+
+The scene derives everything from one `COUNTS` literal, so re-pointing it at a
+future run is a four-number edit — but note it also drives the cell grid (25
+lays out as a 5×5) and the `JUDGED of GATHERED` coverage label, which must never
+collapse back to a bare "edges gathered": a ratio over a sample must not read as
+a ratio over a repository.
 
 ## Operating it
 

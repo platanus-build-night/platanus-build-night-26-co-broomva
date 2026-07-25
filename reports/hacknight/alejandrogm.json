@@ -1,0 +1,295 @@
+{
+  "target": "platanus-build-night-26-co-alejandrogm",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.700Z",
+  "nodes": [
+    {
+      "id": "render.yaml#render-yaml",
+      "kind": "deploy_gate",
+      "name": "deploy config (render.yaml)",
+      "source": "render.yaml",
+      "raw": "# VitalX — despliegue en Render. La app vive en dashboard/, no en la raiz.\nservices:\n  - type: web\n    name: vitalx\n    runtime: node\n    plan: starter\n    region: oregon\n    buildCommand: pnpm run build   # delega a dashboard/, funciona sin Root Directory\n    startCommand: pnpm run start\n    healthCheckPath: /login\n    autoDeploy: true\n    envVars:\n      - key: NODE_VERSION\n        value: \"22\"\n      - key: DATABASE_URL\n        sync: false          # Neon\n      - key: BETTER_AUTH_SECRET\n        sync: false\n      - key: BETTER_AUTH_URL\n        value: https://app.vitalx.dev\n      - key: ANTHROPIC_API_KEY\n        sync: false          # inferencia con Haiku\n      - key: INGEST_DIR\n        value: data          # legado del almacenamiento en archivos; ya lee Postgres\n\n  # Landing estatica: HTML plano en landing/, sin build.\n  - type: web\n    name: vitalx-landing\n    runtime: static\n    staticPublishPath: ./landing\n    autoDeploy: true\n"
+    },
+    {
+      "id": "dashboard/package.json#predev",
+      "kind": "script",
+      "name": "predev",
+      "source": "dashboard/package.json",
+      "raw": "\"predev\": \"node scripts/link-out.mjs && node scripts/link-probe.mjs\""
+    },
+    {
+      "id": "dashboard/package.json#prebuild",
+      "kind": "script",
+      "name": "prebuild",
+      "source": "dashboard/package.json",
+      "raw": "\"prebuild\": \"node scripts/link-out.mjs && node scripts/link-probe.mjs\""
+    },
+    {
+      "id": "dashboard/package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "dashboard/package.json",
+      "raw": "\"dev\": \"next dev\""
+    },
+    {
+      "id": "dashboard/package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "dashboard/package.json",
+      "raw": "\"build\": \"next build\""
+    },
+    {
+      "id": "dashboard/package.json#start",
+      "kind": "script",
+      "name": "start",
+      "source": "dashboard/package.json",
+      "raw": "\"start\": \"next start\""
+    },
+    {
+      "id": "dashboard/package.json#lint",
+      "kind": "script",
+      "name": "lint",
+      "source": "dashboard/package.json",
+      "raw": "\"lint\": \"eslint\""
+    },
+    {
+      "id": "dashboard/package.json#db-generate",
+      "kind": "script",
+      "name": "db:generate",
+      "source": "dashboard/package.json",
+      "raw": "\"db:generate\": \"drizzle-kit generate\""
+    },
+    {
+      "id": "dashboard/package.json#db-migrate",
+      "kind": "script",
+      "name": "db:migrate",
+      "source": "dashboard/package.json",
+      "raw": "\"db:migrate\": \"drizzle-kit migrate\""
+    },
+    {
+      "id": "package.json#report",
+      "kind": "script",
+      "name": "report",
+      "source": "package.json",
+      "raw": "\"report\": \"node atc-report.mjs\""
+    },
+    {
+      "id": "package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "package.json",
+      "raw": "\"build\": \"pnpm --dir dashboard install --frozen-lockfile && pnpm --dir dashboard run db:migrate && pnpm --dir dashboard run build\""
+    },
+    {
+      "id": "package.json#start",
+      "kind": "script",
+      "name": "start",
+      "source": "package.json",
+      "raw": "\"start\": \"pnpm --dir dashboard run start\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "render.yaml#render-yaml",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "Render's build/deploy runner and its HTTP health prober",
+        "actorCanWrite": false,
+        "argument": "This is the only edge in the repo that can block a change from shipping — there is no .github/, no CI, no pre-commit hook. autoDeploy:true sends every push to Render, which runs buildCommand `pnpm run build` in its own builder and then probes healthCheckPath /login over HTTP before cutting traffic. Both signals are emitted outside the repo: the builder's exit code comes from pnpm/drizzle/next processes, and the 200 comes from a request Render originates. It is falsifiable in a way the author cannot suppress: dashboard/instrumentation.ts throws at boot when DATABASE_URL is unset, so a misconfigured deploy dies at the probe. The limit worth naming: this gate asserts only 'it compiled, migrated, booted and served /login' — /login is a static Next page with a Suspense fallback, so the probe carries no claim about application behaviour."
+      },
+      "evidence": [
+        "render.yaml:8-11 buildCommand/startCommand/healthCheckPath/autoDeploy",
+        "no .github directory in repo root",
+        "dashboard/instrumentation.ts throws when DATABASE_URL missing"
+      ],
+      "confidence": 0.75,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#build",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "pnpm's lockfile resolver, drizzle-kit against Neon Postgres, and the TypeScript compiler inside `next build`",
+        "actorCanWrite": false,
+        "argument": "Three chained processes each own their own exit code and each is on Render's deploy path. `pnpm install --frozen-lockfile` fails if pnpm-lock.yaml disagrees with package.json — the resolver, not the author, decides. `db:migrate` submits DDL to a real Postgres that accepts or rejects it. `next build` type-checks the whole app; dashboard/next.config.ts sets only images.unoptimized, so typescript.ignoreBuildErrors stays false and a type error is a nonzero exit. Nothing in the repo can rewrite those verdicts. What it does not assert: any runtime behaviour — this repo has no test runner installed at all."
+      },
+      "evidence": [
+        "package.json build: pnpm --dir dashboard install --frozen-lockfile && ... db:migrate && ... build",
+        "dashboard/next.config.ts has no typescript.ignoreBuildErrors",
+        "render.yaml buildCommand: pnpm run build"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#build",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "tsc/Next compiler process invoked by `next build`",
+        "actorCanWrite": false,
+        "argument": "Same producer as the root build one level down: the compiler decides, and the compiler is not something dashboard/ code can persuade. Reached on every deploy via root `build`. Its assertion is narrow — well-typed and bundleable — and on the oracle axis it is weak in the usual way: the types were authored by the same hand as the implementation, so the check proves the code agrees with its own annotations."
+      },
+      "evidence": [
+        "dashboard/package.json build: next build",
+        "invoked by root package.json build, which render.yaml runs"
+      ],
+      "confidence": 0.65,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#db-migrate",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "the Neon Postgres server executing drizzle-kit's migration SQL",
+        "actorCanWrite": false,
+        "argument": "drizzle-kit migrate opens DATABASE_URL and hands SQL to a database the repo does not host. Postgres's parser and constraint engine produce the success/failure, and an unreachable DB or an invalid migration aborts the build before Render starts the service. The signal is about schema applicability only — a migration that applies cleanly says nothing about whether the schema is the right one."
+      },
+      "evidence": [
+        "dashboard/package.json db:migrate: drizzle-kit migrate",
+        "render.yaml envVars DATABASE_URL sync:false (Neon)",
+        "root build chains db:migrate before next build"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#report",
+      "class": "self_referential",
+      "writeBoundary": {
+        "producer": "the atc-judge LLM skill, which writes verdict.outcome into the same run JSONs the report then aggregates",
+        "actorCanWrite": true,
+        "argument": "atc-report.mjs computes task attribution purely from `r.verdict.outcome`, and that field is written by .claude/skills/atc-judge/SKILL.md — a Claude skill that reads screenshots and stamps completed/failed/inconclusive into out/<ts>/*.json. The runs themselves are produced by the sibling atc-run skill. So an agent generates the trace and an agent of the same class scores it; the report is arithmetic over that scoring, adding no independent observation. Two mitigations belong in the record and neither changes the class: the judge is a separate pass from the executor, and it is explicitly instructed to ignore the executor's `agent_reported` narration and read screenshots instead. Correlated blind spots survive both. Nothing invokes `report` automatically either — it is an operator command."
+      },
+      "evidence": [
+        "atc-report.mjs attributeTask() filters on r.verdict?.outcome",
+        ".claude/skills/atc-judge/SKILL.md writes the verdict object",
+        ".claude/skills/atc-run/SKILL.md produces the runs",
+        "no CI invokes report"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#lint",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "the eslint process (next/core-web-vitals config) — but no traceable consumer",
+        "actorCanWrite": null,
+        "argument": "The fork point on the producer side is clear: eslint exits nonzero on its own findings. What I cannot establish is whether this edge exists at all. There is no .github/workflows, no husky or .git hooks config, no pre-commit file, and Next 16's `next build` no longer runs ESLint, so nothing in the deploy path consults it. That leaves a command a human may or may not have run before pushing — a lint file rather than a lint check. I am declining to call it not_a_check, because it is genuinely capable of failing when run; the untraceable part is whether anything reads it, and that is what unknown is for."
+      },
+      "evidence": [
+        "dashboard/package.json lint: eslint",
+        "dashboard/eslint.config.mjs extends next/core-web-vitals",
+        "no .github, no hook config anywhere in repo",
+        "next 16.2.7 in dependencies (build no longer lints)"
+      ],
+      "confidence": 0.6,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#start",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next.js server process",
+        "actorCanWrite": null,
+        "argument": "A launcher. It delegates to `next start` and asserts nothing about correctness — the process either serves or it does not, and the assertion about that lives one edge away in Render's health probe, which is where I classified it. Counting this separately would double-count the same signal."
+      },
+      "evidence": [
+        "package.json start: pnpm --dir dashboard run start",
+        "render.yaml startCommand: pnpm run start"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#start",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next.js production server",
+        "actorCanWrite": null,
+        "argument": "`next start` produces a running service, not a verdict. Nothing about its invocation distinguishes a correct build from an incorrect one."
+      },
+      "evidence": [
+        "dashboard/package.json start: next start"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Next.js dev server",
+        "actorCanWrite": null,
+        "argument": "A local development server. It is never run by any pipeline and emits no pass/fail signal about the codebase."
+      },
+      "evidence": [
+        "dashboard/package.json dev: next dev"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#prebuild",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "node running link-out.mjs and link-probe.mjs",
+        "actorCanWrite": null,
+        "argument": "Filesystem plumbing that runs on the deploy path but is deliberately built not to fail: link-out.mjs comments that out/ is gitignored and therefore absent on a clean Render deploy, and exits successfully when there is nothing to link. A step engineered to succeed regardless of the state of the code cannot carry information about the code."
+      },
+      "evidence": [
+        "dashboard/package.json prebuild: node scripts/link-out.mjs && node scripts/link-probe.mjs",
+        "dashboard/scripts/link-out.mjs: 'sin la carpeta simplemente no hay nada que enlazar y el build debe seguir'"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#predev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "node running the same two symlink scripts",
+        "actorCanWrite": null,
+        "argument": "Identical plumbing to prebuild, on the local dev path instead of the deploy path. Creates symlinks; asserts nothing."
+      },
+      "evidence": [
+        "dashboard/package.json predev: node scripts/link-out.mjs && node scripts/link-probe.mjs"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "dashboard/package.json#db-generate",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "drizzle-kit codegen",
+        "actorCanWrite": null,
+        "argument": "Emits migration SQL from the schema file. It is an authoring step whose output is committed and later executed by db:migrate — the verdict-bearing edge is that execution against Postgres, not this generation."
+      },
+      "evidence": [
+        "dashboard/package.json db:generate: drizzle-kit generate"
+      ],
+      "confidence": 0.8,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 4,
+    "selfReferential": 1,
+    "unknown": 1,
+    "notACheck": 6,
+    "ratio": 0.6666666666666666
+  },
+  "economics": {
+    "nodesTotal": 16,
+    "nodesSampled": 12,
+    "decidedByProbe": 0,
+    "decidedByAgent": 12,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}

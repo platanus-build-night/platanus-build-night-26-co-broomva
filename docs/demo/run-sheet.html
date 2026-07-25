@@ -832,6 +832,36 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   margin-bottom: var(--k-space-2);
 }
 
+/* ── a CLOSED item: a verified fact, or an explicitly recorded cut ────────
+   Same shape as .rs-todo so the eye reads them as one family, but neutral
+   rather than accented: an open item is the only thing on this sheet that
+   earns the accent. No verdict hue here either — a green panel would read
+   as a class, and this is stage furniture, not data. ───────────────────── */
+.rs-fact {
+  display: block;
+  margin: var(--k-space-4) 0;
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  background: var(--k-bg-1);
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-sm);
+  line-height: var(--k-lh-snug);
+  color: var(--k-ink-0);
+}
+.rs-fact__i { display: block; }
+.rs-fact__i + .rs-fact__i { margin-top: var(--k-space-2); }
+.rs-fact b {
+  font-family: var(--k-font-sans);
+  font-weight: var(--k-fw-semibold);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  font-size: var(--k-fs-micro);
+  color: var(--k-ink-2);
+  display: block;
+  margin-bottom: var(--k-space-2);
+}
+
 /* ── checklists — mono boxes, never a check mark ─────────────────────────── */
 .rs-check { list-style: none; margin: var(--k-space-4) 0; padding: 0; }
 /* The box is absolutely positioned, NOT a grid column: a grid here turns every
@@ -1015,10 +1045,19 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       <em>grew</em>. Write the before-count on your hand.
       <pre class="k-code k-code--cmd">cp -R ~/.config/keel/probes ~/.config/keel/probes.bak-$(date +%H%M) 2>/dev/null; ls ~/.config/keel/probes | wc -l</pre></li>
 
-    <li><b>Corpus report is live.</b> Beat 1 dies without it.
-      <pre class="k-code k-code--cmd">curl -s -o /dev/null -w '%{http_code}\n' -L https://broomva.github.io/keel/reports/</pre>
-      <span class="k-meta">Measured 404 at the time this sheet was written —
-      W2·H had not shipped yet. It must read 200 before you walk up.</span></li>
+    <li><b>Corpus report is live.</b> Beat 1 dies without it. Do not accept a
+      status code. Fetch the page and read its title back, because a 404 page
+      and a stale deploy both return bytes.
+      <pre class="k-code k-code--cmd">curl -sL https://broomva.github.io/keel/reports/ | grep -o '&lt;title&gt;.*&lt;/title&gt;'</pre>
+      <pre class="k-code rs-out">&lt;title&gt;Keel — corpus grounding ratios&lt;/title&gt;</pre>
+      <span class="k-meta">Confirmed by fetching content, not by a status code.
+      Four pages were pulled and their titles read: the landing page
+      (<span class="k-mono">Keel — is your verification touching the world?</span>),
+      the corpus index (above), Keel's own report
+      (<span class="k-mono">Keel — grounding report — keel</span>), and a route
+      page (<span class="k-mono">keel route — openai-python</span>). Re-run this
+      line the morning of; a green check on a deploy is exactly the signal this
+      product exists to distrust.</span></li>
 
     <li><b>Two screened backup repos on disk.</b> If the volunteer's repo comes
       up thin, you switch in four seconds instead of apologising. Both below were
@@ -1031,12 +1070,19 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       clone nor <span class="k-mono">git clean -xdf</span>. If either is
       missing, restore it now; this is rung 2's only floor.</span>
       <pre class="k-code k-code--cmd">git clone --depth 1 https://github.com/pallets/click ~/keel/.keel-corpus/click</pre>
-      <pre class="k-code k-code--cmd">git clone --depth 1 https://github.com/sindresorhus/got ~/keel/.keel-corpus/got</pre></li>
+      <pre class="k-code k-code--cmd">git clone --depth 1 https://github.com/sindresorhus/got ~/keel/.keel-corpus/got</pre>
+      <span class="k-meta">Clone timing, measured: <b>4.21 s</b> shallow, against
+      everything else in beat 2 totalling 0.22 s. The clone is the only network
+      hop in the beat, so pre-clone every repo you might touch, tonight, and
+      leave the volunteer's as the only one you have not.</span></li>
 
     <li><b>Browser tabs, in order, already loaded.</b>
       (1) <span class="k-mono">https://broomva.github.io/keel/reports/</span> ·
       (2) <span class="k-mono">https://broomva.github.io/keel/</span> ·
-      (3) the fallback video, paused at 0:00 in its own window.</li>
+      (3) the same corpus index from disk,
+      <span class="k-mono">file://…/keel/site/reports/index.html</span>, in its
+      own window. Tab 3 is the rung-4 asset: it is the identical committed page,
+      and it opens with the wifi off.</li>
 
     <li><b>Terminal set for a projector.</b> Font ≥ 18 pt, dark theme, window
       wide enough that no command on this sheet wraps. Clear the scrollback.</li>
@@ -1045,13 +1091,34 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       you will actually use. A fumbled window switch costs more seconds than any
       command here.</li>
 
-    <li><b>Fallback video reachable offline.</b> Local file, not a share link.
-      <span class="k-mono">open -R</span> it once so you know the path is right.</li>
+    <li><b>Know your floor: there is no recorded run.</b> The fallback video was
+      cut. Every rung below 1 is a live artefact you can open, and you should
+      open all three now: tab 3 above, the screened clones in item 6, and the
+      clean-room directory in item 3.</li>
   </ol>
 
-  <div class="rs-todo"><b>Open — orchestrator fills before the pitch</b>
-    <span class="rs-todo__i">Fallback video path: [TODO — W2·I₂, recorded ~01:00]</span>
-    <span class="rs-todo__i">Corpus report URL returning 200: [TODO — confirm after W2·H merges]</span></div>
+  <div class="rs-fact"><b>Closed: both pre-flight items are decided</b>
+    <span class="rs-fact__i"><b>Fallback video: CUT.</b> W2·I₂ was dropped per
+    the degradation ladder. Nothing on this sheet plays a recording, and no beat
+    may be introduced as one. What exists instead, per beat, and all of it
+    verified: beat 1 falls back to the committed corpus index from disk
+    (<span class="k-mono">site/reports/index.html</span>, tab 3) and then to
+    <span class="k-mono">render.ts</span> over the fixture report; beat 2 falls
+    back to a screened clone and then to the deterministic
+    <span class="k-mono">classify.ts</span> split, which needs no model and no
+    network; beat 3 falls back to the pre-warmed clean-room directory. Rung 5 is
+    this sheet on paper.</span>
+    <span class="rs-fact__i">A 90.0 s explainer render does exist on disk at
+    <span class="k-mono">video/out/keel-explainer.mp4</span> (7.2 MB, checked on
+    disk). It is an explainer, not a recording of these beats, and nobody has
+    watched it as part of this run sheet. Do not reach for it mid-demo and do
+    not describe it as "the demo".</span>
+    <span class="rs-fact__i"><b>Corpus report URL: CONFIRMED</b>, by fetching
+    the page and reading its content (<span class="k-mono">&lt;title&gt;Keel —
+    corpus grounding ratios&lt;/title&gt;</span>), not by a status code. Three
+    more pages were confirmed the same way: the landing page, Keel's own report
+    at <span class="k-mono">/reports/keel.html</span>, and the route page at
+    <span class="k-mono">/reports/openai-python.bindings.html</span>.</span></div>
 </section>
 
 <!-- ═══════════════════════════════════════════════════════════════════ -->
@@ -1099,7 +1166,16 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       <span class="rs-label">Do</span>
       <p>Switch to browser tab 1. Scroll once: ratio table, then the
         crystallization curve. Do not read the table aloud row by row — point at
-        one high ratio and one low one and say what separates them.</p>
+        exactly two rows, high and low, and say what separates them.</p>
+      <p><b>The high row:</b> <span class="k-mono">aider</span> 1.000, and say
+        in the same breath that it is <b>seven classified edges</b>, which is why
+        the count prints beside the ratio. <b>The low row:</b> ours,
+        <span class="k-mono">keel</span> 0.357. That contrast is the callout
+        below, so do not spend the line twice.</p>
+      <p><b>If someone asks about the big one:</b>
+        <span class="k-mono">vercel-ai</span> is 0.800 over a sample of
+        <b>25 of 1014</b> gathered nodes, 2% of the surface. Say the sampling
+        fraction unprompted; it is on the page either way.</p>
     </div>
 
     <div class="rs-step">
@@ -1109,26 +1185,43 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   crystallization curve — estimated tokens per node vs probes in library</pre>
       <span class="k-meta">Static, precomputed, committed. Nothing here can fail
       live except the network, and the fallback below removes that too.</span>
+      <span class="k-meta">The pooled number, if you are asked for one:
+      <b>0.853</b>, from 122 anchored of 143 classified edges across the <b>14
+      measured</b> repositories. Fifteen are pinned; the fifteenth
+      (<span class="k-mono">anthropic-courses</span>) gathered zero nodes and is
+      recorded <span class="k-mono">nothing_gathered</span> with a
+      <em>null</em> ratio. Say that out loud if the fifteenth comes up: publishing
+      0.000, the worst possible score, about a surface nobody could read would
+      be a category error, and refusing to is the same discipline as the rest of
+      the sheet. All 15 targets are pinned to a revision and were judged
+      sequentially from an <em>empty</em> probe library.</span>
     </div>
 
     <div class="rs-step">
       <span class="rs-label">The line that lands — do not skip it for time</span>
-      <p class="k-callout">"The first repository we ran this on was our own.
-        Keel's grounding ratio for Keel is <b>0.421</b> — 8 of 19 classified
-        edges anchored, 11 self-referential, no unknowns, and 13 more edges
-        excluded as not-a-check with the count printed beside the ratio. And the
-        most useful thing it found is about us: our own
+      <p class="k-callout">"The first repository we ran this on was our own, and
+        it is the <b>lowest number in the corpus</b>. Keel's grounding ratio for
+        Keel is <b>0.357</b>: 5 of 14 classified edges anchored, 9
+        self-referential, no unknowns, and 11 more edges excluded as
+        not-a-check with the count printed beside the ratio. And the most useful
+        thing it found is about us: at that revision our own
         <span class="k-mono">bun test</span> and
-        <span class="k-mono">tsc --noEmit</span> are not run by any CI workflow,
-        so they gate nothing. Both were classified anchored by one agent and
+        <span class="k-mono">tsc --noEmit</span> were run by no workflow at all,
+        so they gated nothing. Both were classified anchored by one agent and
         downgraded to self-referential by the reviewer, because what matters is
         the edge that blocks the merge, not the file that could have."</p>
       <span class="k-meta">This is the most credible sentence in the pitch: the
-      tool's first finding cost us points on our own number. Say the counts, not
-      just <span class="k-mono">0.421</span> — a ratio without its denominator is
-      the exact move this product exists to expose. If a heckler asks whether we
-      fixed it: no, not tonight, and quietly fixing it before measuring would
-      have been the dishonest version.</span>
+      tool's first finding cost us points on our own number, and it left us at
+      the bottom of our own table. Say the counts, not just
+      <span class="k-mono">0.357</span> — a ratio without its denominator is the
+      exact move this product exists to expose. 25 of the 32 gathered nodes were
+      judged; the ratio rests on the 14 of those that are checks.</span>
+      <span class="k-meta">If a heckler asks whether we fixed it: yes.
+      <span class="k-mono">.github/workflows/test.yml</span> exists now and is
+      the fix. The published <b>0.357 is the number at the measured revision</b>
+      and it has not been re-run, which is the whole point: we shipped the
+      finding against ourselves rather than quietly repairing it first and
+      measuring after. Do not claim a new ratio you have not measured.</span>
       <span class="k-meta">Beat 1's budget is 60 s and this callout is ~25 s of
       it. If the beat runs long, cut the "second chart is the one I care about"
       sentence above and point at the curve instead — <em>not</em> this. The
@@ -1147,10 +1240,23 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       <pre class="k-code k-code--cmd">bun scripts/render.ts ../../tests/fixtures/report.sample.json -o /tmp/keel-report.html &amp;&amp; open /tmp/keel-report.html</pre>
     </div>
 
-    <div class="rs-todo"><b>Verify before the pitch</b>
-      The two fallback paths above depend on W2·H (site/reports/index.html) and
-      W1·B (render.ts). Run both once, for real, the moment those merge.
-      [TODO — orchestrator]</div>
+    <div class="rs-fact"><b>Both fallback paths are confirmed</b>
+      <span class="rs-fact__i"><b>Site path: confirmed live, by content.</b>
+      <span class="k-mono">/reports/</span> serves the corpus index
+      (<span class="k-mono">Keel — corpus grounding ratios</span>) and
+      <span class="k-mono">/reports/keel.html</span> serves our own report
+      (<span class="k-mono">Keel — grounding report — keel</span>). The same
+      committed bytes are on disk at
+      <span class="k-mono">site/reports/index.html</span>, which is what the
+      <span class="k-mono">open</span> line above uses and what tab 3 holds.</span>
+      <span class="rs-fact__i"><b>Render path: confirmed.</b>
+      <span class="k-mono">render.ts</span> over
+      <span class="k-mono">tests/fixtures/report.sample.json</span> produces a
+      self-contained artifact: one file, no external request, opens from
+      <span class="k-mono">file://</span>. Same property as this sheet, and for
+      the same reason.</span>
+      <span class="rs-fact__i">Nothing in beat 1 is left to check. What is not
+      on the sheet is a rehearsal; see Human tasks.</span></div>
   </div>
 </section>
 
@@ -1188,6 +1294,46 @@ nothing here is classified yet — that is the agent's job.</pre>
       <span class="k-meta">Real output, from <span class="k-mono">pallets/click</span>.
       Accept 8–120 edges. Below 8, ask for another repo — see the picker below.
       Above ~120 the beat runs long.</span>
+      <span class="k-meta">Measured on the end-to-end run of this beat
+      (<span class="k-mono">sharkdp/fd</span>, a repo Keel had never seen):
+      shallow clone <b>4.21 s</b>, then <span class="k-mono">gather</span>
+      <b>0.08 s</b> for <b>33 nodes</b>: 31
+      <span class="k-mono">ci_step</span> (30 from
+      <span class="k-mono">.github/workflows/CICD.yml</span>, 1 from
+      <span class="k-mono">.github/dependabot.yml</span>) and 2
+      <span class="k-mono">script</span> (Makefile targets). <b>The clone is the
+      only thing here that touches the network, and it is the single most likely
+      thing to stall your opening.</b> Pre-clone anything you can before you walk
+      up; if the volunteer's repo is a surprise, say "cloning" out loud and let
+      the four seconds be four seconds.</span>
+      <span class="k-meta">A fair audience question, so have the answer:
+      <span class="k-mono">dependabot.yml</span> is gathered as a
+      <span class="k-mono">ci_step</span> even though it has no exit code. It
+      lands <span class="k-mono">not_a_check</span>, so it costs the ratio
+      nothing, but it does inflate the raw node count, and gather is mechanical
+      on purpose: it locates surfaces, it does not judge them.</span>
+    </div>
+
+    <div class="rs-step">
+      <span class="rs-label">What this beat costs, measured on sharkdp/fd</span>
+      <table class="k-table k-table--num">
+        <thead>
+          <tr><th>Step</th><th>Wall clock</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>shallow clone</td><td>4.21 s</td></tr>
+          <tr><td><span class="k-mono">gather.ts</span> → 33 nodes</td><td>0.08 s</td></tr>
+          <tr><td><span class="k-mono">classify.ts</span>, empty library</td><td>0.11 s</td></tr>
+          <tr><td><b>agent judgment, 9 nodes</b></td><td><b>~150 s</b></td></tr>
+          <tr><td><span class="k-mono">mint-probe.ts</span> ×1</td><td>0.21 s</td></tr>
+          <tr><td><span class="k-mono">classify.ts</span>, grown library</td><td>0.18 s</td></tr>
+          <tr><td>gather + classify back to back, cold</td><td>0.22 s</td></tr>
+        </tbody>
+      </table>
+      <span class="k-meta"><b>All the plumbing together is 0.22 s. The judgment
+      is ~15 s per node.</b> That single ratio decides how you run this beat: a
+      full 33-node pass at that depth is about eight minutes of dead air. The
+      beat is budgeted at 100 s.</span>
     </div>
 
     <div class="rs-step">
@@ -1196,7 +1342,14 @@ nothing here is classified yet — that is the agent's job.</pre>
         already uses. One line, typed where they can see it:</p>
       <pre class="k-code k-code--cmd">claude</pre>
       <pre class="k-code rs-out">&gt; keel: measure the grounding ratio of /tmp/volunteer — gather, classify,
-&gt; and crystallize anything the probe library could not decide</pre>
+&gt; and crystallize anything the probe library could not decide. judge THREE
+&gt; nodes, not the whole surface. i am on a clock.</pre>
+      <span class="k-meta"><b>Bound the depth in the prompt, out loud.</b> The
+      measured run judged 9 nodes and that took ~150 s on its own. Three nodes is
+      ~45 s and lands the same beat: one clearly anchored, one clearly not, one
+      minted into a probe. If you want more than three, pre-judge before the
+      pitch and narrate the batch rather than waiting on it. Never both judge
+      deep and talk over silence.</span>
     </div>
 
     <div class="rs-step">
@@ -1210,6 +1363,40 @@ nothing here is classified yet — that is the agent's job.</pre>
       <span class="k-meta">Probe files are named
         <span class="k-mono">&lt;id&gt;.v&lt;version&gt;.ts</span>; minting never
         overwrites, it versions.</span>
+      <p class="k-callout">"Two judgments became two probes, and the re-run
+        decided <b>three</b> nodes mechanically, with zero model calls. One of
+        those three I never judged at all."</p>
+      <span class="k-meta">Measured on <span class="k-mono">sharkdp/fd</span>.
+      The two probes are
+      <span class="k-mono">cargo-test-harness-invocation.v1.ts</span> (match
+      <span class="k-mono">"cargo test"</span>, none of
+      <span class="k-mono">"|| true"</span> or
+      <span class="k-mono">continue-on-error</span>) and
+      <span class="k-mono">cargo-clippy-static-analysis.v1.ts</span>. The free
+      node is <span class="k-mono">CICD.yml#81</span>, the MSRV clippy run,
+      decided by the clippy probe without a judgment behind it. Breadth was
+      checked before minting: 0 of 32 and 1 of 32 (3.1%) other nodes matched,
+      under the 25% ceiling. Neither probe reads a repo name, an org, or a path,
+      and <span class="k-mono">signature()</span> never reads
+      <span class="k-mono">node.source</span>. That is the thing to say if
+      someone suspects the probe was fitted to this repo.</span>
+      <span class="k-meta"><b>Abstention is live, not decorative</b>, and it is
+      the best 10 seconds available if you have them: on
+      <span class="k-mono">cargo test --no-run</span> the probe matched and
+      <em>abstained</em> to pending; on
+      <span class="k-mono">cargo clippy … || true</span> it did not match at all;
+      a fresh <span class="k-mono">cargo test --workspace</span> was decided. A
+      lazy probe degrades to <em>ask</em>, never to <em>looks fine</em>.</span>
+      <span class="k-meta"><b>Known defect: do not put probe-decided evidence on
+      the projector.</b> A probe verdict currently carries the <em>minting</em>
+      node's evidence: <span class="k-mono">CICD.yml#81</span>'s verdict cites
+      line 64 and quotes a <span class="k-mono">-Dwarnings</span> flag the node
+      at line 81 does not have. The class is right; the citation points at the
+      wrong line. Read the probe's <span class="k-mono">match</span> aloud, not a
+      probe-decided verdict's evidence. If someone catches it, say exactly
+      that: evidence should be re-derived per decided node, not copied from the
+      mint. Owning it costs you nothing; being caught reading it costs the
+      room's trust in every argument on screen.</span>
     </div>
 
     <div class="rs-fallback">
@@ -1251,12 +1438,38 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
         live run under a clock.</p>
     </div>
 
-    <div class="rs-todo"><b>Verify before the pitch</b>
-      The live path depends on W1·A (classify.ts) and W1·C (mint-probe.ts). Run
-      beat 2 end to end on a repo you have never gathered, twice, and confirm a
-      probe file actually appears in <span class="k-mono">~/.config/keel/probes/</span>.
-      Only the <span class="k-mono">gather</span> output above has been executed
-      as of W1·I. [TODO — orchestrator]</div>
+    <div class="rs-fact"><b>Executed: beat 2 ran end to end on an unseen repo</b>
+      <span class="rs-fact__i"><b>Target:</b>
+      <span class="k-mono">sharkdp/fd</span> at
+      <span class="k-mono">ca51233d</span>, shallow-cloned to
+      <span class="k-mono">/tmp</span>. Not one of the 15 corpus names, and
+      deliberately a shape the library had never seen: a pure-Rust single-binary
+      CLI with a cross-compile matrix,
+      <span class="k-mono">cargo fmt/clippy/test</span>, and a release/attest
+      pipeline. Nothing was written outside <span class="k-mono">/tmp</span>; the
+      corpus probe library and <span class="k-mono">reports/</span> were not
+      touched.</span>
+      <span class="rs-fact__i"><b>Result:</b> 33 nodes gathered · 9 judged (5
+      <span class="k-mono">anchored</span>, 3
+      <span class="k-mono">not_a_check</span>, 1
+      <span class="k-mono">unknown</span>) · 2 probes minted · re-run decided 3
+      nodes by probe with zero model calls, one of them never judged by hand.
+      The whole loop ran from an empty library: first
+      <span class="k-mono">classify</span> printed
+      <span class="k-mono">decided 0 / pending 33</span>, exit 0, no
+      warnings.</span>
+      <span class="rs-fact__i">The <span class="k-mono">unknown</span> is worth
+      having ready: <span class="k-mono">actions/attest</span>. The Fulcio signer
+      really is outside the write boundary, but <em>nothing in the repo consumes
+      the attestation</em>, so whether it gates anything is untraceable from
+      inside the target. It fails closed rather than reading signer strength as a
+      gate. That is <span class="k-mono">unknown</span> doing its job, and it
+      counts against the ratio.</span>
+      <span class="rs-fact__i"><b>Still unexercised:</b> that run minted into an
+      explicit probe directory under <span class="k-mono">/tmp</span>, so
+      "a file appears in <span class="k-mono">~/.config/keel/probes/</span>" was
+      <em>not</em> confirmed by it. Pre-flight item 4 snapshots that directory;
+      diff it after your dry run and you will have closed this yourself.</span></div>
   </div>
 </section>
 
@@ -1377,30 +1590,43 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
       <p>AI-native maturity is not how much of your operation is automated. It is
         what fraction of your operational graph has a verification signal the
         agents cannot author.</p>
-      <p>And Keel audits its own probe library, and publishes the agreement rate.
-        A system that measures groundedness while refusing to measure its own is
-        telling you something.</p>
+      <p>And Keel audits its own probe library. We ran that audit once, by hand,
+        on one target, and it caught <em>our own probe</em> filing two real
+        checks as not-a-check, the one class that inflates the score. We narrowed
+        the probe. Running it on a schedule is what ships next. A system that
+        measures groundedness while refusing to measure its own is telling you
+        something.</p>
     </div>
     <p class="k-meta">Stop there. The substrate table below is for questions, not
       for the pitch.</p>
 
-    <div class="rs-todo"><b>Decide before the pitch — which closing sentence</b>
-      The line above is present tense and it is the last thing the room hears.
-      Its backing is <span class="k-mono">skills/keel/scripts/audit.ts</span>
-      (W2·F), which the plan marks <em>flourish — cut if behind</em>. Closing a
-      pitch about ungrounded assertions with an ungrounded assertion is the one
-      unrecoverable failure on this sheet.
-      <span class="rs-todo__i"><b>If the ε-audit shipped and ran</b> — say the
-      line above verbatim, and have the number ready (objection card 4).</span>
-      <span class="rs-todo__i"><b>If W2·F was cut, or shipped but did not run</b>
-      — say instead: "And Keel is built to audit its own probe library and
-      publish the agreement rate — that ships next. A system that measures
-      groundedness while refusing to measure its own is telling you
-      something." Same close, one tense weaker, and it is true.</span>
-      <span class="rs-todo__i">Status at the time this sheet was written:
-      <span class="k-mono">audit.ts</span> did not exist and no verdict carried
-      an <span class="k-mono">audit</span> field — the weaker line was the
-      correct one. [TODO — orchestrator: confirm or flip after W2·F]</span></div>
+    <div class="rs-fact"><b>Decided: say the close above, with this caveat in your mouth</b>
+      <span class="rs-fact__i"><b>W2·F (<span class="k-mono">audit.ts</span>) was
+      CUT.</b> There is no scheduled ε-audit and no published agreement rate, so
+      "we publish the agreement rate" is <em>not</em> available and must not be
+      said. What <em>is</em> available is stronger, because it is a finding
+      rather than a promise: the audit <b>mechanism</b> was run by hand on one
+      target, and it found real drift in our own probe.</span>
+      <span class="rs-fact__i"><b>The finding, if they want it:</b> re-running
+      <span class="k-mono">tiktoken</span> became an audit, because by then the
+      library decided every node. Two disagreements, both toward the shoppable
+      class: <span class="k-mono">check-manifest</span> and
+      <span class="k-mono">build sdist</span>, judged
+      <span class="k-mono">anchored</span> by the agent, filed
+      <span class="k-mono">not_a_check</span> by the probe. The probe had matched
+      <span class="k-mono">pip install</span> inside a multi-line
+      <span class="k-mono">run:</span> block and condemned the whole step, which
+      also ran <span class="k-mono">check-manifest -v</span> and
+      <span class="k-mono">python -m build --sdist</span>. Blast radius was
+      checked: 13 verdicts from that probe, only these 2 wrong, and <b>both
+      stayed confined to the audit side-file. No published report carried
+      them.</b> The match was narrowed; probe-versus-agent went 3/5 to
+      3/3.</span>
+      <span class="rs-fact__i"><b>The precise caveat, say it unprompted:</b> one
+      target, by hand, not on a schedule. Do not round that up to a rate, a
+      percentage, or a corpus. Closing a pitch about ungrounded assertions with
+      an ungrounded assertion is the one unrecoverable failure on this
+      sheet.</span></div>
   </div>
 </section>
 
@@ -1508,8 +1734,10 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
       </tr>
       <tr>
         <td>ε-audit (sampled, verdict-hidden, incl. agent verdicts)
-          <span class="k-meta">design — not yet shipped (W2·F). Describe the
-          level; do not imply it ran.</span></td>
+          <span class="k-meta">the scheduled version (W2·F) was CUT. The
+          mechanism ran once by hand, on one target, and found two wrong verdicts
+          in our own probe. Describe the level and say that; do not imply a rate
+          or a schedule.</span></td>
         <td>L2 watching loop</td>
         <td>sampling policy</td>
       </tr>
@@ -1564,8 +1792,11 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
       <tr>
         <td>4</td>
         <td>network gone</td>
-        <td>local corpus report from disk, plus the recorded beat 2</td>
-        <td>everything live; say so plainly</td>
+        <td>local corpus report from disk (tab 3), plus the deterministic
+          <span class="k-mono">gather</span> → <span class="k-mono">classify</span>
+          split, which needs no model</td>
+        <td>everything live, and there is no recording to fall back on, because
+          the video was cut. Say so plainly</td>
       </tr>
       <tr>
         <td>5</td>
@@ -1581,8 +1812,10 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
     <p>Agentic classification needs a model, and the model needs the network.
       There is no offline path to a live verdict, and pretending otherwise on
       stage would be a self-refuting move in a pitch about grounding. Offline,
-      beat 2 is a recording or a precomputed report — say which one you are
-      showing.</p>
+      beat 2 is a precomputed report and a deterministic
+      <span class="k-mono">classify</span> split. Say which one you are showing.
+      There is no recording: the fallback video was cut, and rung 4 is written
+      assuming it does not exist.</p>
     <p class="k-meta">Unverified as of W1·I: whether
       <span class="k-mono">npx skills@1.5.18</span> resolves from a warm cache
       with the network down. Assume it does not; rung 4 uses the clean-room
@@ -1602,9 +1835,13 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
     <li><b>Timed dry run #2, wifi off.</b> Prove rung 4 with the wifi actually
       off, not simulated. This is the run that finds the file path you got
       wrong.</li>
-    <li><b>Record the fallback video</b> (Wave 2 · I₂) once beats 1 and 2 work,
-      around 01:00. MemorIA was blocked from presenting when production broke
-      minutes before pitching — record it before you need it.</li>
+    <li><b>Open every fallback once, in order.</b> The video that would have
+      covered all of them was cut, so the ladder is only as good as the files it
+      names: tab 3 (<span class="k-mono">site/reports/index.html</span> from
+      <span class="k-mono">file://</span>), the two screened clones, the
+      clean-room directory, and this sheet on paper. MemorIA was blocked from
+      presenting when production broke minutes before pitching. With no
+      recording, opening these <em>is</em> the mitigation.</li>
     <li><b>Clean-room install check</b> at ~00:30, not 02:50: install into an
       empty store and run the loop. A skill is published when a clean install
       yields a <em>runnable</em> skill, not when
@@ -1616,11 +1853,16 @@ pending nodes are NOT classified. Judge them over `raw` — nothing here default
       <span class="k-mono">skills@1.5.18</span> everywhere on this sheet.</li>
   </ol>
 
-  <div class="rs-todo"><b>Not performed by W1·I</b>
-    No timed rehearsal was executed. Per orchestration correction #9 the
-    rehearsal is a human task; this unit's scope was the runbook and the assets.
-    Every command marked "real output" on this sheet was executed; every command
-    marked TODO was not.</div>
+  <div class="rs-todo"><b>Still not performed: the only open item on this sheet</b>
+    <span class="rs-todo__i">No timed rehearsal has been executed. Per
+    orchestration correction #9 the rehearsal is a human task with a stopwatch;
+    no agent closed it and none can.</span>
+    <span class="rs-todo__i">Everything else is closed. Every command marked
+    "real output" was executed, beat 2 was run end to end on
+    <span class="k-mono">sharkdp/fd</span>, all four live URLs were confirmed by
+    reading their content, and the two items that will not happen (the fallback
+    video and the scheduled ε-audit) are recorded as cuts rather than left
+    open.</span></div>
 </section>
 
 <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of

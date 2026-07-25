@@ -255,6 +255,42 @@ function rejectRepoLiterals(tokens: string[], node: Node): void {
   }
 }
 
+/**
+ * A probe decides MANY nodes, so it cannot carry ONE node's coordinates.
+ *
+ * `rejectRepoLiterals` above stops a path literal getting into `match`. This is
+ * the symmetric guard for `evidence`, and it was added after a minted probe
+ * baked `.github/workflows/CICD.yml:64` — the line it was minted FROM — into its
+ * verdict, then decided a different node at line 81. The class was right and the
+ * citation pointed at the wrong place, which in a tool whose whole claim is
+ * "the argument is the evidence" is worse than citing nothing: a reader who
+ * follows the reference finds a command that is not there and correctly stops
+ * trusting the report.
+ *
+ * A probe's evidence must describe the SHAPE it recognised. Node-specific
+ * citations belong to the agent verdict that minted it, which is preserved in
+ * `mintedFrom` and in the file header.
+ */
+function rejectNodeSpecificEvidence(evidence: string[], node: Node): void {
+  const src = node.source.toLowerCase();
+  for (const e of evidence) {
+    const lc = e.toLowerCase();
+    if (/^[\w./\\-]+:\d+$/.test(e.trim())) {
+      fail(
+        `evidence ${JSON.stringify(e)} is a file:line citation. A probe decides many nodes and would ` +
+          `carry this one's coordinates onto all of them — describe the SHAPE it recognises instead ` +
+          `(the originating citation is kept in mintedFrom).`,
+      );
+    }
+    if (src && lc.includes(src)) {
+      fail(
+        `evidence ${JSON.stringify(e)} names ${node.source}, the node this was minted from. ` +
+          `Evidence must describe the shape, not the origin.`,
+      );
+    }
+  }
+}
+
 function buildSpec(node: Node, verdict: Record<string, unknown>, idOverride?: string): MintSpec {
   const cls = verdict.class;
   if (cls === 'unknown') {
@@ -343,7 +379,11 @@ function buildSpec(node: Node, verdict: Record<string, unknown>, idOverride?: st
       actorCanWrite: wb.actorCanWrite as boolean | null,
       argument: wb.argument.trim(),
     },
-    evidence: strArray(verdict.evidence, 'verdict.evidence'),
+    evidence: (() => {
+      const ev = strArray(verdict.evidence, 'verdict.evidence');
+      rejectNodeSpecificEvidence(ev, node);
+      return ev;
+    })(),
     confidence,
     match,
     assert: assertSpec,

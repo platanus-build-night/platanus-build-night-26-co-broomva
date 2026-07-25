@@ -832,6 +832,36 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   margin-bottom: var(--k-space-2);
 }
 
+/* ── a CLOSED item: a verified fact, or an explicitly recorded cut ────────
+   Same shape as .rs-todo so the eye reads them as one family, but neutral
+   rather than accented: an open item is the only thing on this sheet that
+   earns the accent. No verdict hue here either — a green panel would read
+   as a class, and this is stage furniture, not data. ───────────────────── */
+.rs-fact {
+  display: block;
+  margin: var(--k-space-4) 0;
+  padding: var(--k-space-3) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  background: var(--k-bg-1);
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-sm);
+  line-height: var(--k-lh-snug);
+  color: var(--k-ink-0);
+}
+.rs-fact__i { display: block; }
+.rs-fact__i + .rs-fact__i { margin-top: var(--k-space-2); }
+.rs-fact b {
+  font-family: var(--k-font-sans);
+  font-weight: var(--k-fw-semibold);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  font-size: var(--k-fs-micro);
+  color: var(--k-ink-2);
+  display: block;
+  margin-bottom: var(--k-space-2);
+}
+
 /* ── checklists — mono boxes, never a check mark ─────────────────────────── */
 .rs-check { list-style: none; margin: var(--k-space-4) 0; padding: 0; }
 /* The box is absolutely positioned, NOT a grid column: a grid here turns every
@@ -1018,22 +1048,35 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
         probe degrades to <em>ask</em>, never to <em>looks fine</em>.</p>
     </div>
 
-    <div class="rs-todo"><b>The network line — check it the day of, then fill this slot</b>
-      Everything above is subprocess + kill-timer, and it is true regardless of
-      platform. The <em>network</em> claim is separate, thinner, and
-      platform-conditional: macOS <span class="k-mono">sandbox-exec</span> with a
-      deny-default profile is the mechanism <em>where it applies</em>, and W1·C
-      is correcting an overclaim in exactly this area.
-      <span class="rs-todo__i"><b>Network / filesystem confinement:</b> [TODO —
-      read the final sentence W1·C shipped in
-      <span class="k-mono">probe-sandbox.ts</span> and say that sentence, not a
-      paraphrase of it. It is platform-conditional: no
-      <span class="k-mono">sandbox-exec</span> means no confinement, only a
-      stripped env.]</span>
-      <span class="rs-todo__i">Until that slot is filled, the card stops after
-      the four lines above. They are enough — the question asked was about
-      running LLM-generated code, and "killed by the parent at ten seconds,
-      cannot assert a class, cannot take the run down" answers it.</span></div>
+    <div class="rs-fact"><b>The network line: closed, and platform-conditional</b>
+      <span class="rs-fact__i"><b>On macOS:</b> the process re-executes itself
+      under <span class="k-mono">sandbox-exec</span> with a deny-default profile
+      before it touches a probe. That profile blocks <b>network of any kind</b>
+      and <b>filesystem writes anywhere</b>, allows no exec but
+      <span class="k-mono">bun</span>, denies the credential paths
+      (<span class="k-mono">~/.ssh</span>, <span class="k-mono">~/.aws</span>,
+      <span class="k-mono">~/.gnupg</span>,
+      <span class="k-mono">~/.config/gh</span>,
+      <span class="k-mono">~/.netrc</span>), and forwards no API keys.</span>
+      <span class="rs-fact__i"><b>Everywhere else it is not enforced, and the
+      tool says so itself.</b> This is the sentence it prints, so say this and
+      not a paraphrase: <em>"sandbox NOT enforced: probe code ran in a child
+      process with a stripped environment — no inherited credentials — under the
+      parent's kill-timer, but network access and filesystem writes were NOT
+      confined."</em> It goes to stderr and into
+      <span class="k-mono">warnings</span>, never silently.</span>
+      <span class="rs-fact__i"><b>Not claimed, and say so before they ask:</b>
+      read confinement (a probe can read what you can read, minus those
+      credential paths), exfiltration through the verdict text a probe returns,
+      and any CPU or memory bound. A hang is the parent's problem by
+      design.</span>
+      <span class="rs-fact__i"><b>An adversarial review found a hole here and it
+      is closed.</b> A probe could force its own <em>unconfined</em> re-run by
+      exiting 0 with no output, because empty stdout is under the probe's control.
+      Degradation now requires a non-zero exit <b>and</b>
+      <span class="k-mono">sandbox-exec</span>'s own stderr diagnostic, which the
+      confined code cannot forge. A confined child that exits quietly is treated
+      as a probe defect: every node pends, and nothing re-runs unconfined.</span></div>
 
     <div class="rs-never"><b>Do not say</b>
       "It's sandboxed" as a whole-cloth claim. Name the mechanism: subprocess,
@@ -1096,11 +1139,23 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
       instead, so nothing is untested.</span>
     </div>
 
-    <div class="rs-todo"><b>Fill before the pitch</b>
-      Repeatability: verdict agreement [TODO — %] across [TODO — N] independent
-      runs on the same target. Do not say a number you have not measured; if the
-      run did not happen, say "we publish the agreement rate; we have not run it
-      on this corpus yet."</div>
+    <div class="rs-fact"><b>Repeatability: there is no number, and the reason is the interesting part</b>
+      <span class="rs-fact__i">One target was re-run
+      (<span class="k-mono">tiktoken</span>). <b>Agent-only agreement is
+      undefined:</b> zero nodes were re-judged by an agent, because by that point
+      the grown probe library decided every node. You cannot measure judgment
+      stability on nodes no judgment touched.</span>
+      <span class="rs-fact__i"><b>Do not say 100%.</b> Pooled agreement on that
+      re-run is 10 of 10, and it is not a stability claim. Keel's own summary
+      says so in writing: probes are deterministic scripts that reproduce their
+      own verdicts exactly, so counting them as independent re-judgment inflates
+      the number toward 1.0 as the library grows, for reasons that have nothing
+      to do with judgment. It is reported beside the agent number for audit,
+      never as it.</span>
+      <span class="rs-fact__i"><b>Say this:</b> "We have not measured agent
+      repeatability yet. The one re-run we have got swallowed by the probe
+      library, which is a good problem and a real gap. What that re-run did do is
+      turn into an audit, and it caught a bug in our own probe. Card 4."</span></div>
 
     <div class="rs-never"><b>Do not say</b>
       "The model is very good at this." The claim is not model quality — it is
@@ -1151,10 +1206,11 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
     <h2 class="rs-card__q">"The agent writes the probes — who verifies the
       verifier?"</h2>
 
-    <p class="rs-card__a">Query provenance. The target cannot select the
-      question, the output contract, or the audit sample — and the ε-audit
-      re-decides a sample of probe verdicts with the cached verdict hidden, then
-      publishes the agreement rate as a counter-metric on our own library.</p>
+    <p class="rs-card__a">Query provenance — the target cannot select the
+      question, the output contract, or the audit sample. And we ran that audit
+      on our own library once, by hand: it caught <em>our own probe</em> filing
+      two real checks as <span class="k-mono">not_a_check</span>, the one class
+      that inflates the score. We narrowed the probe.</p>
 
     <div class="rs-card__more">
       <p>If pressed: independence of the <em>query</em> is the binding invariant,
@@ -1174,11 +1230,40 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
         "looks fine".</p>
     </div>
 
-    <div class="rs-todo"><b>Fill before the pitch</b>
-      Probe-library agreement rate: [TODO — %] over [TODO — N] audited nodes at a
-      [TODO — %] sampling fraction. If the ε-audit did not ship (it is the first
-      rung of the degradation ladder), say the design and say it did not run —
-      do not imply a number.</div>
+    <div class="rs-step">
+      <span class="rs-label">The audit found real drift: the counter-metric working</span>
+      <p>Re-running <span class="k-mono">tiktoken</span> became an audit, because
+        by then the library decided every node. <b>Two disagreements, both toward
+        the shoppable class.</b>
+        <span class="k-mono">check-manifest</span> and
+        <span class="k-mono">build sdist</span>: the agent had judged them
+        <span class="k-mono">anchored</span>; the probe filed them
+        <span class="k-mono">not_a_check</span>.</p>
+      <p>The cause is legible in one sentence, which is the point of probes being
+        code. The <span class="k-mono">unfrozen-dependency-install</span> probe
+        matched <span class="k-mono">pip install</span> inside a multi-line
+        <span class="k-mono">run:</span> block and condemned the whole step, but
+        those steps also run <span class="k-mono">check-manifest -v</span> and
+        <span class="k-mono">python -m build --sdist</span>.</p>
+      <p><b>Blast radius was checked, not assumed:</b> 13 verdicts came from that
+        probe, only these 2 were wrong, and <b>both stayed confined to the audit
+        side-file. No published report ever carried them.</b> The match was
+        narrowed; probe-versus-agent went 3/5 to 3/3.</p>
+      <p class="k-callout">"The counter-metric caught our own probe shopping the
+        one class that inflates the score. That is the answer to who verifies the
+        verifier: something did, it found a real defect in our work, and the two
+        bad verdicts never reached a published number."</p>
+    </div>
+
+    <div class="rs-fact"><b>The limit, said before they ask</b>
+      <span class="rs-fact__i"><b>One target, by hand, not on a schedule.</b> The
+      scheduled ε-audit was cut. There is <b>no published agreement rate</b> and
+      no sampling fraction. Do not say a percentage, do not say "we publish it",
+      do not round one hand-run audit up to a corpus.</span>
+      <span class="rs-fact__i">The structural guarantee is what carries when the
+      rate does not: a probe <em>abstains</em> by returning null and may never
+      return <span class="k-mono">unknown</span>. A lazy probe degrades to
+      <em>ask</em>, never to <em>looks fine</em>.</span></div>
   </div>
 </section>
 
@@ -1242,18 +1327,24 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 
     <div class="rs-step">
       <span class="rs-label">The proof that we apply this to ourselves</span>
-      <p>Keel measured this repository and found that our own
-        <span class="k-mono">bun test</span> and
-        <span class="k-mono">tsc --noEmit</span> are <b>not run by any CI
-        workflow</b> — so they gate nothing. Both had been classified
+      <p>Keel measured this repository and found that at the measured revision
+        our own <span class="k-mono">bun test</span> and
+        <span class="k-mono">tsc --noEmit</span> were <b>run by no workflow at
+        all</b>, so they gated nothing. Both had been classified
         <span class="k-mono">anchored</span>; the adversarial reviewer downgraded
         both to <span class="k-mono">self_referential</span>, because the rule is
         to classify the edge that actually blocks the merge, not the file that
         could have.</p>
       <p>Say this one. It is the most credible thing the tool can say about
-        itself: the first thing it did was cost us two points on our own number.
-        A tool that only ever finds other people's problems is a marketing
-        artifact.</p>
+        itself: the first thing it did was cost us anchored edges on our own
+        number, and it left us at <b>0.357, the lowest ratio in our own
+        corpus</b>, against a pooled 0.853. A tool that only ever finds other
+        people's problems is a marketing artifact.</p>
+      <p><b>If they ask whether we fixed it:</b> yes.
+        <span class="k-mono">.github/workflows/test.yml</span> exists now and is
+        the fix. The published 0.357 is the number at the measured revision and
+        has not been re-run. Shipping the finding against ourselves and then
+        fixing it, in that order, is the only order that is not marketing.</p>
     </div>
   </div>
 </section>
@@ -1307,24 +1398,89 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 <!-- ═══════════════════════════════════════════════════════════════════ -->
 <section class="rs-section" id="numbers">
   <h2>Numbers to have on hand</h2>
-  <p>Say a measured number or say none. The left column is executed; the right
-    column is not, and stays a TODO until somebody runs it.</p>
+  <p>Say a measured number or say none. The left column is executed. The right
+    column is either explicitly cut or genuinely unmeasured, and saying a number
+    from it would be the exact move this product exists to expose.</p>
 
   <div class="rs-cols">
     <div class="rs-panel">
       <h3>Measured, as of this sheet</h3>
       <ul>
-        <li><b>Keel's own grounding ratio: 0.421.</b> Anchored 8 of 19 classified
-          edges · <span class="k-mono">self_referential</span> 11 ·
+        <li><b>The corpus: pooled 0.853.</b> 122 anchored of 143 classified edges
+          across <b>14 measured</b> repositories. 15 are pinned to a revision and
+          were judged sequentially from an <em>empty</em> probe library; the
+          fifteenth (<span class="k-mono">anthropic-courses</span>) gathered zero
+          nodes and is recorded <span class="k-mono">nothing_gathered</span> with
+          a <b>null</b> ratio, never 0.000, because publishing the worst
+          possible score about a surface nobody could read is a category
+          error.</li>
+        <li><b>Keel's own grounding ratio: 0.357, the lowest in its own
+          corpus.</b> Anchored 5 of 14 classified edges ·
+          <span class="k-mono">self_referential</span> 9 ·
           <span class="k-mono">unknown</span> 0 ·
-          <span class="k-mono">not_a_check</span> 13, excluded from the ratio and
-          printed beside it. Never say the ratio without the counts.</li>
-        <li>What it found about us: our own <span class="k-mono">bun test</span>
-          and <span class="k-mono">tsc --noEmit</span> are <b>not run by any CI
-          workflow</b>, so they gate nothing — both downgraded from
+          <span class="k-mono">not_a_check</span> 11, excluded from the ratio and
+          printed beside it · 25 of 32 gathered nodes judged. Never say the ratio
+          without the counts.</li>
+        <li><b>Per-repo, for pointing at:</b>
+          <span class="k-mono">aider</span> 1.000 but over only <b>7</b>
+          classified edges (say the count in the same breath) ·
+          <span class="k-mono">vercel-ai</span> 0.800 sampled <b>25 of 1014</b>
+          nodes, 2% of the surface · <span class="k-mono">requests</span> 0.917 ·
+          <span class="k-mono">flask</span> 1.000 ·
+          <span class="k-mono">sinatra</span> 0.875.</li>
+        <li><b>Crystallization, measured and noisy:</b> probe library 0 → 29
+          (R² <b>0.99</b>, linear and unambiguous) · probe-decided share
+          <b>+145%</b> (R² 0.21) · estimated tokens per node <b>−66.5%</b>
+          (R² 0.28) · seconds per node <b>−72.9%</b> (R² 0.04). The chart prints
+          <em>"the line explains less than half the variance — read the raw
+          squares."</em> Run 6 (<span class="k-mono">mcp-python-sdk</span>) cost
+          592 estimated tokens per node at 0% probe share and is visible in the
+          data. <b>The honest headline: library growth is unambiguous, the cost
+          decline is real but noisy.</b> Never present it as a smooth
+          curve.</li>
+        <li>Every token figure is an <b>estimate</b> and must be said as one,
+          because no API exposes session usage to a skill.</li>
+        <li><b><span class="k-mono">keel route</span>, live: 2 routable, 18
+          unroutable across 6 repositories.</b> The restraint is the result:
+          most ungrounded verification needs a <em>decision</em>, not a wire. Best
+          route: on <span class="k-mono">openai-python</span>, the
+          <span class="k-mono">action_required</span> flag gating the issue job
+          is the model self-labelling its own finding; route it to the step in the
+          same job that already fetched
+          <span class="k-mono">peps.python.org</span> under
+          <span class="k-mono">curl --fail</span>. "No prompt, permission
+          profile, or model output can move an end-of-life date the CPython
+          release managers publish." Every binding is
+          <span class="k-mono">status: proposed</span>. The constructing loop
+          emits, a human admits.</li>
+        <li><b>ε-audit, run by hand on one target:</b> 2 disagreements, both
+          toward <span class="k-mono">not_a_check</span> · blast radius checked
+          at 13 verdicts from that probe, only 2 wrong · both confined to the
+          audit side-file, no published report carried them · probe-versus-agent
+          3/5 → 3/3 after the match was narrowed. Card 4.</li>
+        <li><b>Beat 2, end to end on an unseen repo</b>
+          (<span class="k-mono">sharkdp/fd</span>): 33 nodes gathered in 0.08 s ·
+          9 judged in ~150 s · 2 probes minted · re-run decided 3 nodes by probe
+          with zero model calls, one of them never judged by hand. All plumbing
+          combined is 0.22 s; judgment is ~15 s per node.</li>
+        <li><b>Live and confirmed by fetching content</b>, not by a status code:
+          the landing page, <span class="k-mono">/reports/</span>,
+          <span class="k-mono">/reports/keel.html</span>, and
+          <span class="k-mono">/reports/openai-python.bindings.html</span>.</li>
+        <li><b>Install:</b> <span class="k-mono">npx skills add broomva/keel</span>.
+          <span class="k-mono">skills</span> v1.5.19+ needs Node ≥ 22.20 and this
+          machine is 22.14, so pin <span class="k-mono">skills@1.5.18</span> on
+          stage, or run <span class="k-mono">nvm install 22.20</span>
+          beforehand.</li>
+        <li>What it found about us: at the measured revision our own
+          <span class="k-mono">bun test</span> and
+          <span class="k-mono">tsc --noEmit</span> were <b>run by no workflow at
+          all</b>, so they gated nothing; both were downgraded from
           <span class="k-mono">anchored</span> to
           <span class="k-mono">self_referential</span> by the adversarial
-          reviewer. Card 6.</li>
+          reviewer. <span class="k-mono">.github/workflows/test.yml</span> is the
+          fix and now exists; the published 0.357 has not been re-run. Card
+          6.</li>
         <li>Zero <span class="k-mono">unknown</span> in the fixture, and none
           fabricated — three independent judges converged on
           <em>inside</em> the write boundary for unpinned out-of-repo
@@ -1353,19 +1509,24 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
     </div>
 
     <div class="rs-panel">
-      <h3>Open — do not say these until measured</h3>
+      <h3>Cut, or unmeasured: do not say these</h3>
       <ul>
-        <li>Corpus size: [TODO — N repositories]. Fifteen are pinned in
-          <span class="k-mono">corpus.json</span>; how many actually ran is a
-          different number, and that is the one to say.</li>
-        <li>Grounding ratios <em>across the corpus</em>: [TODO — range]. Our own
-          0.421 is measured; the range is not, and one target is not a
-          distribution.</li>
-        <li>Crystallization curve: [TODO — estimated tokens per node at 0 probes
-          vs at N probes]. Label the axis <em>estimated</em> tokens; no API
-          exposes session usage to a skill.</li>
-        <li>Repeatability: [TODO — verdict agreement % across independent runs].</li>
-        <li>ε-audit agreement rate: [TODO — %, or "did not run"].</li>
+        <li><b>Agent repeatability: unmeasured, and undefined on the one re-run
+          we have.</b> Zero nodes were re-judged by an agent, because the grown
+          library decided all of them. <b>Do not say the pooled 10/10:</b> probes are
+          deterministic and reproduce their own verdicts exactly, so counting
+          them inflates the number toward 1.0 for reasons unrelated to judgment.
+          Keel's own summary says this in writing. Card 2.</li>
+        <li><b>A published ε-audit agreement rate: CUT.</b> There is no scheduled
+          audit and no rate. What exists is one hand-run audit on one target that
+          found real drift. Say the finding, never a percentage. Card 4.</li>
+        <li><b>The fallback demo video: CUT.</b> There is no recording of any
+          beat. The per-beat fallbacks on the run sheet are the whole ladder.</li>
+        <li><b>Keel's ratio after the CI fix: not measured.</b> 0.357 is the
+          number at the measured revision. Do not improve it out loud.</li>
+        <li><b>Anything about test <em>quality</em>.</b> Keel measures shape.
+          There is no number here about whether a check is any good, and there is
+          not going to be one tonight.</li>
       </ul>
     </div>
   </div>

@@ -1,0 +1,291 @@
+{
+  "target": "platanus-build-night-26-co-JGaldo-beep",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.695Z",
+  "nodes": [
+    {
+      "id": "package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "package.json",
+      "raw": "\"dev\": \"bun run bin/cine.ts\""
+    },
+    {
+      "id": "package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "package.json",
+      "raw": "\"build\": \"bun build bin/cine.ts --target=node --packages=external --outfile dist/cine.js && bun build src/mcp/server.ts --target=node --packages=external --outfile dist/mcp.js && bun run scripts/fix-shebang.mjs\""
+    },
+    {
+      "id": "package.json#smoke",
+      "kind": "script",
+      "name": "smoke",
+      "source": "package.json",
+      "raw": "\"smoke\": \"bun run scripts/smoke.ts\""
+    },
+    {
+      "id": "package.json#test",
+      "kind": "script",
+      "name": "test",
+      "source": "package.json",
+      "raw": "\"test\": \"bun test\""
+    },
+    {
+      "id": "package.json#type-check",
+      "kind": "script",
+      "name": "type-check",
+      "source": "package.json",
+      "raw": "\"type-check\": \"tsc --noEmit\""
+    },
+    {
+      "id": "package.json#lint",
+      "kind": "script",
+      "name": "lint",
+      "source": "package.json",
+      "raw": "\"lint\": \"biome check .\""
+    },
+    {
+      "id": "package.json#lint-fix",
+      "kind": "script",
+      "name": "lint:fix",
+      "source": "package.json",
+      "raw": "\"lint:fix\": \"biome check --write .\""
+    },
+    {
+      "id": "package.json#format",
+      "kind": "script",
+      "name": "format",
+      "source": "package.json",
+      "raw": "\"format\": \"biome format --write .\""
+    },
+    {
+      "id": "package.json#mcp",
+      "kind": "script",
+      "name": "mcp",
+      "source": "package.json",
+      "raw": "\"mcp\": \"bun run src/mcp/server.ts\""
+    },
+    {
+      "id": "package.json#prepublishonly",
+      "kind": "script",
+      "name": "prepublishOnly",
+      "source": "package.json",
+      "raw": "\"prepublishOnly\": \"bun run build && bun test && bun run type-check && bun run lint\""
+    },
+    {
+      "id": "biome.json#biome-json",
+      "kind": "ci_step",
+      "name": "linter config (biome.json)",
+      "source": "biome.json",
+      "raw": "{\n  \"$schema\": \"https://biomejs.dev/schemas/1.9.0/schema.json\",\n  \"organizeImports\": {\n    \"enabled\": true\n  },\n  \"files\": {\n    \"ignore\": [\"data/**\", \"dist/**\", \"node_modules/**\", \"tmpclaude-*\"]\n  },\n  \"linter\": {\n    \"enabled\": true,\n    \"rules\": {\n      \"recommended\": true\n    }\n  },\n  \"formatter\": {\n    \"enabled\": true,\n    \"indentStyle\": \"space\",\n    \"indentWidth\": 2,\n    \"lineWidth\": 100\n  },\n  \"javascript\": {\n    \"formatter\": {\n      \"quoteStyle\": \"single\",\n      \"trailingCommas\": \"es5\"\n    }\n  }\n}\n"
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "package.json#test",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "bun's test runner process exit code, over 11 real test files in tests/",
+        "actorCanWrite": false,
+        "argument": "The signal is the exit status of `bun test` executing tests/*.test.ts in a child process. The author writes the assertions but cannot write the verdict: a thrown TypeError or a wrong return value from src/lib/booking.ts produces a non-zero exit regardless of intent. Critically, this script is NOT orphaned the way most hackathon test scripts are — `prepublishOnly` chains `bun test`, and the package manager invokes that lifecycle hook unconditionally on publish, so the edge has a real invoker on the publish path. It has NO invoker on the merge path: there is no .github/workflows, no CI config, and no repo-tracked git hook, so a push to main is gated by nothing. Oracle caveat per the deep limit: assertions in tests/format.test.ts, tests/booking.test.ts etc. were plausibly co-authored with src/, so execution independence holds while specification independence does not.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.test = 'bun test'",
+        "package.json scripts.prepublishOnly = 'bun run build && bun test && bun run type-check && bun run lint'",
+        "tests/ contains 11 files: banner, booking, cache, format, mappers, member-session, order-service, search, seat-map, session-capture, token",
+        "`ls .github` -> no such directory"
+      ],
+      "confidence": 0.78,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#type-check",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "the TypeScript compiler (tsc --noEmit) reading tsconfig.json",
+        "actorCanWrite": false,
+        "argument": "tsc performs deterministic static analysis of the source and emits diagnostics the author cannot author around without changing the types themselves. The compiler binary comes from devDependencies (typescript ^5.6.0) and is not repo-modifiable code. Same invoker story as `test`: reachable through prepublishOnly, unreachable from any merge-time gate because no CI exists. Note the scope limit — this proves type consistency, not behaviour.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts['type-check'] = 'tsc --noEmit'",
+        "package.json devDependencies.typescript = '^5.6.0'",
+        "tsconfig.json present at repo root",
+        "prepublishOnly chains 'bun run type-check'"
+      ],
+      "confidence": 0.82,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#lint",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "the Biome binary (@biomejs/biome ^1.9.0) in check mode, exit code driven by rule violations",
+        "actorCanWrite": false,
+        "argument": "`biome check .` without --write only reports; a violation is a non-zero exit produced by an external analyzer the source cannot influence except by conforming. biome.json enables the `recommended` rule set, which includes correctness/suspicious rules (unreachable code, unused bindings), so this is not purely cosmetic. The author can weaken it by editing biome.json — but that is a change to the rule set, not a write to the signal, so the boundary holds. Narrowness caveat: it asserts conformance to a rule list, never that the CLI books a cinema seat correctly. Invoked only via prepublishOnly; nothing invokes it on push.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.lint = 'biome check .'",
+        "biome.json linter.enabled=true, rules.recommended=true",
+        "biome.json files.ignore excludes data/, dist/, node_modules/, tmpclaude-*",
+        "prepublishOnly chains 'bun run lint'"
+      ],
+      "confidence": 0.72,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#prepublishonly",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "the package manager's lifecycle runner, aggregating exit codes of bun build, bun test, tsc, and biome",
+        "actorCanWrite": false,
+        "argument": "This is the only automated invoker in the entire repository. npm/bun run prepublishOnly as a mandatory step of `publish` and abort the publish on non-zero exit; the author does not get to skip it in the normal path. Descending rather than trusting the wrapper: of its four children, `build` asserts nothing (bundling), while `test`, `type-check` and `lint` each terminate in an external producer traced above — so the aggregate inherits a real, falsifiable signal rather than wrapping unknowns. Two honest limits: the gate fires at publish time, not at merge or push time, so main can hold broken code indefinitely; and `--ignore-scripts` bypasses it entirely.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.prepublishOnly = 'bun run build && bun test && bun run type-check && bun run lint'",
+        "package.json bin { cine, cine-mcp } and files[] — this is a package intended for npm distribution",
+        "no .github/workflows, no CI config anywhere in the tree"
+      ],
+      "confidence": 0.65,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#smoke",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "Cine Colombia's live production API (token scrape -> theatres -> films -> showtimes -> seat layout), observed through scripts/smoke.ts",
+        "actorCanWrite": null,
+        "argument": "The producer side is the strongest anchor in the repository: a live third-party ticketing backend the author demonstrably cannot write to, exercised end-to-end, with real failure paths (`throw new Error('La cartelera vino vacía')`). What I cannot establish is the edge. Nothing invokes this script — it is absent from prepublishOnly, there is no CI, no tracked hook, and the file header explicitly says 'Run with `bun run scripts/smoke.ts`', i.e. a human decides both when it runs and whether its mostly-console.log output looked right. An external signal that only reaches a human eyeball on request is a diagnostic, not a gate, and I cannot trace it to any transition it blocks. Fails closed rather than crediting the repo for an anchor nothing consumes.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.smoke = 'bun run scripts/smoke.ts'",
+        "scripts/smoke.ts:2 'End-to-end smoke check against the live Cine Colombia API'",
+        "scripts/smoke.ts — output is console.log narrative; only one hard assertion (`if (!firstFilm) throw`)",
+        "prepublishOnly does NOT chain smoke",
+        "no .github/, no repo-tracked hooks"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#build",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "bun's bundler writing dist/cine.js and dist/mcp.js, then scripts/fix-shebang.mjs",
+        "actorCanWrite": null,
+        "argument": "Produces artifacts; asserts nothing about correctness. Bun's bundler strips TypeScript types rather than checking them, so a type error that `tsc --noEmit` would catch passes through this step silently. It can fail on a syntax error or a missing import, but that is the transpiler declining to emit, not a verdict about behaviour. Excluded from the ratio.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.build = 'bun build bin/cine.ts ... && bun build src/mcp/server.ts ... && bun run scripts/fix-shebang.mjs'",
+        "type-check exists as a separate script precisely because build does not type-check"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the bun runtime executing the CLI entrypoint bin/cine.ts interactively",
+        "actorCanWrite": null,
+        "argument": "Starts the interactive Clack-prompt CLI for a human to use. There is no assertion, no expected output, no pass/fail semantics — the exit code reflects whether a person quit the program. Excluded from the ratio.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.dev = 'bun run bin/cine.ts'",
+        "dependencies include @clack/prompts (interactive TUI)"
+      ],
+      "confidence": 0.92,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#mcp",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "a long-running stdio MCP server process (src/mcp/server.ts)",
+        "actorCanWrite": null,
+        "argument": "A server launcher, matching the stdio entry in .mcp.json. It runs until killed; it has no terminating success condition and therefore no verdict to emit. Excluded from the ratio.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.mcp = 'bun run src/mcp/server.ts'",
+        ".mcp.json mcpServers['cine-colombia'] type=stdio, command=bun"
+      ],
+      "confidence": 0.92,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#lint-fix",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Biome in --write mode, rewriting source files in place",
+        "actorCanWrite": null,
+        "argument": "The --write flag converts the diagnostic into an edit: violations are repaired rather than reported, so the step succeeds precisely because it changed the code. A step that resolves its own failure condition cannot carry information about the state it found. Excluded from the ratio; the reporting twin `lint` is where the signal lives.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts['lint:fix'] = 'biome check --write .'",
+        "contrast with scripts.lint = 'biome check .' (no --write)"
+      ],
+      "confidence": 0.88,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#format",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Biome's formatter writing files in place",
+        "actorCanWrite": null,
+        "argument": "Pure rewrite — reindents to biome.json's 2-space / 100-column / single-quote settings and exits zero. It cannot fail on anything the author cares about, so it asserts nothing. Excluded from the ratio.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "package.json scripts.format = 'biome format --write .'",
+        "biome.json formatter { indentStyle: space, indentWidth: 2, lineWidth: 100 }"
+      ],
+      "confidence": 0.93,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "biome.json#biome-json",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "nothing — this is declarative configuration, not an executed edge",
+        "actorCanWrite": null,
+        "argument": "biome.json parameterises the `lint` and `format` edges; it does not run and emits no signal. Judging it separately would double-count the Biome edges already judged. Excluded from the ratio as a non-edge.",
+        "actorCanWriteNote": null
+      },
+      "evidence": [
+        "biome.json is a $schema-bearing config document with no executable content",
+        "consumed by package.json scripts.lint / scripts.format"
+      ],
+      "confidence": 0.9,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 4,
+    "selfReferential": 0,
+    "unknown": 1,
+    "notACheck": 6,
+    "ratio": 0.8
+  },
+  "economics": {
+    "nodesTotal": 11,
+    "nodesSampled": 11,
+    "decidedByProbe": 0,
+    "decidedByAgent": 11,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}

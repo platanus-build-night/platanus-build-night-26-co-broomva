@@ -5,7 +5,7 @@
 [`2026-07-24-keel-mvp-build.md`](2026-07-24-keel-mvp-build.md) (the build, the
 orchestrator rulings, the first P20 findings).
 
-**Written:** 2026-07-25, 23:05 COT.
+**Written:** 2026-07-25, 23:05 COT · **updated 00:40** with the constructive layer and the beat-2/beat-3 verifications.
 
 ---
 
@@ -27,7 +27,7 @@ not by a green check.
 
 | Thing | State |
 |---|---|
-| `main` | all engine work merged (PR #3), corpus in PR #8 |
+| `main` | everything merged — PRs #3, #8, #10, #11, #12. Zero open. |
 | Live site | `broomva.github.io/keel/reports/` — content-verified |
 | `bun test` | 153 pass |
 | `tsc --noEmit` | clean |
@@ -159,8 +159,12 @@ the dash sits at column 0 while siblings align at 2, so `uses:` read as a child 
 - throwing probe → skipped and named, non-fatal
 - probe returning `unknown` → rejected at assess-time **inside the child**
 - zero-probe path → `decided=0, pending=32, exit 0`
-- clean-room `npx skills@1.5.18 add` → **runnable** skill (`--list` would not
-  have proven this)
+- clean-room `npx skills@1.5.18 add` → **runnable** skill, re-verified against the
+  FINAL build: all four surfaces execute from the installed copy — `gather` (42
+  nodes), `classify` (exit 0, spawns the sandbox child, 42 pending on an empty
+  library), `render`, `route`. The packaging boundary holds: 9 scripts ship, and
+  none of `reports/`, `site/`, `tests/`, `corpus.json`, `.github/` leaks into the
+  skill store. `--list` alone would have proven none of this.
 - deployed site → verified by fetching content
 - design-audit exemption, portability exemption, and the gather regression are
   each **mutation-proven**: reintroduce the defect, confirm the check FAILS
@@ -177,6 +181,51 @@ the dash sits at column 0 while siblings align at 2, so `uses:` read as a child 
 - **Our machine paths scrubbed at publish; quoted evidence preserved.**
   openai-python's real `/home/codex` stays, because redacting it would falsify
   what a reader checks the verdict against.
+
+---
+
+## 6a · The constructive layer is live (P1-a, pulled forward)
+
+`docs/plans/constructive-grounding-layer.md` is a post-event roadmap, but its
+Phase 1 names itself *"the cheapest real step, and the only one that could ever be
+pulled forward"* — and W1·R had already built the engine. So it ran, over six
+measured repositories.
+
+| target | routable | unroutable | ratio → projected |
+|---|---|---|---|
+| keel | 1 | 8 | 0.357 → 0.429 |
+| openai-python | 1 | 2 | 0.769 → 0.846 |
+| anthropic-sdk-python | 0 | 4 | 0.667 → 0.667 |
+| vercel-ai | 0 | 2 | 0.800 → 0.800 |
+| requests | 0 | 1 | 0.917 → 0.917 |
+| sinatra | 0 | 1 | 0.875 → 0.875 |
+
+**2 of 20 ungrounded checks can be re-grounded by rewiring.** The restraint is the
+result and it is a stronger claim than a high number: most ungrounded verification
+needs a *decision*, not a wire, and eighteen more routes would have raised ratios
+while grounding nothing.
+
+The best route, on openai-python: the `action_required` flag gating the issue job
+is the model self-labelling its own finding; route it to the step in the same job
+that already fetched peps.python.org under `curl --fail` and already proved with
+`jq --exit-status` that every entry carries `end_of_life`. *"No prompt, permission
+profile, or model output can move an end-of-life date the CPython release managers
+publish."*
+
+On keel it independently proposed wiring `bun test` into the portability job — the
+same fix already made by hand in `test.yml`, rediscovered from the measured data.
+
+Two traps were declined explicitly: routing a spec-derived oracle onto the config
+of the suite whose oracle is in question (a circle), and grounding a release gate
+by its own downstream consequence.
+
+Safety held throughout: every anchor is a node already `anchored` in that same
+report (route.ts refused nothing, because none was invented), every binding is
+`status: proposed`, and the dispatch payload provably carries no ratio — enforced
+by `tests/separation.test.ts`, verified by injecting a leak and confirming it fails.
+
+Published at `/reports/<name>.bindings.html`, linked from the index's **routes**
+column.
 
 ---
 
@@ -214,6 +263,58 @@ W1·C, W1·D, W1·E, W1·G, W1·I, W1·R, W2·H.
   `[tool.*]` sub-tables** — the gatherer's granularity spreads one ruff
   invocation across four nodes, which weights the numerator. Flagged by the
   judging agent rather than collapsed.
+
+---
+
+## 7b · The product finding — what the corpus says to build next
+
+This is the most useful thing the night produced, and it is not in any plan.
+
+**The metric saturates.** Seven of fourteen measured targets scored exactly
+1.000; eight scored ≥ 0.9; pooled 0.853. The median denominator is 12 edges, 57%
+of judged nodes are `not_a_check`, and only 18% of the gathered surface was
+judged at all. A metric that tells most repositories "you are fine" does not
+sell, and is probably not true. The landing page promises *"your agents are
+grading their own homework"* and the number mostly reports that they are not.
+
+**Why it saturates, and the fix is already in our own data.** Keel classifies the
+EXECUTION axis: `pytest` in CI is `anchored` because the runtime decides the exit
+code. True, and shallow. **41 of the 122 anchored verdicts — 34% — already carry a
+written admission that the ORACLE was authored inside the write boundary.**
+anthropic-sdk-python is the clearest: the test fixtures point every client at a
+mock booted from the OpenAPI spec that *generates the source under test*, and the
+snapshot fixtures record the client's own traffic as the expected payloads. We
+wrote that finding down forty-one times and counted it zero times.
+
+**So the next unit is oracle-axis scoring** — execution independence and oracle
+independence as two separate verdicts, yielding a second ratio that does not
+saturate and that actually speaks to agent-maintained code. It is an unlock
+rather than research: the arguments already exist in the verdicts, and the work
+is a schema addition plus a judging-prompt change.
+
+**It needs a schema change, so it must go through the freeze protocol.** The
+schema is frozen and this handoff is not permission to edit it. Re-freeze
+deliberately, then re-dispatch.
+
+Ranked behind it:
+
+1. **An answer key.** Everything here is self-graded — Keel has no external check
+   that its verdicts are *right*, which is a verifier-independence problem in Keel
+   itself and awkward given the pitch. The roadmap's Luckin backtest (Phase 4) has
+   real ground truth. Cheaper version: measure repos with a known public
+   verification failure and check the ratio was low beforehand.
+2. **Point it at agent-maintained code.** The corpus was human-maintained OSS with
+   mature CI — the thesis's easy case. No repository where agents write the code,
+   the tests, AND the review was ever measured. That is the market, and if the
+   ratio is not bad there we need to know.
+3. **Weight by what gates the merge.** The gatherer surfaces mostly provisioning,
+   so denominators are thin. Per-node reasoning about "does this block a merge"
+   already happens; it is not yet in the arithmetic.
+
+**What NOT to build next: more constructive phases.** 2 routable / 18 unroutable
+says routing is bounded — most fixes need a human decision. Anchor discovery over
+an integration surface would be a remediation engine for a diagnosis nobody
+disputes yet.
 
 ---
 

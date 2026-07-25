@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keel — grounding report — platanus-build-night-26-co-Yosoyepa</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — design tokens. THE canonical source. There is no second copy.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Every Keel surface reads these: the report artifact (inlined by render.ts),
+   the marketing site, the agents page, and the governance docs. `site/` gets a
+   byte-identical copy written by `make site-tokens`; `make design-audit`
+   executes a diff and exits non-zero if it has drifted. That check is anchored
+   under Keel's own definition — the signal is a diff exit code, not an
+   assertion this repo also writes.
+
+   WHY ONE FILE AND NOT FIVE. Systems this size usually split color/type/space
+   into separate files behind an @import entry point. Keel cannot: the report
+   must open from file:// with zero external requests, so `render.ts` inlines
+   this text verbatim into a <style> block. One file is one read. The section
+   rules below carry the structure the file split would have carried.
+
+   NAMESPACE. Every token is `--k-*`. Keel's output gets embedded in other
+   people's pages and pasted into other people's docs; an unprefixed `--accent`
+   would collide and silently restyle someone else's surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ═══ CANVAS ══════════════════════════════════════════════════════════════
+     Dark, because Keel is an instrument, not a document. Elevation is
+     expressed as a background step plus a hairline — never a shadow. On a
+     #07090c canvas a shadow is a smudge: it costs paint and reads as nothing.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-bg-0: #07090c;          /* page */
+  --k-bg-1: #0c1015;          /* raised: cards, code blocks, table headers */
+  --k-bg-2: #11161d;          /* nested / hover */
+  --k-bg-3: #171d26;          /* active / selected row */
+
+  --k-line: #1b2027;          /* hairline — the default separator */
+  --k-line-strong: #2a323c;   /* emphasis rule, focused input */
+
+  /* ═══ INK ═════════════════════════════════════════════════════════════════
+     Four steps. --k-ink-3 is BELOW the 4.5:1 text threshold on --k-bg-0 by
+     design; it is for borders, disabled glyphs, and decorative rules. Never
+     set body copy in it. The other three clear 4.5:1 on bg-0 and bg-1.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ink-0: #e8edf2;         /* primary text        ~16:1 on bg-0 */
+  --k-ink-1: #b6c0cb;         /* secondary text      ~10:1 */
+  --k-ink-2: #8b97a5;         /* tertiary / meta      ~6:1 */
+  --k-ink-3: #5b6774;         /* NON-TEXT ONLY        ~2.6:1 */
+
+  /* ═══ KEEL'S OWN VOICE ════════════════════════════════════════════════════
+     One accent, used surgically: links, the emphasized clause in a headline,
+     Keel's own annotations. It is a HUE RESERVED FOR THE NARRATOR — it never
+     encodes a verdict, and no verdict color is ever used for chrome. Mixing
+     the two is how a tool starts congratulating itself in green.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-accent: #7dd3fc;
+  --k-accent-hover: #b6e6ff;
+  --k-accent-line: rgba(125, 211, 252, 0.30);   /* link underline at rest */
+  --k-accent-wash: rgba(125, 211, 252, 0.10);   /* callout fill */
+
+  /* ═══ VERDICTS ════════════════════════════════════════════════════════════
+     Exactly four, matching `GroundingClass` in schemas/keel.ts. The schema is
+     frozen; so is this list. Adding a fifth swatch here without a schema
+     change means someone is inventing a class in CSS.
+
+       anchored          the producer is outside the write boundary
+       self_referential  it is inside
+       unknown           the fork point could not be traced — FAILS CLOSED
+       not_a_check       asserts nothing; excluded from the denominator
+
+     `not_a_check` is deliberately the least attractive swatch in the file. It
+     is the one shoppable class — misfiling a real check there shrinks the
+     denominator and inflates the score — so it gets inert slate and, per
+     `.k-verdict`, a dashed border rather than a solid one. It should never
+     look like a place you want your nodes to land.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-anchored: #4ade80;
+  --k-self-referential: #f87171;
+  --k-unknown: #fbbf24;
+  --k-not-a-check: #94a3b8;
+
+  /* Tints for chip fills and graph marks. Kept as explicit rgba rather than
+     color-mix() so the report renders identically in older embedded viewers
+     (email clients, IDE previews) that never see a modern engine. */
+  --k-anchored-wash: rgba(74, 222, 128, 0.10);
+  --k-self-referential-wash: rgba(248, 113, 113, 0.10);
+  --k-unknown-wash: rgba(251, 191, 36, 0.10);
+  --k-not-a-check-wash: rgba(148, 163, 184, 0.08);
+
+  /* Confidence smell — an `anchored` verdict asserted with confidence < 0.5.
+     Aliased to --k-unknown on purpose: the visual claim is "this is closer to
+     unknown than its color suggests". A separate hue would imply a fifth
+     class, and there is no fifth class. */
+  --k-smell: var(--k-unknown);
+
+  /* ═══ TYPE ════════════════════════════════════════════════════════════════
+     NO WEBFONTS. Not a preference — an invariant. The report must open from
+     file://, survive being emailed, and issue zero external requests, which
+     rules out every hosted face. System stacks are the honest answer; a
+     bundled base64 face would add ~80KB to an artifact whose whole argument
+     is that it depends on nothing.
+
+     The two families carry a PROVENANCE distinction, and this is the rule
+     most worth keeping: MONO IS QUOTED FROM THE WORLD, SANS IS KEEL TALKING.
+     Node names, file paths, commands, exit codes, class names, hashes — mono,
+     because Keel did not write them. Prose, headings, arguments, and
+     annotations — sans, because Keel did. A reader can tell claim from
+     evidence at a glance without reading a word.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, system-ui, sans-serif;
+  --k-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                 "Cascadia Mono", Consolas, monospace;
+
+  --k-fs-ratio: clamp(64px, 13vw, 128px);   /* the grounding ratio, and only it */
+  --k-fs-display: clamp(30px, 5.2vw, 46px); /* page hero */
+  --k-fs-h1: 24px;
+  --k-fs-h2: 19px;
+  --k-fs-h3: 16px;
+  --k-fs-lede: 19px;
+  --k-fs-body: 16px;
+  --k-fs-ui: 15px;                          /* dense report UI */
+  --k-fs-sm: 14px;
+  --k-fs-xs: 12.5px;
+  --k-fs-micro: 11px;                       /* eyebrows, table headers */
+
+  --k-lh-ratio: 0.9;
+  --k-lh-tight: 1.18;
+  --k-lh-snug: 1.35;
+  --k-lh-body: 1.65;
+
+  /* Three weights. There is no 700: on a near-black canvas heavy strokes
+     bloom, and the halation costs more legibility than the emphasis buys. */
+  --k-fw-regular: 400;
+  --k-fw-medium: 500;
+  --k-fw-semibold: 600;
+
+  --k-track-ratio: -0.045em;
+  --k-track-display: -0.022em;
+  --k-track-tight: -0.01em;
+  --k-track-normal: 0;
+  --k-track-eyebrow: 0.18em;   /* uppercase section labels */
+  --k-track-brand: 0.22em;     /* the wordmark only */
+
+  /* ═══ SPACE ═══════════════════════════════════════════════════════════════
+     4px grid. Measures are capped tight: a verdict list read at 1400px wide
+     loses the row it started on, and this artifact is read row by row.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-space-0: 0;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+  --k-space-16: 64px;
+  --k-space-20: 80px;
+  --k-space-24: 96px;
+
+  --k-measure-read: 760px;     /* prose column — site, docs */
+  --k-measure-report: 1080px;  /* report shell: graph + verdict table */
+  --k-measure-prose: 62ch;     /* lede / paragraph wrap */
+
+  /* ═══ RADIUS ══════════════════════════════════════════════════════════════
+     Small. Keel's surfaces are cells, rows, and records — the vocabulary of a
+     ledger. Generous rounding reads as consumer-soft and undersells that the
+     numbers on screen are accounting, not a dashboard.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-r-xs: 3px;
+  --k-r-sm: 4px;
+  --k-r-md: 6px;
+  --k-r-lg: 8px;
+  --k-r-xl: 12px;
+  --k-r-pill: 999px;           /* tags and class chips only */
+
+  /* ═══ MOTION ══════════════════════════════════════════════════════════════
+     Fast and flat. Instruments settle; they do not perform. No overshoot, no
+     bounce, nothing above 200ms. Motion here exists to preserve object
+     continuity across a state change, never to draw attention to one.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ease: cubic-bezier(0.2, 0, 0.38, 1);
+  --k-dur-fast: 90ms;
+  --k-dur-base: 160ms;
+
+  /* ═══ GRAPH MARKS ═════════════════════════════════════════════════════════
+     The node graph is one mark per node. SQUARES, not circles: a circle in a
+     verification UI reads as a status dot, and a status dot is exactly the
+     unaccountable green light Keel exists to criticize. A square reads as a
+     cell in a ledger. Sized to stay legible at 200 nodes.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-mark: 10px;
+  --k-mark-gap: 3px;
+  --k-mark-r: 2px;
+  --k-mark-stroke: 1.5px;      /* smell ring on an anchored mark */
+
+  /* ═══ FOCUS ═══════════════════════════════════════════════════════════════
+     Two-stop ring: a bg-colored inset so the accent never touches the element
+     edge, then the accent. Visible on every surface step without a per-context
+     override. */
+  --k-focus-ring: 0 0 0 2px var(--k-bg-0), 0 0 0 4px var(--k-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — element defaults and component classes. Requires tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHY CSS CLASSES AND NOT COMPONENTS. Keel's surfaces are static HTML emitted
+   as strings by `render.ts`, plus two hand-written pages. There is no runtime,
+   no build step, and no framework to hang a component API on — so the
+   component contract is a class name plus a documented markup shape. See
+   `README.md` in this directory for the per-component usage brief.
+
+   Every value below is a var(). A literal hex, px, or ms in this file is a
+   bug, and `make design-audit` fails on one. The two exceptions are marked
+   inline with `audit-ok:` and carry a reason.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Reset, kept to what actually bites ─────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-0);
+  color: var(--k-ink-0);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-body);
+  line-height: var(--k-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--k-fw-semibold);
+  line-height: var(--k-lh-snug);
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+
+p { margin: 0 0 var(--k-space-4); max-width: var(--k-measure-prose); }
+
+a {
+  color: var(--k-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--k-accent-line);
+  transition: color var(--k-dur-fast) var(--k-ease),
+              border-color var(--k-dur-fast) var(--k-ease);
+}
+a:hover { color: var(--k-accent-hover); border-bottom-color: var(--k-accent); }
+
+code, kbd, samp, pre { font-family: var(--k-font-mono); }
+
+::selection { background: var(--k-accent-wash); color: var(--k-ink-0); }
+
+:focus-visible { outline: none; box-shadow: var(--k-focus-ring); border-radius: var(--k-r-sm); }
+
+/* Motion is never load-bearing here, so honouring the preference costs
+   nothing and removes every transition and the one animated element. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.k-page   { max-width: var(--k-measure-read);   margin: 0 auto; padding: var(--k-space-20) var(--k-space-6) var(--k-space-24); }
+.k-report { max-width: var(--k-measure-report); margin: 0 auto; padding: var(--k-space-12) var(--k-space-6) var(--k-space-20); }
+
+.k-rule { border: 0; border-top: 1px solid var(--k-line); margin: var(--k-space-16) 0; }
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+
+/* Uppercase section label. Sentence-case everywhere else — these are the only
+   shouted words in the system, and they are structural, not emphatic. */
+.k-eyebrow {
+  margin: 0 0 var(--k-space-5);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-wordmark {
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-brand);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-display {
+  font-size: var(--k-fs-display);
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  font-weight: var(--k-fw-semibold);
+}
+/* The one emphasized clause in a headline. Accent = Keel's own voice. */
+.k-display em { font-style: normal; color: var(--k-accent); }
+
+.k-lede {
+  font-size: var(--k-fs-lede);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+
+.k-meta { font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+/* Anything quoted from the target: paths, node names, commands, hashes. */
+.k-mono { font-family: var(--k-font-mono); font-size: 0.92em; } /* audit-ok: relative to inherited size, not a fixed step */
+
+/* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+.k-card {
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-5);
+}
+
+.k-code {
+  display: block;
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-4) var(--k-space-5);
+  font-size: var(--k-fs-ui);
+  overflow-x: auto;
+}
+.k-code--cmd::before { content: "$ "; color: var(--k-ink-2); }
+
+.k-callout {
+  margin: 0 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  background: var(--k-bg-1);
+  border-left: 2px solid var(--k-accent);
+  font-size: var(--k-fs-lede);
+  line-height: var(--k-lh-snug);
+}
+
+/* ── Verdict classes ────────────────────────────────────────────────────────
+   `.k-class` renders a GroundingClass name. The name is ALWAYS the schema
+   spelling in mono — `self_referential`, never "Self-Referential". The class
+   is an identifier from the data model, not a label we get to prettify, and
+   re-spelling it in prose breaks the reader's ability to grep the JSON.
+
+   Drive the variant with data-class so invalid values render unstyled and
+   loudly wrong rather than silently defaulting to something plausible.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-1);
+  padding: var(--k-space-1) var(--k-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  line-height: var(--k-lh-snug);
+  white-space: nowrap;
+}
+
+.k-class[data-class="anchored"]         { color: var(--k-anchored);         background: var(--k-anchored-wash); }
+.k-class[data-class="self_referential"] { color: var(--k-self-referential); background: var(--k-self-referential-wash); }
+.k-class[data-class="unknown"]          { color: var(--k-unknown);          background: var(--k-unknown-wash); }
+
+/* Dashed, because this class is EXCLUDED FROM THE DENOMINATOR. The border
+   style is the reader's cue that the node left the accounting entirely — the
+   one place a verdict changes what the ratio is computed over, so it is the
+   one place the chip stops looking like the others. */
+.k-class[data-class="not_a_check"] {
+  color: var(--k-not-a-check);
+  background: var(--k-not-a-check-wash);
+  border-color: var(--k-ink-3);
+  border-style: dashed;
+}
+
+/* Confidence smell: `anchored` asserted below 0.5. High confidence with thin
+   evidence is the pattern worth catching, so it gets a ring rather than a
+   footnote. */
+.k-class[data-smell] { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+/* ── Verdict row ────────────────────────────────────────────────────────────
+   A verdict without its argument is the unaccountable green check Keel exists
+   to criticize, so the markup contract is: every `.k-verdict` contains a
+   `.k-argument`. The rule below makes a violation visible in the artifact
+   itself during development, and `make design-audit` fails the build on one.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-verdict {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) auto;
+  gap: var(--k-space-2) var(--k-space-4);
+  padding: var(--k-space-4) 0;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.k-verdict__name   { font-family: var(--k-font-mono); font-size: var(--k-fs-ui); color: var(--k-ink-0); word-break: break-word; }
+.k-verdict__source { grid-column: 1; font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-verdict__class  { grid-column: 2; grid-row: 1; justify-self: end; }
+
+/* The evidence. Sans, because this is Keel reasoning — not quoted material. */
+.k-argument {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+
+.k-verdict:not(:has(.k-argument))::after {
+  content: "missing write-boundary argument — a class without its causal path is not a verdict";
+  grid-column: 1 / -1;
+  padding: var(--k-space-2) var(--k-space-3);
+  border-radius: var(--k-r-sm);
+  background: var(--k-self-referential-wash);
+  color: var(--k-self-referential);
+  font-size: var(--k-fs-xs);
+}
+
+/* ── Grounding ratio ────────────────────────────────────────────────────────
+   NEVER render `.k-ratio__value` without `.k-ratio__counts`. A ratio with a
+   hidden denominator is the exact move this tool was built to expose, and it
+   is trivially inflated by shopping nodes into `not_a_check`. The counts row
+   prints `not_a_check` BESIDE the ratio, visibly outside the fraction.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-ratio { margin: 0 0 var(--k-space-8); }
+
+.k-ratio__value {
+  display: block;
+  font-size: var(--k-fs-ratio);
+  line-height: var(--k-lh-ratio);
+  letter-spacing: var(--k-track-ratio);
+  font-weight: var(--k-fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+
+.k-ratio__formula { margin: var(--k-space-3) 0 var(--k-space-4); font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+.k-ratio__counts { display: flex; flex-wrap: wrap; gap: var(--k-space-2) var(--k-space-5); align-items: center; font-size: var(--k-fs-sm); }
+.k-ratio__count { display: inline-flex; align-items: baseline; gap: var(--k-space-2); font-variant-numeric: tabular-nums; color: var(--k-ink-1); }
+
+/* Set off with a leading rule: everything after it is outside the fraction. */
+.k-ratio__count--excluded {
+  padding-left: var(--k-space-5);
+  border-left: 1px solid var(--k-line);
+  color: var(--k-ink-2);
+}
+
+/* Composition bar. Segment widths are set inline by the renderer from the
+   real counts — no minimum width, because a class with two nodes must look
+   like a class with two nodes. */
+.k-meter { display: flex; height: var(--k-space-2); border-radius: var(--k-r-pill); overflow: hidden; background: var(--k-bg-2); margin: var(--k-space-4) 0; }
+.k-meter__seg[data-class="anchored"]         { background: var(--k-anchored); }
+.k-meter__seg[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-meter__seg[data-class="unknown"]          { background: var(--k-unknown); }
+.k-meter__seg[data-class="not_a_check"]      { background: var(--k-not-a-check); opacity: 0.45; }
+
+/* ── Node graph ─────────────────────────────────────────────────────────────
+   One mark per node, squares on a wrapping grid. Squares, not circles: a
+   circle reads as a status dot, and a status dot is the thing being audited.
+   The grid wraps rather than scaling, so 15 nodes and 200 nodes use the same
+   mark size and neither clips.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-graph { display: flex; flex-wrap: wrap; gap: var(--k-mark-gap); margin: 0 0 var(--k-space-6); }
+
+.k-mark {
+  width: var(--k-mark);
+  height: var(--k-mark);
+  border-radius: var(--k-mark-r);
+  background: var(--k-ink-3);
+}
+.k-mark[data-class="anchored"]         { background: var(--k-anchored); }
+.k-mark[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-mark[data-class="unknown"]          { background: var(--k-unknown); }
+.k-mark[data-class="not_a_check"]      { background: transparent; box-shadow: inset 0 0 0 1px var(--k-not-a-check); } /* audit-ok: 1px hairline is the smallest renderable inset, not a scale step */
+.k-mark[data-smell]                    { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+.k-legend { display: flex; flex-wrap: wrap; gap: var(--k-space-4); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-legend__item { display: inline-flex; align-items: center; gap: var(--k-space-2); }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--k-fs-ui); }
+.k-table th {
+  padding: var(--k-space-2) var(--k-space-3) var(--k-space-2) 0;
+  border-bottom: 1px solid var(--k-line-strong);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+  text-align: left;
+}
+.k-table td { padding: var(--k-space-3) var(--k-space-3) var(--k-space-3) 0; border-bottom: 1px solid var(--k-line); vertical-align: top; color: var(--k-ink-1); }
+.k-table td:first-child { color: var(--k-ink-0); }
+.k-table--num td { font-variant-numeric: tabular-nums; }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-2);
+  padding: var(--k-space-2) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-r-md);
+  background: var(--k-bg-1);
+  color: var(--k-ink-0);
+  font-family: inherit;
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  cursor: pointer;
+  transition: background var(--k-dur-fast) var(--k-ease), border-color var(--k-dur-fast) var(--k-ease);
+}
+.k-btn:hover { background: var(--k-bg-2); border-color: var(--k-ink-3); }
+.k-btn--accent { border-color: var(--k-accent-line); color: var(--k-accent); }
+
+.k-tag {
+  display: inline-flex;
+  padding: var(--k-space-1) var(--k-space-3);
+  border-radius: var(--k-r-pill);
+  background: var(--k-bg-2);
+  color: var(--k-ink-2);
+  font-size: var(--k-fs-micro);
+  letter-spacing: var(--k-track-normal);
+}
+
+/* ── Scope note ─────────────────────────────────────────────────────────────
+   MANDATORY on every artifact that prints a grounding ratio. A high ratio
+   reported without it will be read as "well tested", which is a claim Keel
+   does not make and cannot support. It is a component, not a paragraph, so
+   that it cannot be quietly reworded per artifact.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-scope {
+  margin: var(--k-space-10) 0 0;
+  padding: var(--k-space-4) var(--k-space-5);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-lg);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+.k-scope strong { color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+
+/* ── Economics footer ───────────────────────────────────────────────────── */
+
+.k-econ { display: flex; flex-wrap: wrap; gap: var(--k-space-8); margin-top: var(--k-space-8); padding-top: var(--k-space-5); border-top: 1px solid var(--k-line); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-econ__stat { display: flex; flex-direction: column; gap: var(--k-space-1); }
+.k-econ__value { font-size: var(--k-fs-h3); font-variant-numeric: tabular-nums; color: var(--k-ink-0); }
+
+/* ── Print ──────────────────────────────────────────────────────────────────
+   The report is expected to be emailed, and an emailed artifact gets printed
+   and pasted into decks. Dark-on-paper is unreadable and wastes toner, so the
+   canvas and ink tokens invert while the four verdict hues are DARKENED
+   rather than swapped — the classification must survive the medium, otherwise
+   a printed report and a screen report disagree about what they show.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  :root {
+    --k-bg-0: #ffffff;
+    --k-bg-1: #f7f7f5;
+    --k-bg-2: #eeeeec;
+    --k-bg-3: #e6e6e3;
+    --k-line: #dcdcd7;
+    --k-line-strong: #b9b9b2;
+    --k-ink-0: #14161a;
+    --k-ink-1: #3a4048;
+    --k-ink-2: #626a74;
+    --k-ink-3: #9aa1aa;
+    --k-accent: #0b6ea8;
+    --k-accent-line: rgba(11, 110, 168, 0.35);
+    --k-anchored: #157f3e;
+    --k-self-referential: #b3261e;
+    --k-unknown: #8a5a00;
+    --k-not-a-check: #5f6b78;
+  }
+  body { background: #ffffff; } /* audit-ok: print canvas must be paper-white regardless of theme tokens */
+  .k-verdict, .k-card, .k-scope { break-inside: avoid; }
+  a { border-bottom: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
+}
+
+
+/* ── renderer-local layout (kr-*), tokens only ── */
+.kr-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--k-space-12);
+  align-items: start;
+  margin: var(--k-space-12) 0 0;
+}
+@media (max-width: 760px) {
+  .kr-split { grid-template-columns: minmax(0, 1fr); gap: var(--k-space-8); }
+}
+.kr-section { margin: var(--k-space-16) 0 0; }
+.kr-line {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+}
+.kr-ev {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--k-measure-prose);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+  line-height: var(--k-lh-snug);
+}
+.kr-ev li { margin-top: var(--k-space-1); word-break: break-word; }
+.kr-ev li::before { content: "· "; color: var(--k-ink-3); }
+.kr-missing { color: var(--k-self-referential); }
+.kr-smell { color: var(--k-smell); }
+.kr-curve { overflow-x: auto; }
+.kr-curve svg { max-width: 100%; height: auto; }
+
+</style>
+</head>
+<body>
+<main class="k-report">
+<header>
+  <p class="k-wordmark">Keel</p>
+  <h1 class="k-display">Grounding report<em>.</em></h1>
+  <p class="k-lede">Every verification edge in <span class="k-mono">platanus-build-night-26-co-Yosoyepa</span>,
+     classified by who produces the signal and whether the actor being verified
+     can write to that producer.</p>
+  <table class="k-table">
+    <tr><th>target</th><td class="k-mono">platanus-build-night-26-co-Yosoyepa</td></tr>
+    <tr><th>revision</th><td class="k-mono">hack-night-2026-07-24</td></tr>
+    <tr><th>generated</th><td class="k-mono">2026-07-25T06:03:02.697Z</td></tr>
+  </table>
+</header>
+
+<div class="kr-split"><div class="k-ratio">
+  <span class="k-ratio__value">0.00</span>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 0 / 9</p>
+  <div class="k-meter">
+    <div class="k-meter__seg" data-class="anchored" style="width:0.0000%"></div>
+    <div class="k-meter__seg" data-class="self_referential" style="width:11.1111%"></div>
+    <div class="k-meter__seg" data-class="unknown" style="width:88.8889%"></div>
+
+  </div>
+  <div class="k-ratio__counts">
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 0</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 1</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 8</span>
+    <span class="k-ratio__count k-ratio__count--excluded">
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 3
+      <span class="k-meta">excluded from the denominator</span>
+    </span>
+
+  </div>
+</div>
+<div>
+  <p class="k-eyebrow">Coverage (judged)</p>
+  <table class="k-table k-table--num">
+    <thead><tr><th>node kind</th><th>judged</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">script</td><td>8</td></tr>
+      <tr><td class="k-mono">test_target</td><td>3</td></tr>
+      <tr><td class="k-mono">deploy_gate</td><td>1</td></tr>
+
+    </tbody>
+  </table>
+  <p class="k-meta">Nodes by kind, over the 12 node(s) carried in this
+     report. Surfaces the gatherer cannot read are absent here rather than
+     counted as <span class="k-mono">unknown</span>, which makes non-coverage
+     Keel's own shoppable class — so it is stated, not implied.</p>
+</div>
+</div>
+<p class="k-callout">This run judged <span class="k-mono">12</span> of <span class="k-mono">37</span> gathered edges. Every number on this page describes that sample, not the whole surface — 25 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
+
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
+verification, not its quality. A repo can be 100% anchored with terrible
+tests. Anchoring says the signal comes from outside; it does not say the
+signal is sufficient.</p>
+
+<section class="kr-section">
+  <p class="k-eyebrow">Node graph — 12 node(s), in gather order</p>
+  <div class="k-graph">
+    <span class="k-mark" data-class="not_a_check" title="deploy config (vercel.json) — product/web/vercel.json — not_a_check (confidence 0.92)"></span>
+    <span class="k-mark" data-class="not_a_check" title="dev — product/web/package.json — not_a_check (confidence 0.95)"></span>
+    <span class="k-mark" data-class="unknown" title="build — product/web/package.json — unknown (confidence 0.8)"></span>
+    <span class="k-mark" data-class="unknown" title="smoke — product/web/package.json — unknown (confidence 0.82)"></span>
+    <span class="k-mark" data-class="unknown" title="typecheck — product/web/package.json — unknown (confidence 0.85)"></span>
+    <span class="k-mark" data-class="unknown" title="test — product/web/package.json — unknown (confidence 0.85)"></span>
+    <span class="k-mark" data-class="unknown" title="contracts:check — product/web/package.json — unknown (confidence 0.78)"></span>
+    <span class="k-mark" data-class="unknown" title="test runner config (playwright.config.ts) — product/web/playwright.config.ts — unknown (confidence 0.8)"></span>
+    <span class="k-mark" data-class="unknown" title="pytest config ([tool.pytest.ini_options]) — product/api/pyproject.toml:33 — unknown (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — product/api/tests/conftest.py — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="self_referential" title="verify — package.json — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="unknown" title="check — package.json — unknown (confidence 0.8)"></span>
+
+  </div>
+  <div class="k-legend">
+    <span class="k-legend__item"><span class="k-mark" data-class="self_referential"></span> self_referential 1</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="unknown"></span> unknown 8</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 3</span>
+
+  </div>
+  <p class="k-meta">No mark is ringed: no drawn verdict is anchored below confidence 0.6. Hover a mark for its node.</p>
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">self_referential — 1</p>
+  <p class="k-meta">The producer sits inside the write boundary of the actor being verified.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">verify</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">package.json · script</div>
+    <p class="k-argument">hackathon.mjs verify() spawns the named command and refuses to write a receipt unless status===0, and it stamps the receipt with a workspace fingerprint and the capability-plan timestamp — a real attempt at anchoring. But the artifact that any consumer reads is a JSON file in the working tree, and the actor being verified is an agent with write access to that tree. stop-gate.mjs only re-reads state.json; it never re-executes anything, so a receipt appended by hand is indistinguishable from one earned, and the agent also chooses which command to pass after `--`. The claim and the check land in the same write. Compounding it, the consuming hook is not even installed here, so today the receipt gates nothing at all.</p>
+    <p class="kr-line">producer <span class="k-mono">nominally spawnSync&#39;s child exit code; durably, the verificationReceipts array inside .hackathon/state.json</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>scripts/hackathon.mjs:416-437 — receipt written to .hackathon/state.json only when exitCode===0</li>
+      <li>scripts/hooks/stop-gate.mjs — reads state.json + capabilities.json, re-runs nothing</li>
+      <li>scripts/bootstrap.mjs:32-43 — hook activation writes .claude/settings.local.json / .codex/hooks.json; neither file exists in this clone</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">unknown — 8</p>
+  <p class="k-meta">The fork point could not be established. Fails closed — counts against the ratio exactly like self_referential.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">build</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">The tsc half is genuinely falsifiable, so this is not merely artifact production. But I could not find the invoker. There is no .github/workflows directory anywhere in the repo, the Railway Dockerfile builds only the Python API (uv sync of product/api; it never copies product/web or runs pnpm), and .git/hooks/pre-push only inspects branch names. The only automated consumer of any repo command would be the agent stop-gate, and its activation artifacts (.claude/settings.local.json, .codex/hooks.json) are absent, so it is off. A type error therefore blocks nothing I can trace — but a human may run it before demoing, which I cannot rule out. Fork point untraceable, so it fails closed.</p>
+    <p class="kr-line">producer <span class="k-mono">tsc 7.0.2 in --noEmit mode, then the vite bundler — both real processes whose exit codes the author cannot dictate</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>no .github/ directory in repo root (ls -a)</li>
+      <li>Dockerfile: COPY product/api, COPY product/contracts only; no web stage</li>
+      <li>product/web/package.json: &quot;build&quot;: &quot;tsc --noEmit &amp;&amp; vite build&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">smoke</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">On the execution axis this is the strongest edge in the repo: the browser really renders, the API really answers, and the assertions cannot be talked into passing. But execution independence only pays out if something executes it. Nothing in the repo invokes `pnpm smoke`: no CI, the Railway image has no node/pnpm/browser layer, and the stop-gate that lists `pnpm smoke` under verification.required is not installed. I cannot establish an enforcing path, so unknown, not anchored.</p>
+    <p class="kr-line">producer <span class="k-mono">Playwright driving real chromium against a real uvicorn + vite pair booted by the config&#39;s webServer block</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>.hackathon/capabilities.json: required[] includes {&quot;stage&quot;:&quot;declared-smoke&quot;,&quot;command&quot;:[&quot;pnpm smoke&quot;]}</li>
+      <li>no .claude/settings.local.json and no .codex/hooks.json — stop-gate never activated</li>
+      <li>product/web/tests/e2e/smoke.spec.ts exists and drives a seeded session</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.82</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">typecheck</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">tsc&#39;s verdict is not authorable by the code it analyzes, so the producer would sit outside the boundary if it ran. No pipeline calls it: no workflow files, no pre-commit hook (only .git/hooks/pre-push, which greps branch names), no Docker layer. This is a command that could check, not a check that runs.</p>
+    <p class="kr-line">producer <span class="k-mono">the TypeScript compiler, a deterministic analyzer of the source</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/web/package.json: &quot;typecheck&quot;: &quot;tsc --noEmit&quot;</li>
+      <li>ls .git/hooks -&gt; pre-push only</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">test</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">vitest run really executes React components under jsdom, so a crash cannot be argued away — but the oracle was co-authored with the implementation, and more decisively, nothing runs it. There is no CI in this repository at all. A test suite with no invoker is a test file, not a check; classifying it anchored would score the file rather than the edge.</p>
+    <p class="kr-line">producer <span class="k-mono">the vitest runner in jsdom; assertions decided by execution</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/web/package.json: &quot;test&quot;: &quot;vitest run&quot;</li>
+      <li>no .github/workflows anywhere in the clone</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">contracts:check</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">The comparison is mechanical — a hash mismatch is not negotiable — and both sides of it are files the actor writes, but drift between them is still a fact the actor cannot assert away without editing both. The blocker is invocation: no workflow, no hook, no Docker step calls it, and the top-level `check` script that would chain to it is itself uninvoked. The enforcing edge does not exist in the repo I can read.</p>
+    <p class="kr-line">producer <span class="k-mono">node running sync-contracts.mjs --check, which hashes checked-in JSON schemas against regenerated TypeScript</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/web/package.json: &quot;contracts:check&quot;: &quot;node scripts/sync-contracts.mjs --check&quot;</li>
+      <li>package.json: &quot;web:contracts:check&quot; wraps it; no automated caller of either</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.78</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">test runner config (playwright.config.ts)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/web/playwright.config.ts · test_target</div>
+    <p class="k-argument">reuseExistingServer:false means the servers are genuinely started, not assumed — a boot failure aborts the run, which is real outside-the-code signal. Still unclassifiable as anchored because no scheduler ever triggers this config: the only reference to it is the `smoke` script, which nothing calls. Also worth naming: the run pins CLOUDPATH_DEMO_MODE=true, so the API answers from checked-in fixtures rather than live providers — the outermost dependency is stubbed by the actor even when the harness does run.</p>
+    <p class="kr-line">producer <span class="k-mono">Playwright&#39;s webServer supervisor, which boots uvicorn on :18000 and vite on :15173 and polls /api/health before any test runs</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>playwright.config.ts: webServer[0].env CLOUDPATH_DEMO_MODE=&quot;true&quot;</li>
+      <li>playwright.config.ts: reuseExistingServer: false, url health-gated</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">product/api/pyproject.toml:33 · test_target</div>
+    <p class="k-argument">Thirteen test modules exist and pytest&#39;s pass/fail is produced by execution, not by claim. But the Dockerfile installs with --no-dev, so pytest is not even present in the deployed image, and there is no workflow, hook, or make target that runs `uv run pytest`. The suite is reachable only by a human typing `pnpm api:test`. No traceable enforcing edge -&gt; fails closed.</p>
+    <p class="kr-line">producer <span class="k-mono">pytest collecting testpaths=[&quot;tests&quot;] with asyncio_mode=auto; verdicts come from the CPython runtime</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/api/pyproject.toml:33 [tool.pytest.ini_options]</li>
+      <li>Dockerfile: `uv sync --directory product/api --frozen --no-dev`</li>
+      <li>13 test_*.py files under product/api/tests/</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">check</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="unknown">unknown</span></span>
+    <div class="k-verdict__source k-mono">package.json · script</div>
+    <p class="k-argument">This is the repo&#39;s own designated canonical gate — .hackathon/capabilities.json names `pnpm check` as canonical and required — and two of its three legs (validate-setup, node --test) are genuine executed assertions. It is nonetheless unknown on two counts. First, it is an aggregate; per the descend rule its grounding is only that of its children, and validate-setup.mjs mostly asserts that governance files exist and parse — paperwork checked against paperwork. Second, nothing invokes it: the only mechanism that would enforce `required` is the stop-gate hook, and its activation files were never written.</p>
+    <p class="kr-line">producer <span class="k-mono">a chain of three node processes: sync-skills --check, validate-setup.mjs, and `node --test test/*.test.mjs`</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>.hackathon/capabilities.json: canonical = {&quot;command&quot;:[&quot;pnpm&quot;,&quot;check&quot;]}</li>
+      <li>package.json: &quot;check&quot;: &quot;pnpm check:skills &amp;&amp; pnpm check:setup &amp;&amp; pnpm test&quot;</li>
+      <li>scripts/validate-setup.mjs asserts file existence + JSON parseability + CLAUDE.md contains &quot;@AGENTS.md&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">not_a_check — 3</p>
+  <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">deploy config (vercel.json)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">product/web/vercel.json · deploy_gate</div>
+    <p class="k-argument">The file contains only a catch-all rewrite of /(.*) to /index.html. No build command, no ignored-build-step, no check condition — nothing here can return a failing status. It changes how requests are routed after a deploy; it never observes the artifact and cannot refuse one, so it emits no correctness signal to classify.</p>
+    <p class="kr-line">producer <span class="k-mono">Vercel routing layer applying an SPA rewrite rule</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/web/vercel.json: sole key is &quot;rewrites&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.92</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">dev</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">product/web/package.json · script</div>
+    <p class="k-argument">`vite --port 5173` starts a long-lived server. Its exit code is produced by whoever presses Ctrl-C, not by any assertion about the code. It produces a running process, asserts nothing, and cannot fail in a way anyone reads.</p>
+    <p class="kr-line">producer <span class="k-mono">vite dev server process</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/web/package.json: &quot;dev&quot;: &quot;vite --port 5173&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.95</span></p>
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">product/api/tests/conftest.py · test_target</div>
+    <p class="k-argument">conftest.py contains no assertion and no exit path. It builds demo_settings/live_settings/client fixtures and resets the budget tracker. It cannot fail in a way that means anything about the product; it is scaffolding the real tests consume. Excluded from the ratio because there is no signal here to be grounded — the classification belongs on the suite that uses it, judged separately.</p>
+    <p class="kr-line">producer <span class="k-mono">pytest fixture module — constructs Settings objects and a TestClient</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>product/api/tests/conftest.py: only @pytest.fixture definitions, zero assert statements</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <!-- KEEL:CURVE -->
+  <p class="k-eyebrow">Crystallization curve</p>
+  <div class="kr-curve">
+<svg class="keel-curve" xmlns="http://www.w3.org/2000/svg" width="1080" height="1510" viewBox="0 0 1080 1510" role="img" aria-labelledby="keel-curve-title keel-curve-desc" style="max-width:100%;height:auto">
+<title id="keel-curve-title">Keel crystallization curve</title>
+<desc id="keel-curve-desc">Crystallization curve over 15 runs from /Users/broomva/keel/reports. falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less than half the variance — read the raw squares)</desc>
+<style>.keel-curve { font-family: var(--k-font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif); }
+.keel-curve text { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
+.keel-curve .kc-bg { fill: var(--k-bg-0, #07090c); }
+.keel-curve .kc-panel { fill: var(--k-bg-1, #0c1015); stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-eyebrow { fill: var(--k-ink-2, #8b97a5); font-size: 11px; letter-spacing: 0.18em; }
+.keel-curve .kc-h1 { fill: var(--k-ink-0, #e8edf2); font-size: 19px; letter-spacing: -0.01em; }
+.keel-curve .kc-h2 { fill: var(--k-ink-0, #e8edf2); font-size: 15px; letter-spacing: -0.01em; }
+.keel-curve .kc-panel-title { fill: var(--k-ink-0, #e8edf2); font-size: 14px; }
+.keel-curve .kc-axis { fill: var(--k-ink-2, #8b97a5); font-size: 11px; }
+.keel-curve .kc-note { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
+.keel-curve .kc-scope { fill: var(--k-ink-2, #8b97a5); font-size: 12.5px; }
+/* Keel's own caveats are CHROME, not verdicts. tokens.css reserves the accent
+   for the narrator and forbids a verdict hue on chrome — amber here would put
+   "a node could not be traced" and "do not trust this chart" in one colour, in
+   one document. Weight carries the emphasis instead. */
+.keel-curve .kc-warn { fill: var(--k-ink-0, #e8edf2); font-size: 12.5px; font-weight: 600; }
+.keel-curve .kc-fitnote { fill: var(--k-ink-2, #8b97a5); font-size: 10.5px; text-anchor: end; }
+.keel-curve .kc-mono { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; font-family: var(--k-font-mono, ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", Consolas, monospace); }
+.keel-curve .kc-tick { fill: var(--k-ink-2, #8b97a5); font-size: 11px; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.keel-curve .kc-tick--y { text-anchor: end; }
+.keel-curve .kc-gap { fill: var(--k-ink-2, #8b97a5); font-size: 11px; text-anchor: middle; }
+.keel-curve .kc-gapline { stroke: var(--k-ink-3, #5b6774); stroke-width: 1; stroke-dasharray: 2 4; }
+.keel-curve .kc-grid { stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-rule { stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-line { fill: none; stroke-width: 1.5; }
+.keel-curve .kc-fit { stroke-width: 1.5; stroke-dasharray: 5 4; opacity: 0.7; }
+.keel-curve .kc-pt { stroke: none; }
+.keel-curve .kc-accent { stroke: var(--k-accent, #7dd3fc); fill: var(--k-accent, #7dd3fc); }
+.keel-curve .kc-accent.kc-line, .keel-curve .kc-accent.kc-fit { fill: none; }
+.keel-curve .kc-series { stroke: var(--k-ink-1, #b6c0cb); fill: var(--k-ink-1, #b6c0cb); }
+.keel-curve .kc-series.kc-line, .keel-curve .kc-series.kc-fit { fill: none; }</style>
+<rect class="kc-bg" x="0" y="0" width="1080" height="1510"/>
+<text class="kc-eyebrow" x="32" y="44">CRYSTALLIZATION CURVE</text>
+<text class="kc-h1" x="32" y="66">15 sequential runs · 345 nodes judged of 1838 gathered · 124 anchored</text>
+<text class="kc-warn" x="32" y="88">Keel corpus — 15 repositories, 2026-07-24 — measured corpus (declared on the command line)</text>
+<rect class="kc-panel" x="32" y="114" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="46" y="136">estimated tokens per node</text>
+<text class="kc-axis" x="46" y="151">estimated tokens / judged node</text>
+<line class="kc-grid" x1="96" y1="292.0" x2="508" y2="292.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="295.5">0</text>
+<line class="kc-grid" x1="96" y1="226.0" x2="508" y2="226.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="229.5">300</text>
+<line class="kc-grid" x1="96" y1="160.0" x2="508" y2="160.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="163.5">600</text>
+<line class="kc-fit kc-accent" x1="96.0" y1="195.8" x2="508.0" y2="243.8"/>
+<polyline class="kc-line kc-accent" points="96.0,182.5 125.4,210.8 154.9,204.4 184.3,201.9 213.7,247.1 243.1,208.9 272.6,161.7 302.0,250.4 331.4,239.2 360.9,228.2 390.3,202.1 419.7,233.6 449.1,222.5 478.6,223.7 508.0,280.3"/>
+<rect class="kc-pt kc-accent" x="92.5" y="179.0" width="7" height="7" rx="2"><title>run 0 · keel · estimated tokens per node = 498 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="121.9" y="207.3" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · estimated tokens per node = 369 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="151.4" y="200.9" width="7" height="7" rx="2"><title>run 2 · openai-python · estimated tokens per node = 398 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="180.8" y="198.4" width="7" height="7" rx="2"><title>run 3 · vercel-ai · estimated tokens per node = 410 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="210.2" y="243.6" width="7" height="7" rx="2"><title>run 4 · aider · estimated tokens per node = 204 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="239.6" y="205.4" width="7" height="7" rx="2"><title>run 5 · browser-use · estimated tokens per node = 378 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="269.1" y="158.2" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · estimated tokens per node = 592 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="298.5" y="246.9" width="7" height="7" rx="2"><title>run 7 · simonw-llm · estimated tokens per node = 189 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="327.9" y="235.7" width="7" height="7" rx="2"><title>run 8 · tiktoken · estimated tokens per node = 240</title></rect>
+<rect class="kc-pt kc-accent" x="357.4" y="224.7" width="7" height="7" rx="2"><title>run 9 · requests · estimated tokens per node = 290 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="386.8" y="198.6" width="7" height="7" rx="2"><title>run 10 · flask · estimated tokens per node = 408 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="416.2" y="230.1" width="7" height="7" rx="2"><title>run 11 · sinatra · estimated tokens per node = 265 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="445.6" y="219.0" width="7" height="7" rx="2"><title>run 12 · commander-js · estimated tokens per node = 316</title></rect>
+<rect class="kc-pt kc-accent" x="475.1" y="220.2" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · estimated tokens per node = 310 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="504.5" y="276.8" width="7" height="7" rx="2"><title>run 14 · tiktoken · estimated tokens per node = 53</title></rect>
+<text class="kc-tick" x="96.0" y="308">0*</text>
+<text class="kc-tick" x="125.4" y="308">1*</text>
+<text class="kc-tick" x="154.9" y="308">2*</text>
+<text class="kc-tick" x="184.3" y="308">3*</text>
+<text class="kc-tick" x="213.7" y="308">4*</text>
+<text class="kc-tick" x="243.1" y="308">5*</text>
+<text class="kc-tick" x="272.6" y="308">6*</text>
+<text class="kc-tick" x="302.0" y="308">7*</text>
+<text class="kc-tick" x="331.4" y="308">8</text>
+<text class="kc-tick" x="360.9" y="308">9*</text>
+<text class="kc-tick" x="390.3" y="308">10*</text>
+<text class="kc-tick" x="419.7" y="308">11*</text>
+<text class="kc-tick" x="449.1" y="308">12</text>
+<text class="kc-tick" x="478.6" y="308">13*</text>
+<text class="kc-tick" x="508.0" y="308">14</text>
+<rect class="kc-panel" x="556" y="114" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="570" y="136">seconds per node</text>
+<text class="kc-axis" x="570" y="151">measured s / judged node</text>
+<line class="kc-grid" x1="620" y1="292.0" x2="1032" y2="292.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="295.5">0.0</text>
+<line class="kc-grid" x1="620" y1="226.0" x2="1032" y2="226.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="229.5">60.0</text>
+<line class="kc-grid" x1="620" y1="160.0" x2="1032" y2="160.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="163.5">120.0</text>
+<line class="kc-fit kc-series" x1="620.0" y1="259.1" x2="1032.0" y2="276.7"/>
+<polyline class="kc-line kc-series" points="620.0,291.9 649.4,274.6 678.9,275.0 708.3,175.6 737.7,268.6 767.1,268.1 796.6,269.8 826.0,279.1 855.4,265.9 884.9,273.6 914.3,269.4 943.7,273.4 973.1,271.4 1002.6,269.5 1032.0,291.9"/>
+<rect class="kc-pt kc-series" x="616.5" y="288.4" width="7" height="7" rx="2"><title>run 0 · keel · seconds per node = 0.1 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="645.9" y="271.1" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · seconds per node = 15.8 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="675.4" y="271.5" width="7" height="7" rx="2"><title>run 2 · openai-python · seconds per node = 15.4 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="704.8" y="172.1" width="7" height="7" rx="2"><title>run 3 · vercel-ai · seconds per node = 105.9 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="734.2" y="265.1" width="7" height="7" rx="2"><title>run 4 · aider · seconds per node = 21.3 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="763.6" y="264.6" width="7" height="7" rx="2"><title>run 5 · browser-use · seconds per node = 21.7 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="793.1" y="266.3" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · seconds per node = 20.1 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="822.5" y="275.6" width="7" height="7" rx="2"><title>run 7 · simonw-llm · seconds per node = 11.8 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="851.9" y="262.4" width="7" height="7" rx="2"><title>run 8 · tiktoken · seconds per node = 23.7</title></rect>
+<rect class="kc-pt kc-series" x="881.4" y="270.1" width="7" height="7" rx="2"><title>run 9 · requests · seconds per node = 16.8 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="910.8" y="265.9" width="7" height="7" rx="2"><title>run 10 · flask · seconds per node = 20.5 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="940.2" y="269.9" width="7" height="7" rx="2"><title>run 11 · sinatra · seconds per node = 16.9 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="969.6" y="267.9" width="7" height="7" rx="2"><title>run 12 · commander-js · seconds per node = 18.7</title></rect>
+<rect class="kc-pt kc-series" x="999.1" y="266.0" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · seconds per node = 20.4 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="1028.5" y="288.4" width="7" height="7" rx="2"><title>run 14 · tiktoken · seconds per node = 0.1</title></rect>
+<text class="kc-tick" x="620.0" y="308">0*</text>
+<text class="kc-tick" x="649.4" y="308">1*</text>
+<text class="kc-tick" x="678.9" y="308">2*</text>
+<text class="kc-tick" x="708.3" y="308">3*</text>
+<text class="kc-tick" x="737.7" y="308">4*</text>
+<text class="kc-tick" x="767.1" y="308">5*</text>
+<text class="kc-tick" x="796.6" y="308">6*</text>
+<text class="kc-tick" x="826.0" y="308">7*</text>
+<text class="kc-tick" x="855.4" y="308">8</text>
+<text class="kc-tick" x="884.9" y="308">9*</text>
+<text class="kc-tick" x="914.3" y="308">10*</text>
+<text class="kc-tick" x="943.7" y="308">11*</text>
+<text class="kc-tick" x="973.1" y="308">12</text>
+<text class="kc-tick" x="1002.6" y="308">13*</text>
+<text class="kc-tick" x="1032.0" y="308">14</text>
+<rect class="kc-panel" x="32" y="342" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="46" y="364">probe-decided share</text>
+<text class="kc-axis" x="46" y="379">measured share of decided nodes</text>
+<line class="kc-grid" x1="96" y1="520.0" x2="508" y2="520.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="523.5">0.00</text>
+<line class="kc-grid" x1="96" y1="454.0" x2="508" y2="454.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="457.5">0.50</text>
+<line class="kc-grid" x1="96" y1="388.0" x2="508" y2="388.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="391.5">1.00</text>
+<line class="kc-fit kc-series" x1="96.0" y1="509.7" x2="508.0" y2="455.5"/>
+<polyline class="kc-line kc-series" points="96.0,520.0 125.4,520.0 154.9,498.9 184.3,509.4 213.7,446.1 243.1,477.8 272.6,520.0 302.0,446.1 331.4,443.0 360.9,483.0 390.3,520.0 419.7,483.0 449.1,494.9 478.6,488.3 508.0,388.0"/>
+<rect class="kc-pt kc-series" x="92.5" y="516.5" width="7" height="7" rx="2"><title>run 0 · keel · probe-decided share = 0.00 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="121.9" y="516.5" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · probe-decided share = 0.00 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="151.4" y="495.4" width="7" height="7" rx="2"><title>run 2 · openai-python · probe-decided share = 0.16 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="180.8" y="505.9" width="7" height="7" rx="2"><title>run 3 · vercel-ai · probe-decided share = 0.08 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="210.2" y="442.6" width="7" height="7" rx="2"><title>run 4 · aider · probe-decided share = 0.56 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="239.6" y="474.3" width="7" height="7" rx="2"><title>run 5 · browser-use · probe-decided share = 0.32 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="269.1" y="516.5" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · probe-decided share = 0.00 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="298.5" y="442.6" width="7" height="7" rx="2"><title>run 7 · simonw-llm · probe-decided share = 0.56 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="327.9" y="439.5" width="7" height="7" rx="2"><title>run 8 · tiktoken · probe-decided share = 0.58</title></rect>
+<rect class="kc-pt kc-series" x="357.4" y="479.5" width="7" height="7" rx="2"><title>run 9 · requests · probe-decided share = 0.28 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="386.8" y="516.5" width="7" height="7" rx="2"><title>run 10 · flask · probe-decided share = 0.00 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="416.2" y="479.5" width="7" height="7" rx="2"><title>run 11 · sinatra · probe-decided share = 0.28 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="445.6" y="491.4" width="7" height="7" rx="2"><title>run 12 · commander-js · probe-decided share = 0.19</title></rect>
+<rect class="kc-pt kc-series" x="475.1" y="484.8" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · probe-decided share = 0.24 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="504.5" y="384.5" width="7" height="7" rx="2"><title>run 14 · tiktoken · probe-decided share = 1.00</title></rect>
+<text class="kc-tick" x="96.0" y="536">0*</text>
+<text class="kc-tick" x="125.4" y="536">1*</text>
+<text class="kc-tick" x="154.9" y="536">2*</text>
+<text class="kc-tick" x="184.3" y="536">3*</text>
+<text class="kc-tick" x="213.7" y="536">4*</text>
+<text class="kc-tick" x="243.1" y="536">5*</text>
+<text class="kc-tick" x="272.6" y="536">6*</text>
+<text class="kc-tick" x="302.0" y="536">7*</text>
+<text class="kc-tick" x="331.4" y="536">8</text>
+<text class="kc-tick" x="360.9" y="536">9*</text>
+<text class="kc-tick" x="390.3" y="536">10*</text>
+<text class="kc-tick" x="419.7" y="536">11*</text>
+<text class="kc-tick" x="449.1" y="536">12</text>
+<text class="kc-tick" x="478.6" y="536">13*</text>
+<text class="kc-tick" x="508.0" y="536">14</text>
+<rect class="kc-panel" x="556" y="342" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="570" y="364">probe library size</text>
+<text class="kc-axis" x="570" y="379">measured probes in library</text>
+<line class="kc-grid" x1="620" y1="520.0" x2="1032" y2="520.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="523.5">0</text>
+<line class="kc-grid" x1="620" y1="454.0" x2="1032" y2="454.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="457.5">15</text>
+<line class="kc-grid" x1="620" y1="388.0" x2="1032" y2="388.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="391.5">30</text>
+<line class="kc-fit kc-series" x1="620.0" y1="515.8" x2="1032.0" y2="388.7"/>
+<polyline class="kc-line kc-series" points="620.0,520.0 649.4,506.8 678.9,498.0 708.3,484.8 737.7,476.0 767.1,467.2 796.6,462.8 826.0,454.0 855.4,445.2 884.9,436.4 914.3,423.2 943.7,418.8 973.1,405.6 1002.6,392.4 1032.0,392.4"/>
+<rect class="kc-pt kc-series" x="616.5" y="516.5" width="7" height="7" rx="2"><title>run 0 · keel · probe library size = 0 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="645.9" y="503.3" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · probe library size = 3 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="675.4" y="494.5" width="7" height="7" rx="2"><title>run 2 · openai-python · probe library size = 5 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="704.8" y="481.3" width="7" height="7" rx="2"><title>run 3 · vercel-ai · probe library size = 8 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="734.2" y="472.5" width="7" height="7" rx="2"><title>run 4 · aider · probe library size = 10 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="763.6" y="463.7" width="7" height="7" rx="2"><title>run 5 · browser-use · probe library size = 12 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="793.1" y="459.3" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · probe library size = 13 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="822.5" y="450.5" width="7" height="7" rx="2"><title>run 7 · simonw-llm · probe library size = 15 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="851.9" y="441.7" width="7" height="7" rx="2"><title>run 8 · tiktoken · probe library size = 17</title></rect>
+<rect class="kc-pt kc-series" x="881.4" y="432.9" width="7" height="7" rx="2"><title>run 9 · requests · probe library size = 19 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="910.8" y="419.7" width="7" height="7" rx="2"><title>run 10 · flask · probe library size = 22 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="940.2" y="415.3" width="7" height="7" rx="2"><title>run 11 · sinatra · probe library size = 23 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="969.6" y="402.1" width="7" height="7" rx="2"><title>run 12 · commander-js · probe library size = 26</title></rect>
+<rect class="kc-pt kc-series" x="999.1" y="388.9" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · probe library size = 29 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="1028.5" y="388.9" width="7" height="7" rx="2"><title>run 14 · tiktoken · probe library size = 29</title></rect>
+<text class="kc-tick" x="620.0" y="536">0*</text>
+<text class="kc-tick" x="649.4" y="536">1*</text>
+<text class="kc-tick" x="678.9" y="536">2*</text>
+<text class="kc-tick" x="708.3" y="536">3*</text>
+<text class="kc-tick" x="737.7" y="536">4*</text>
+<text class="kc-tick" x="767.1" y="536">5*</text>
+<text class="kc-tick" x="796.6" y="536">6*</text>
+<text class="kc-tick" x="826.0" y="536">7*</text>
+<text class="kc-tick" x="855.4" y="536">8</text>
+<text class="kc-tick" x="884.9" y="536">9*</text>
+<text class="kc-tick" x="914.3" y="536">10*</text>
+<text class="kc-tick" x="943.7" y="536">11*</text>
+<text class="kc-tick" x="973.1" y="536">12</text>
+<text class="kc-tick" x="1002.6" y="536">13*</text>
+<text class="kc-tick" x="1032.0" y="536">14</text>
+<text class="kc-axis" x="32" y="576">x axis: run index in the recorded corpus order (listed below). Squares are the raw per-run values; the dashed line is an</text>
+<text class="kc-axis" x="32" y="591">ordinary-least-squares fit and is never shown without them. The fit is clipped to the panel, and withheld entirely (with the</text>
+<text class="kc-axis" x="32" y="606">panel saying so) where a straight line would predict values the points cannot take — R^2 for every fit is in the trend notes</text>
+<text class="kc-axis" x="32" y="621">below. * on run 0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13 = judged fewer nodes than gathered; per-node values are per JUDGED node.</text>
+<text class="kc-h2" x="32" y="648">Coverage (judged)</text>
+<text class="kc-mono" x="32" y="668">ci_step 224 · script 64 · test_target 46 · review_gate 10 · deploy_gate 1</text>
+<text class="kc-h2" x="32" y="696">Trend</text>
+<text class="kc-note" x="32" y="716">estimated tokens per node: falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less</text>
+<text class="kc-note" x="32" y="732">than half the variance — read the raw squares). raw first 498 -&gt; last 53.</text>
+<text class="kc-note" x="32" y="748">seconds per node: falls — total fitted change -72.9% of the mean across 15 runs (R^2 0.04, so the line explains less than half</text>
+<text class="kc-note" x="32" y="764">the variance — read the raw squares). raw first 0.1 -&gt; last 0.1.</text>
+<text class="kc-note" x="32" y="780">probe-decided share: rises — total fitted change 144.9% of the mean across 15 runs (R^2 0.21, so the line explains less than</text>
+<text class="kc-note" x="32" y="796">half the variance — read the raw squares). raw first 0.00 -&gt; last 1.00.</text>
+<text class="kc-note" x="32" y="812">probe library size: rises — total fitted change 187.7% of the mean across 15 runs (R^2 0.99). raw first 0 -&gt; last 29.</text>
+<text class="kc-h2" x="32" y="840">Run order</text>
+<text class="kc-note" x="32" y="860">run order derived from Report.generatedAt (ascending, filename as tiebreak) — no order.json manifest present</text>
+<text class="kc-mono" x="32" y="876">0 keel -&gt; 1 anthropic-sdk-python -&gt; 2 openai-python -&gt; 3 vercel-ai -&gt; 4 aider -&gt; 5 browser-use -&gt; 6</text>
+<text class="kc-mono" x="32" y="892">mcp-python-sdk -&gt; 7 simonw-llm -&gt; 8 tiktoken -&gt; 9 requests -&gt; 10 flask -&gt; 11 sinatra -&gt; 12 commander-js -&gt; 13</text>
+<text class="kc-mono" x="32" y="908">anthropic-quickstarts -&gt; 14 tiktoken</text>
+<text class="kc-h2" x="32" y="936">Shuffle check</text>
+<text class="kc-note" x="32" y="956">shuffle check INCOMPLETE — the curve direction ran, the ratio direction did not</text>
+<text class="kc-note" x="32" y="972">Permutation (400 draws, seed 20260724): median |delta normalized slope| 0.633, 92% of draws move it by &gt;= 0.15. A permutation</text>
+<text class="kc-note" x="32" y="988">reorders ALREADY-RECORDED runs; it cannot reproduce what a genuine re-run in a different order would have cost, because the</text>
+<text class="kc-note" x="32" y="1004">probe library would have accumulated differently. It is a sanity signal on order-dependence, never a substitute for the</text>
+<text class="kc-note" x="32" y="1020">empirical re-run.</text>
+<text class="kc-warn" x="32" y="1036">Ratio stability under shuffle was NOT checked: no re-run supplied (--shuffled) and none declared in corpus.meta.json. Permuting</text>
+<text class="kc-warn" x="32" y="1052">recorded runs cannot move a per-target ratio, so the permutation result below says nothing about it. Supply a re-run with</text>
+<text class="kc-warn" x="32" y="1068">--shuffled &lt;dir&gt;.</text>
+<text class="kc-h2" x="32" y="1096">Disclosures</text>
+<text class="kc-note" x="32" y="1116">- Skipped 3 file(s) that are not usable run reports: corpus-summary.json (no string &quot;target&quot;); curve.json (no string &quot;target&quot;);</text>
+<text class="kc-note" x="32" y="1132">keel.bindings.json (no &quot;nodes&quot; array).</text>
+<text class="kc-note" x="32" y="1148">- Run 0 (keel) judged 25 of 32 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1164">- Run 1 (anthropic-sdk-python) judged 25 of 41 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1180">- Run 2 (openai-python) judged 25 of 95 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1196">- Run 3 (vercel-ai) judged 25 of 1014 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1212">- Run 4 (aider) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1228">- Run 5 (browser-use) judged 25 of 104 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1244">- Run 6 (mcp-python-sdk) judged 25 of 121 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1260">- Run 7 (simonw-llm) judged 25 of 38 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1276">- Run 9 (requests) judged 25 of 106 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1292">- Run 10 (flask) judged 25 of 59 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1308">- Run 11 (sinatra) judged 25 of 59 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1324">- Run 13 (anthropic-quickstarts) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1340">- Run 14 (tiktoken): decidedByProbe + decidedByAgent = 10 but nodesSampled = 12. Probe-decided share uses the decided total</text>
+<text class="kc-note" x="32" y="1356">(10).</text>
+<text class="kc-note" x="32" y="1372">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in /Users/broomva/keel/reports/corpus.meta.json.</text>
+<text class="kc-note" x="32" y="1388">The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.</text>
+<text class="kc-note" x="32" y="1404">- Token counts are ESTIMATES in 15 of 15 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill,</text>
+<text class="kc-note" x="32" y="1420">so the token axis reads &quot;estimated tokens&quot; and nothing here claims a measured token count.</text>
+<line class="kc-rule" x1="32" y1="1448" x2="1048" y2="1448"/>
+<text class="kc-scope" x="32" y="1466">Scope. Keel measures the shape of verification, not its quality. A repo can be 100% anchored with terrible tests. Anchoring says</text>
+<text class="kc-scope" x="32" y="1482">the signal comes from outside; it does not say the signal is sufficient.</text>
+</svg>
+
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">Run economics</p>
+  <div class="k-econ">
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>decided by probe</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">12</span>
+      <span>decided by agent</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0%</span>
+      <span>probe-decided share</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">12 / 37</span>
+      <span>nodes judged / gathered</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>estimated tokens in</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>estimated tokens out</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0 ms</span>
+      <span>wall clock</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>probes minted</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>probe library size</span>
+    </div>
+
+  </div>
+  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 12 of 37 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently. The probe library is empty, so every decision on this run cost a model call. That is the left-hand end of the crystallization curve, not a defect.</p>
+</section>
+
+</main>
+</body>
+</html>
