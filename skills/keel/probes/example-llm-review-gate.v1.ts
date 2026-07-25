@@ -57,9 +57,6 @@ const NOT_THIS = ['required_approving_review_count', 'reviewers:', 'codeowners']
  */
 const ADVISORY = ['continue-on-error: true', '|| true', 'mode: comment', 'comment-only'];
 
-/** A `name:` line in a YAML step — the author's label, not the author's command. */
-const LABEL_LINE = /^\s*-?\s*name\s*:/;
-
 /**
  * WHAT THE STEP DOES. For a CI step that is the `uses:` action reference, the
  * `run:` command, and the `with:` inputs that configure them. Two things are
