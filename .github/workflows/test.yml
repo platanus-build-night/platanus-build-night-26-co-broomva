@@ -1,0 +1,80 @@
+name: test
+
+# This workflow exists because Keel measured itself and found that `bun test` and
+# `tsc --noEmit` were run by NO workflow — so they gated nothing, and both were
+# correctly downgraded from `anchored` to `self_referential` (grounding-classes.md:
+# "classify the edge that actually blocks the merge, not the file that could have").
+#
+# The point is the gate, not the file: these steps must run on a fresh runner, and a
+# non-zero exit must block the merge. If someone later adds `continue-on-error: true`
+# or `|| true` here, this edge becomes `not_a_check` by Keel's own definition — a step
+# that cannot fail asserts nothing.
+
+# Skipping on docs/site-only changes is a cost decision, not a correctness one: nothing
+# under these paths can change what `bun test` or `tsc` decide. Anything that CAN — the
+# skill, the tests, the toolchain baseline — is deliberately absent from both lists.
+on:
+  push:
+    branches: [main]
+    paths-ignore: &docs-only
+      - 'site/**'
+      - 'docs/**'
+      - '**/*.md'
+      - 'project-logo.png'
+  pull_request:
+    paths-ignore: *docs-only
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install toolchain baseline
+        run: bun install --frozen-lockfile
+
+      # The exit code comes from the runtime executing the assertions on a machine the
+      # PR author does not control. Documented limit, and it is the honest one: the
+      # oracle is authored in-repo alongside the implementation, so a green run proves
+      # the code does what the tests say — not that the tests say the right thing.
+      - name: bun test
+        run: bun test
+
+      - name: tsc --noEmit
+        run: bunx tsc --noEmit
+
+      # The design system encodes the report's invariants in CSS: not_a_check outside
+      # the denominator, the confidence-smell ring, and a visible defect state when a
+      # verdict is missing its writeBoundary.argument.
+      - name: design adherence gate
+        run: make design-audit
+
+      # The fixture is the contract between the engine and every consumer. Recomputing
+      # its ratio from its own verdicts catches a fixture edited into disagreeing with
+      # itself, which would silently invalidate the renderer, the curve, and the tests.
+      - name: fixture recomputes
+        run: |
+          bun -e '
+            import { groundingRatio } from "./skills/keel/schemas/keel.ts";
+            const r = await Bun.file("tests/fixtures/report.sample.json").json();
+            const g = groundingRatio(r.verdicts);
+            if (JSON.stringify(g) !== JSON.stringify(r.grounding)) {
+              throw new Error("stored grounding disagrees with a recomputation");
+            }
+            const naked = r.verdicts.filter((v) => !v.writeBoundary?.argument?.trim());
+            if (naked.length) {
+              throw new Error(naked.length + " verdict(s) carry no argument — a class without its causal path is an unaccountable green check");
+            }
+            console.log("fixture OK — ratio", g.ratio.toFixed(4), "over", r.verdicts.length, "verdicts");
+          '
