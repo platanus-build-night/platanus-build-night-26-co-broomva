@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keel · hoja de escenario · 2:00 · ES</title>
+<style>
+/* ─── skills/keel/design/tokens.css (verbatim) ──────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — design tokens. THE canonical source. There is no second copy.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Every Keel surface reads these: the report artifact (inlined by render.ts),
+   the marketing site, the agents page, and the governance docs. `site/` gets a
+   byte-identical copy written by `make site-tokens`; `make design-audit`
+   executes a diff and exits non-zero if it has drifted. That check is anchored
+   under Keel's own definition — the signal is a diff exit code, not an
+   assertion this repo also writes.
+
+   WHY ONE FILE AND NOT FIVE. Systems this size usually split color/type/space
+   into separate files behind an @import entry point. Keel cannot: the report
+   must open from file:// with zero external requests, so `render.ts` inlines
+   this text verbatim into a <style> block. One file is one read. The section
+   rules below carry the structure the file split would have carried.
+
+   NAMESPACE. Every token is `--k-*`. Keel's output gets embedded in other
+   people's pages and pasted into other people's docs; an unprefixed `--accent`
+   would collide and silently restyle someone else's surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ═══ CANVAS ══════════════════════════════════════════════════════════════
+     Dark, because Keel is an instrument, not a document. Elevation is
+     expressed as a background step plus a hairline — never a shadow. On a
+     #07090c canvas a shadow is a smudge: it costs paint and reads as nothing.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-bg-0: #07090c;          /* page */
+  --k-bg-1: #0c1015;          /* raised: cards, code blocks, table headers */
+  --k-bg-2: #11161d;          /* nested / hover */
+  --k-bg-3: #171d26;          /* active / selected row */
+
+  --k-line: #1b2027;          /* hairline — the default separator */
+  --k-line-strong: #2a323c;   /* emphasis rule, focused input */
+
+  /* ═══ INK ═════════════════════════════════════════════════════════════════
+     Four steps. --k-ink-3 is BELOW the 4.5:1 text threshold on --k-bg-0 by
+     design; it is for borders, disabled glyphs, and decorative rules. Never
+     set body copy in it. The other three clear 4.5:1 on bg-0 and bg-1.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ink-0: #e8edf2;         /* primary text        ~16:1 on bg-0 */
+  --k-ink-1: #b6c0cb;         /* secondary text      ~10:1 */
+  --k-ink-2: #8b97a5;         /* tertiary / meta      ~6:1 */
+  --k-ink-3: #5b6774;         /* NON-TEXT ONLY        ~2.6:1 */
+
+  /* ═══ KEEL'S OWN VOICE ════════════════════════════════════════════════════
+     One accent, used surgically: links, the emphasized clause in a headline,
+     Keel's own annotations. It is a HUE RESERVED FOR THE NARRATOR — it never
+     encodes a verdict, and no verdict color is ever used for chrome. Mixing
+     the two is how a tool starts congratulating itself in green.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-accent: #7dd3fc;
+  --k-accent-hover: #b6e6ff;
+  --k-accent-line: rgba(125, 211, 252, 0.30);   /* link underline at rest */
+  --k-accent-wash: rgba(125, 211, 252, 0.10);   /* callout fill */
+
+  /* ═══ VERDICTS ════════════════════════════════════════════════════════════
+     Exactly four, matching `GroundingClass` in schemas/keel.ts. The schema is
+     frozen; so is this list. Adding a fifth swatch here without a schema
+     change means someone is inventing a class in CSS.
+
+       anchored          the producer is outside the write boundary
+       self_referential  it is inside
+       unknown           the fork point could not be traced — FAILS CLOSED
+       not_a_check       asserts nothing; excluded from the denominator
+
+     `not_a_check` is deliberately the least attractive swatch in the file. It
+     is the one shoppable class — misfiling a real check there shrinks the
+     denominator and inflates the score — so it gets inert slate and, per
+     `.k-verdict`, a dashed border rather than a solid one. It should never
+     look like a place you want your nodes to land.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-anchored: #4ade80;
+  --k-self-referential: #f87171;
+  --k-unknown: #fbbf24;
+  --k-not-a-check: #94a3b8;
+
+  /* Tints for chip fills and graph marks. Kept as explicit rgba rather than
+     color-mix() so the report renders identically in older embedded viewers
+     (email clients, IDE previews) that never see a modern engine. */
+  --k-anchored-wash: rgba(74, 222, 128, 0.10);
+  --k-self-referential-wash: rgba(248, 113, 113, 0.10);
+  --k-unknown-wash: rgba(251, 191, 36, 0.10);
+  --k-not-a-check-wash: rgba(148, 163, 184, 0.08);
+
+  /* Confidence smell — an `anchored` verdict asserted with confidence < 0.5.
+     Aliased to --k-unknown on purpose: the visual claim is "this is closer to
+     unknown than its color suggests". A separate hue would imply a fifth
+     class, and there is no fifth class. */
+  --k-smell: var(--k-unknown);
+
+  /* ═══ TYPE ════════════════════════════════════════════════════════════════
+     NO WEBFONTS. Not a preference — an invariant. The report must open from
+     file://, survive being emailed, and issue zero external requests, which
+     rules out every hosted face. System stacks are the honest answer; a
+     bundled base64 face would add ~80KB to an artifact whose whole argument
+     is that it depends on nothing.
+
+     The two families carry a PROVENANCE distinction, and this is the rule
+     most worth keeping: MONO IS QUOTED FROM THE WORLD, SANS IS KEEL TALKING.
+     Node names, file paths, commands, exit codes, class names, hashes — mono,
+     because Keel did not write them. Prose, headings, arguments, and
+     annotations — sans, because Keel did. A reader can tell claim from
+     evidence at a glance without reading a word.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, system-ui, sans-serif;
+  --k-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                 "Cascadia Mono", Consolas, monospace;
+
+  --k-fs-ratio: clamp(64px, 13vw, 128px);   /* the grounding ratio, and only it */
+  --k-fs-display: clamp(30px, 5.2vw, 46px); /* page hero */
+  --k-fs-h1: 24px;
+  --k-fs-h2: 19px;
+  --k-fs-h3: 16px;
+  --k-fs-lede: 19px;
+  --k-fs-body: 16px;
+  --k-fs-ui: 15px;                          /* dense report UI */
+  --k-fs-sm: 14px;
+  --k-fs-xs: 12.5px;
+  --k-fs-micro: 11px;                       /* eyebrows, table headers */
+
+  --k-lh-ratio: 0.9;
+  --k-lh-tight: 1.18;
+  --k-lh-snug: 1.35;
+  --k-lh-body: 1.65;
+
+  /* Three weights. There is no 700: on a near-black canvas heavy strokes
+     bloom, and the halation costs more legibility than the emphasis buys. */
+  --k-fw-regular: 400;
+  --k-fw-medium: 500;
+  --k-fw-semibold: 600;
+
+  --k-track-ratio: -0.045em;
+  --k-track-display: -0.022em;
+  --k-track-tight: -0.01em;
+  --k-track-normal: 0;
+  --k-track-eyebrow: 0.18em;   /* uppercase section labels */
+  --k-track-brand: 0.22em;     /* the wordmark only */
+
+  /* ═══ SPACE ═══════════════════════════════════════════════════════════════
+     4px grid. Measures are capped tight: a verdict list read at 1400px wide
+     loses the row it started on, and this artifact is read row by row.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-space-0: 0;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+  --k-space-16: 64px;
+  --k-space-20: 80px;
+  --k-space-24: 96px;
+
+  --k-measure-read: 760px;     /* prose column — site, docs */
+  --k-measure-report: 1080px;  /* report shell: graph + verdict table */
+  --k-measure-prose: 62ch;     /* lede / paragraph wrap */
+
+  /* ═══ RADIUS ══════════════════════════════════════════════════════════════
+     Small. Keel's surfaces are cells, rows, and records — the vocabulary of a
+     ledger. Generous rounding reads as consumer-soft and undersells that the
+     numbers on screen are accounting, not a dashboard.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-r-xs: 3px;
+  --k-r-sm: 4px;
+  --k-r-md: 6px;
+  --k-r-lg: 8px;
+  --k-r-xl: 12px;
+  --k-r-pill: 999px;           /* tags and class chips only */
+
+  /* ═══ MOTION ══════════════════════════════════════════════════════════════
+     Fast and flat. Instruments settle; they do not perform. No overshoot, no
+     bounce, nothing above 200ms. Motion here exists to preserve object
+     continuity across a state change, never to draw attention to one.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ease: cubic-bezier(0.2, 0, 0.38, 1);
+  --k-dur-fast: 90ms;
+  --k-dur-base: 160ms;
+
+  /* ═══ GRAPH MARKS ═════════════════════════════════════════════════════════
+     The node graph is one mark per node. SQUARES, not circles: a circle in a
+     verification UI reads as a status dot, and a status dot is exactly the
+     unaccountable green light Keel exists to criticize. A square reads as a
+     cell in a ledger. Sized to stay legible at 200 nodes.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-mark: 10px;
+  --k-mark-gap: 3px;
+  --k-mark-r: 2px;
+  --k-mark-stroke: 1.5px;      /* smell ring on an anchored mark */
+
+  /* ═══ FOCUS ═══════════════════════════════════════════════════════════════
+     Two-stop ring: a bg-colored inset so the accent never touches the element
+     edge, then the accent. Visible on every surface step without a per-context
+     override. */
+  --k-focus-ring: 0 0 0 2px var(--k-bg-0), 0 0 0 4px var(--k-accent);
+}
+/* ─── skills/keel/design/keel.css (verbatim) ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — element defaults and component classes. Requires tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHY CSS CLASSES AND NOT COMPONENTS. Keel's surfaces are static HTML emitted
+   as strings by `render.ts`, plus two hand-written pages. There is no runtime,
+   no build step, and no framework to hang a component API on — so the
+   component contract is a class name plus a documented markup shape. See
+   `README.md` in this directory for the per-component usage brief.
+
+   Every value below is a var(). A literal hex, px, or ms in this file is a
+   bug, and `make design-audit` fails on one. The two exceptions are marked
+   inline with `audit-ok:` and carry a reason.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Reset, kept to what actually bites ─────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-0);
+  color: var(--k-ink-0);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-body);
+  line-height: var(--k-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--k-fw-semibold);
+  line-height: var(--k-lh-snug);
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+
+p { margin: 0 0 var(--k-space-4); max-width: var(--k-measure-prose); }
+
+a {
+  color: var(--k-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--k-accent-line);
+  transition: color var(--k-dur-fast) var(--k-ease),
+              border-color var(--k-dur-fast) var(--k-ease);
+}
+a:hover { color: var(--k-accent-hover); border-bottom-color: var(--k-accent); }
+
+code, kbd, samp, pre { font-family: var(--k-font-mono); }
+
+::selection { background: var(--k-accent-wash); color: var(--k-ink-0); }
+
+:focus-visible { outline: none; box-shadow: var(--k-focus-ring); border-radius: var(--k-r-sm); }
+
+/* Motion is never load-bearing here, so honouring the preference costs
+   nothing and removes every transition and the one animated element. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.k-page   { max-width: var(--k-measure-read);   margin: 0 auto; padding: var(--k-space-20) var(--k-space-6) var(--k-space-24); }
+.k-report { max-width: var(--k-measure-report); margin: 0 auto; padding: var(--k-space-12) var(--k-space-6) var(--k-space-20); }
+
+.k-rule { border: 0; border-top: 1px solid var(--k-line); margin: var(--k-space-16) 0; }
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+
+/* Uppercase section label. Sentence-case everywhere else — these are the only
+   shouted words in the system, and they are structural, not emphatic. */
+.k-eyebrow {
+  margin: 0 0 var(--k-space-5);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-wordmark {
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-brand);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-display {
+  font-size: var(--k-fs-display);
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  font-weight: var(--k-fw-semibold);
+}
+/* The one emphasized clause in a headline. Accent = Keel's own voice. */
+.k-display em { font-style: normal; color: var(--k-accent); }
+
+.k-lede {
+  font-size: var(--k-fs-lede);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+
+.k-meta { font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+/* Anything quoted from the target: paths, node names, commands, hashes. */
+.k-mono { font-family: var(--k-font-mono); font-size: 0.92em; } /* audit-ok: relative to inherited size, not a fixed step */
+
+/* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+.k-card {
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-5);
+}
+
+.k-code {
+  display: block;
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-4) var(--k-space-5);
+  font-size: var(--k-fs-ui);
+  overflow-x: auto;
+}
+.k-code--cmd::before { content: "$ "; color: var(--k-ink-2); }
+
+.k-callout {
+  margin: 0 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  background: var(--k-bg-1);
+  border-left: 2px solid var(--k-accent);
+  font-size: var(--k-fs-lede);
+  line-height: var(--k-lh-snug);
+}
+
+/* ── Verdict classes ────────────────────────────────────────────────────────
+   `.k-class` renders a GroundingClass name. The name is ALWAYS the schema
+   spelling in mono — `self_referential`, never "Self-Referential". The class
+   is an identifier from the data model, not a label we get to prettify, and
+   re-spelling it in prose breaks the reader's ability to grep the JSON.
+
+   Drive the variant with data-class so invalid values render unstyled and
+   loudly wrong rather than silently defaulting to something plausible.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-1);
+  padding: var(--k-space-1) var(--k-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  line-height: var(--k-lh-snug);
+  white-space: nowrap;
+}
+
+.k-class[data-class="anchored"]         { color: var(--k-anchored);         background: var(--k-anchored-wash); }
+.k-class[data-class="self_referential"] { color: var(--k-self-referential); background: var(--k-self-referential-wash); }
+.k-class[data-class="unknown"]          { color: var(--k-unknown);          background: var(--k-unknown-wash); }
+
+/* Dashed, because this class is EXCLUDED FROM THE DENOMINATOR. The border
+   style is the reader's cue that the node left the accounting entirely — the
+   one place a verdict changes what the ratio is computed over, so it is the
+   one place the chip stops looking like the others. */
+.k-class[data-class="not_a_check"] {
+  color: var(--k-not-a-check);
+  background: var(--k-not-a-check-wash);
+  border-color: var(--k-ink-3);
+  border-style: dashed;
+}
+
+/* Confidence smell: `anchored` asserted below 0.5. High confidence with thin
+   evidence is the pattern worth catching, so it gets a ring rather than a
+   footnote. */
+.k-class[data-smell] { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+/* ── Verdict row ────────────────────────────────────────────────────────────
+   A verdict without its argument is the unaccountable green check Keel exists
+   to criticize, so the markup contract is: every `.k-verdict` contains a
+   `.k-argument`. The rule below makes a violation visible in the artifact
+   itself during development, and `make design-audit` fails the build on one.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-verdict {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) auto;
+  gap: var(--k-space-2) var(--k-space-4);
+  padding: var(--k-space-4) 0;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.k-verdict__name   { font-family: var(--k-font-mono); font-size: var(--k-fs-ui); color: var(--k-ink-0); word-break: break-word; }
+.k-verdict__source { grid-column: 1; font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-verdict__class  { grid-column: 2; grid-row: 1; justify-self: end; }
+
+/* The evidence. Sans, because this is Keel reasoning — not quoted material. */
+.k-argument {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+
+.k-verdict:not(:has(.k-argument))::after {
+  content: "missing write-boundary argument — a class without its causal path is not a verdict";
+  grid-column: 1 / -1;
+  padding: var(--k-space-2) var(--k-space-3);
+  border-radius: var(--k-r-sm);
+  background: var(--k-self-referential-wash);
+  color: var(--k-self-referential);
+  font-size: var(--k-fs-xs);
+}
+
+/* ── Grounding ratio ────────────────────────────────────────────────────────
+   NEVER render `.k-ratio__value` without `.k-ratio__counts`. A ratio with a
+   hidden denominator is the exact move this tool was built to expose, and it
+   is trivially inflated by shopping nodes into `not_a_check`. The counts row
+   prints `not_a_check` BESIDE the ratio, visibly outside the fraction.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-ratio { margin: 0 0 var(--k-space-8); }
+
+.k-ratio__value {
+  display: block;
+  font-size: var(--k-fs-ratio);
+  line-height: var(--k-lh-ratio);
+  letter-spacing: var(--k-track-ratio);
+  font-weight: var(--k-fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+
+.k-ratio__formula { margin: var(--k-space-3) 0 var(--k-space-4); font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+.k-ratio__counts { display: flex; flex-wrap: wrap; gap: var(--k-space-2) var(--k-space-5); align-items: center; font-size: var(--k-fs-sm); }
+.k-ratio__count { display: inline-flex; align-items: baseline; gap: var(--k-space-2); font-variant-numeric: tabular-nums; color: var(--k-ink-1); }
+
+/* Set off with a leading rule: everything after it is outside the fraction. */
+.k-ratio__count--excluded {
+  padding-left: var(--k-space-5);
+  border-left: 1px solid var(--k-line);
+  color: var(--k-ink-2);
+}
+
+/* Composition bar. Segment widths are set inline by the renderer from the
+   real counts — no minimum width, because a class with two nodes must look
+   like a class with two nodes. */
+.k-meter { display: flex; height: var(--k-space-2); border-radius: var(--k-r-pill); overflow: hidden; background: var(--k-bg-2); margin: var(--k-space-4) 0; }
+.k-meter__seg[data-class="anchored"]         { background: var(--k-anchored); }
+.k-meter__seg[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-meter__seg[data-class="unknown"]          { background: var(--k-unknown); }
+.k-meter__seg[data-class="not_a_check"]      { background: var(--k-not-a-check); opacity: 0.45; }
+
+/* ── Node graph ─────────────────────────────────────────────────────────────
+   One mark per node, squares on a wrapping grid. Squares, not circles: a
+   circle reads as a status dot, and a status dot is the thing being audited.
+   The grid wraps rather than scaling, so 15 nodes and 200 nodes use the same
+   mark size and neither clips.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-graph { display: flex; flex-wrap: wrap; gap: var(--k-mark-gap); margin: 0 0 var(--k-space-6); }
+
+.k-mark {
+  width: var(--k-mark);
+  height: var(--k-mark);
+  border-radius: var(--k-mark-r);
+  background: var(--k-ink-3);
+}
+.k-mark[data-class="anchored"]         { background: var(--k-anchored); }
+.k-mark[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-mark[data-class="unknown"]          { background: var(--k-unknown); }
+.k-mark[data-class="not_a_check"]      { background: transparent; box-shadow: inset 0 0 0 1px var(--k-not-a-check); } /* audit-ok: 1px hairline is the smallest renderable inset, not a scale step */
+.k-mark[data-smell]                    { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+.k-legend { display: flex; flex-wrap: wrap; gap: var(--k-space-4); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-legend__item { display: inline-flex; align-items: center; gap: var(--k-space-2); }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--k-fs-ui); }
+.k-table th {
+  padding: var(--k-space-2) var(--k-space-3) var(--k-space-2) 0;
+  border-bottom: 1px solid var(--k-line-strong);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+  text-align: left;
+}
+.k-table td { padding: var(--k-space-3) var(--k-space-3) var(--k-space-3) 0; border-bottom: 1px solid var(--k-line); vertical-align: top; color: var(--k-ink-1); }
+.k-table td:first-child { color: var(--k-ink-0); }
+.k-table--num td { font-variant-numeric: tabular-nums; }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-2);
+  padding: var(--k-space-2) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-r-md);
+  background: var(--k-bg-1);
+  color: var(--k-ink-0);
+  font-family: inherit;
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  cursor: pointer;
+  transition: background var(--k-dur-fast) var(--k-ease), border-color var(--k-dur-fast) var(--k-ease);
+}
+.k-btn:hover { background: var(--k-bg-2); border-color: var(--k-ink-3); }
+.k-btn--accent { border-color: var(--k-accent-line); color: var(--k-accent); }
+
+.k-tag {
+  display: inline-flex;
+  padding: var(--k-space-1) var(--k-space-3);
+  border-radius: var(--k-r-pill);
+  background: var(--k-bg-2);
+  color: var(--k-ink-2);
+  font-size: var(--k-fs-micro);
+  letter-spacing: var(--k-track-normal);
+}
+
+/* ── Scope note ─────────────────────────────────────────────────────────────
+   MANDATORY on every artifact that prints a grounding ratio. A high ratio
+   reported without it will be read as "well tested", which is a claim Keel
+   does not make and cannot support. It is a component, not a paragraph, so
+   that it cannot be quietly reworded per artifact.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-scope {
+  margin: var(--k-space-10) 0 0;
+  padding: var(--k-space-4) var(--k-space-5);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-lg);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+.k-scope strong { color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+
+/* ── Economics footer ───────────────────────────────────────────────────── */
+
+.k-econ { display: flex; flex-wrap: wrap; gap: var(--k-space-8); margin-top: var(--k-space-8); padding-top: var(--k-space-5); border-top: 1px solid var(--k-line); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-econ__stat { display: flex; flex-direction: column; gap: var(--k-space-1); }
+.k-econ__value { font-size: var(--k-fs-h3); font-variant-numeric: tabular-nums; color: var(--k-ink-0); }
+
+/* ── Print ──────────────────────────────────────────────────────────────────
+   The report is expected to be emailed, and an emailed artifact gets printed
+   and pasted into decks. Dark-on-paper is unreadable and wastes toner, so the
+   canvas and ink tokens invert while the four verdict hues are DARKENED
+   rather than swapped — the classification must survive the medium, otherwise
+   a printed report and a screen report disagree about what they show.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  :root {
+    --k-bg-0: #ffffff;
+    --k-bg-1: #f7f7f5;
+    --k-bg-2: #eeeeec;
+    --k-bg-3: #e6e6e3;
+    --k-line: #dcdcd7;
+    --k-line-strong: #b9b9b2;
+    --k-ink-0: #14161a;
+    --k-ink-1: #3a4048;
+    --k-ink-2: #626a74;
+    --k-ink-3: #9aa1aa;
+    --k-accent: #0b6ea8;
+    --k-accent-line: rgba(11, 110, 168, 0.35);
+    --k-anchored: #157f3e;
+    --k-self-referential: #b3261e;
+    --k-unknown: #8a5a00;
+    --k-not-a-check: #5f6b78;
+  }
+  body { background: #ffffff; } /* audit-ok: print canvas must be paper-white regardless of theme tokens */
+  .k-verdict, .k-card, .k-scope { break-inside: avoid; }
+  a { border-bottom: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
+}
+/* ─── stage-only layer (sg-*) — arranges .k-* components, adds no palette ── */
+.sg-wrap{max-width:78rem;margin:0 auto;padding:var(--k-space-8) var(--k-space-6) var(--k-space-16)}
+.sg-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--k-space-4);
+  border-bottom:1px solid var(--k-line-strong);padding-bottom:var(--k-space-5);margin-bottom:var(--k-space-8)}
+.sg-head h1{margin:0;font-size:var(--k-fs-h1);letter-spacing:var(--k-track-tight)}
+.sg-clock{font-family:var(--k-font-mono);font-size:clamp(30px,4vw,46px);line-height:1;
+  color:var(--k-accent);letter-spacing:var(--k-track-display);margin-left:auto}
+.sg-sub{color:var(--k-ink-2);font-size:var(--k-fs-sm);margin:var(--k-space-2) 0 0}
+.sg-sec{margin:var(--k-space-12) 0 var(--k-space-6)}
+.sg-sec h2{font-size:var(--k-fs-h2);margin:0 0 var(--k-space-2);letter-spacing:var(--k-track-tight)}
+.sg-sec .sg-note{color:var(--k-ink-2);font-size:var(--k-fs-sm);margin:0 0 var(--k-space-5);max-width:var(--k-measure-prose)}
+
+/* the beat rows — the thing a presenter's eye lands on */
+.sg-beat{display:grid;grid-template-columns:10.5rem minmax(0,1fr) 16rem;gap:var(--k-space-6);
+  padding:var(--k-space-5) 0;border-top:1px solid var(--k-line)}
+.sg-beat:first-of-type{border-top:1px solid var(--k-line-strong)}
+.sg-t{font-family:var(--k-font-mono);font-size:var(--k-fs-ui);color:var(--k-accent);
+  letter-spacing:var(--k-track-normal);white-space:nowrap;min-width:0}
+.sg-t b{display:block;color:var(--k-ink-0);font-size:var(--k-fs-xs);font-weight:var(--k-fw-semibold);
+  letter-spacing:.12em;text-transform:uppercase;margin-bottom:var(--k-space-2);white-space:normal}
+.sg-t i{display:block;font-style:normal;color:var(--k-ink-3);font-size:var(--k-fs-xs);margin-top:var(--k-space-2)}
+.sg-say p{font-size:var(--k-fs-lede);line-height:var(--k-lh-snug);margin:0 0 var(--k-space-3);
+  color:var(--k-ink-0)}
+.sg-say p:last-child{margin-bottom:0}
+.sg-say strong{color:var(--k-accent);font-weight:var(--k-fw-semibold)}
+.sg-say code{font-family:var(--k-font-mono);font-size:.92em;background:var(--k-bg-2);
+  border:1px solid var(--k-line);border-radius:var(--k-r-xs);padding:.1em .4em}
+.sg-screen{font-size:var(--k-fs-sm);color:var(--k-ink-2);line-height:var(--k-lh-body);
+  border-left:2px solid var(--k-line-strong);padding-left:var(--k-space-4)}
+.sg-screen .lbl{display:block;color:var(--k-ink-3);font-size:var(--k-fs-xs);
+  letter-spacing:var(--k-track-eyebrow);text-transform:uppercase;margin-bottom:var(--k-space-2)}
+.sg-screen b{color:var(--k-ink-0);font-weight:var(--k-fw-semibold)}
+.sg-screen .warn{display:block;margin-top:var(--k-space-3);color:var(--k-accent);
+  font-size:var(--k-fs-xs);letter-spacing:var(--k-track-eyebrow);text-transform:uppercase;font-weight:var(--k-fw-semibold)}
+.sg-beat--live{background:var(--k-accent-wash)}
+.sg-cut{display:flex;align-items:center;gap:var(--k-space-4);margin:0;padding:var(--k-space-3) 0;
+  border-top:1px dashed var(--k-accent-line);color:var(--k-accent);
+  font-family:var(--k-font-mono);font-size:var(--k-fs-xs);letter-spacing:var(--k-track-eyebrow);text-transform:uppercase}
+
+/* generic grids */
+.sg-grid{display:grid;gap:var(--k-space-4)}
+.sg-grid--2{grid-template-columns:repeat(auto-fit,minmax(20rem,1fr))}
+.sg-grid--3{grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))}
+.sg-q{font-weight:var(--k-fw-semibold);color:var(--k-ink-0);margin:0 0 var(--k-space-2);font-size:var(--k-fs-body)}
+.sg-a{margin:0;color:var(--k-ink-1);font-size:var(--k-fs-sm);line-height:var(--k-lh-body)}
+.sg-num{display:flex;justify-content:space-between;align-items:baseline;gap:var(--k-space-3);
+  padding:var(--k-space-2) 0;border-bottom:1px solid var(--k-line);font-size:var(--k-fs-sm)}
+.sg-num:last-child{border-bottom:0}
+.sg-num span{color:var(--k-ink-2)}
+.sg-num b{font-family:var(--k-font-mono);color:var(--k-ink-0);font-weight:var(--k-fw-medium);white-space:nowrap}
+.sg-never li{color:var(--k-ink-1);margin-bottom:var(--k-space-3);font-size:var(--k-fs-sm);line-height:var(--k-lh-body)}
+.sg-never li b{color:var(--k-self-referential)}
+.sg-ol{counter-reset:sg;list-style:none;padding:0;margin:0}
+.sg-ol li{counter-increment:sg;position:relative;padding-left:var(--k-space-8);margin-bottom:var(--k-space-4);
+  font-size:var(--k-fs-sm);color:var(--k-ink-1);line-height:var(--k-lh-body)}
+.sg-ol li::before{content:counter(sg);position:absolute;left:0;top:0;
+  font-family:var(--k-font-mono);color:var(--k-accent);font-size:var(--k-fs-ui)}
+.sg-pre{position:relative;padding-left:var(--k-space-6);font-size:var(--k-fs-sm);
+  color:var(--k-ink-1);margin:0 0 var(--k-space-4);line-height:var(--k-lh-body)}
+.sg-pre::before{content:"☐";position:absolute;left:0;top:0;color:var(--k-accent);font-family:var(--k-font-mono)}
+@media print{
+  .sg-beat{break-inside:avoid}
+  .sg-wrap{max-width:none}
+}
+</style>
+</head>
+<body>
+<div class="sg-wrap">
+
+<header class="sg-head">
+  <div>
+    <p class="k-eyebrow">Keel · hoja de escenario · español</p>
+    <h1>Ninguna empresa audita sus propios libros</h1>
+    <p class="sg-sub">2:00 exactos · 315 palabras · ritmo objetivo <b>158 ppm</b> · el video de 60s corre en silencio bajo los bloques 1–4</p>
+  </div>
+  <div class="sg-clock">2:00</div>
+</header>
+
+<div class="k-callout">
+  <p><strong>La única frase que tiene que sobrevivir.</strong> Un check solo es un check si la señal que lee viene de un lugar donde lo verificado no puede escribir.</p>
+</div>
+
+<!-- ─────────────────────────────  PRE-FLIGHT  ───────────────────────────── -->
+<section class="sg-sec">
+  <h2>Antes de subir</h2>
+  <p class="sg-note">Cinco cosas que tienen que ser verdad al pisar el escenario. Ninguna se arregla en vivo.</p>
+  <div class="sg-grid sg-grid--2">
+    <div>
+      <p class="sg-pre">Pestaña 1: <code>video/out/keel-pitch-60.mp4</code> en frame 0, pantalla completa, <b>sin audio</b> (la pista existe pero está muda — es correcto).</p>
+      <p class="sg-pre">Pestaña 2: el reporte ya renderizado, abierto y scrolleado a la fila <code>keel · 0.357</code>.</p>
+      <p class="sg-pre">Terminal: fuente grande, caché de <code>npx</code> tibia — corré el install una vez antes de entrar.</p>
+    </div>
+    <div>
+      <p class="sg-pre">Repo voluntario ya clonado en <code>/tmp</code> (el <code>gather</code> es lo único que corre de verdad en vivo).</p>
+      <p class="sg-pre">Cronómetro visible. Si a <b>1:02</b> no cortaste a la terminal, saltá el bloque 4 completo.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  EL GUION  ─────────────────────────────── -->
+<section class="sg-sec">
+  <h2>El guion</h2>
+  <p class="sg-note">Palabra por palabra. Lo que está en <strong>color</strong> es lo que se acentúa. Nunca leas en voz alta lo que ya está escrito en pantalla — la pantalla lleva el <em>qué</em>, la voz lleva el <em>porqué</em>.</p>
+
+  <div class="sg-beat">
+    <div class="sg-t"><b>1 · problema</b>0:00 → 0:26<i>69 palabras</i></div>
+    <div class="sg-say">
+      <p><strong>Ninguna empresa audita sus propios libros.</strong></p>
+      <p>El software nunca necesitó esa regla: otro revisaba tu código, y los tests existían antes que tu cambio.</p>
+      <p>Llegaron los agentes, los loops, los flujos autónomos. Todos aceleraron sacando justamente a ese otro.</p>
+      <p>Hoy el mismo actor escribe el código, escribe el test, y escribe el job que dice que pasó.</p>
+      <p>Y cuando eso se rompe, no suena ninguna alarma. <strong>Queda en verde.</strong></p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Video S1. Empieza el video al decir «Ninguna empresa» — no antes.<br><br>La aceleración y el problema son <em>el mismo hecho</em>: la velocidad vino de sacar al humano, y ese humano era la independencia. No los digas como dos cosas.</div>
+  </div>
+
+  <div class="sg-beat">
+    <div class="sg-t"><b>2 · la regla</b>0:26 → 0:37<i>29 palabras</i></div>
+    <div class="sg-say">
+      <p>Así que convertimos la regla en algo medible:</p>
+      <p><strong>Un check solo es un check si la señal que lee viene de un lugar donde lo verificado no puede escribir.</strong></p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Video S2.<br><br>Decila <em>lento</em>. Es la única frase que la sala se tiene que llevar. Pausá después del punto.</div>
+  </div>
+
+  <div class="sg-beat">
+    <div class="sg-t"><b>3 · clases y ratio</b>0:37 → 0:49<i>31 palabras</i></div>
+    <div class="sg-say">
+      <p>Cada arista de verificación del repo se clasifica con esa sola pregunta. Las que no podemos rastrear cuentan <strong>en contra</strong>. Nunca a favor.</p>
+      <p>Eso es lo que impide <strong>maquillar el número</strong>.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Video S3–S4: las clases y el ratio.<br><br>La pantalla ya imprime <code>anchored</code> / <code>self_referential</code> / <code>unknown</code>. No los leas. Tu trabajo acá es <em>«no se puede maquillar»</em> — 12 segundos que compran la credibilidad de todo el número.<br><br><span class="warn">No recortar</span></div>
+  </div>
+
+  <div class="sg-beat">
+    <div class="sg-t"><b>4 · se abarata</b>0:49 → 0:57<i>20 palabras</i></div>
+    <div class="sg-say">
+      <p>La primera vez que ve una forma nueva, el agente la razona — y la deja escrita como un script revisable.</p>
+      <p>Quince repos después, el costo por check cayó cerca de dos tercios.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Video S5–S6.<br><br><span class="warn">Primero en la escalera de recorte</span> Si vas atrasado, salteá el bloque entero: la pantalla ya dice que se abarata.</div>
+  </div>
+
+  <div class="sg-beat">
+    <div class="sg-t"><b>5 · corte</b>0:57 → 1:02<i>13 palabras</i></div>
+    <div class="sg-say">
+      <p>Esa es la afirmación. Ahora, en vivo, sobre un repo que no conozco.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>El video termina en 1:00 — esta frase cruza el corte. Cambiá a la terminal <em>mientras</em> hablás, no en silencio.</div>
+  </div>
+
+  <p class="sg-cut">— corte a vivo —</p>
+
+  <div class="sg-beat sg-beat--live">
+    <div class="sg-t"><b>6 · instalación</b>1:02 → 1:12<i>27 palabras</i></div>
+    <div class="sg-say">
+      <p>Es una skill, no un servicio.</p>
+      <p><code>npx skills add broomva/keel</code></p>
+      <p>Corre dentro del harness que ya tienes, sobre tu repo, en tu máquina. Nada sale de ahí.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>El install real. Deja que se vea el panel de <em>Security Risk Assessments</em> — no lo escondas; que aparezca refuerza el argumento, y la objeción 8 ya tiene la respuesta.</div>
+  </div>
+
+  <div class="sg-beat sg-beat--live">
+    <div class="sg-t"><b>7 · correr y reporte</b>1:12 → 1:28<i>42 palabras</i></div>
+    <div class="sg-say">
+      <p>Le apuntas a un repo. Junta cada arista de verificación — CI, tests, gates de review, deploy — con el snippet literal, sin resumir.</p>
+      <p><strong>Clasificar toma minutos, así que este reporte ya está corrido.</strong></p>
+      <p>Y no da solo el número: da el nodo, la clase, y el porqué. Discutible línea por línea.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span><code>gather</code> en vivo sobre el repo voluntario (aristas reales scrolleando) → corte al reporte ya renderizado.<br><br><span class="warn">La frase del medio no se negocia</span> El promedio medido es 21,9 s por nodo; una corrida real no cabe acá. En un pitch sobre honestidad de señales, que te pillen fingiendo una corrida es fatal.</div>
+  </div>
+
+  <div class="sg-beat sg-beat--live">
+    <div class="sg-t"><b>8 · la prueba</b>1:28 → 1:39<i>30 palabras</i></div>
+    <div class="sg-say">
+      <p><strong>El primer repo que Keel acusó fue Keel.</strong></p>
+      <p>Quince repos, ochenta y cinco por ciento agrupado. ¿Nosotros? Treinta y seis. El peor de todos.</p>
+      <p>Nuestros tests corrían — pero ningún CI los corría. No bloqueaban nada.</p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Nuestro propio reporte: <code>0.357</code>, con las 9 filas <code>self_referential</code> visibles.<br><br>Los dos números hacen trabajos distintos: <b>85% agrupado</b> prueba que la herramienta discrimina; <b>36% propio</b> prueba que publicamos nuestro peor resultado. Ninguno funciona solo.<br><br><span class="warn">No recortar</span></div>
+  </div>
+
+  <div class="sg-beat sg-beat--live">
+    <div class="sg-t"><b>9 · cierre</b>1:39 → 2:00<i>54 palabras</i></div>
+    <div class="sg-say">
+      <p>El freno para soltarle el acelerador a los agentes no es el modelo. Es la señal que dice que pasó.</p>
+      <p>Keel la mide. El paso siguiente la <strong>rutea</strong>: cada check sin anclaje, conectado a una señal que el agente no puede escribir — y que ya existe en tu repo.</p>
+      <p><strong>Habilitar autonomía deja de ser un acto de fe. Pasa a ser un paso de build.</strong></p>
+    </div>
+    <div class="sg-screen"><span class="lbl">en pantalla</span>Cierre.<br><br>Acá aterriza el techo de autonomía que el bloque 1 dejó abierto. <code>keel route</code> ya existe y emite <code>Binding[]</code>; <code>construct</code> y <code>apply</code> son lo que falta — y <code>apply</code> <b>nunca lo completa un agente</b>. Eso último solo si preguntan.<br><br><span class="warn">No recortar</span></div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  RECORTE  ─────────────────────────────── -->
+<section class="sg-sec">
+  <h2>Escalera de recorte</h2>
+  <p class="sg-note">En este orden, y solo en este orden. Si el ensayo se pasa de 2:00, bajá un peldaño y volvé a medir.</p>
+  <ol class="sg-ol">
+    <li><b>Bloque 4 completo</b> — la pantalla ya dice que se abarata. <b>−8 s</b></li>
+    <li><b>Bloque 7, la lista con guiones</b> → «Junta cada arista de verificación con el snippet literal.» <b>−3 s</b></li>
+    <li><b>Bloque 1, última línea</b> → «Y cuando eso se rompe, nada suena. Queda en verde.» <b>−1 s</b></li>
+  </ol>
+  <div class="k-callout">
+    <p><strong>Nunca recortes 3, 8 ni 9.</strong> Son credibilidad, prueba y cierre. Un pitch de 1:50 sin ellos es peor que uno de 2:05 con ellos.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  OBJECIONES  ──────────────────────────── -->
+<section class="sg-sec">
+  <h2>Ocho objeciones, una respiración cada una</h2>
+  <p class="sg-note">Respondé la pregunta y parate. No agregues la segunda oración.</p>
+  <div class="sg-grid sg-grid--2">
+    <div class="k-card">
+      <p class="sg-q">«¿Estás corriendo código generado por un LLM?»</p>
+      <p class="sg-a">Corren bajo un perfil <em>deny-default</em>: sin red, sin escritura en disco. Si el kernel rechaza el perfil, la corrida lo dice en <code>warnings</code> — nunca se degrada en silencio. Y son scripts chicos y revisables: con el directorio de probes vacío la salida es idéntica, solo más cara.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«¿El clasificador no es subjetivo?»</p>
+      <p class="sg-a">La pregunta es una sola y es estructural: quién produce la señal, y si el actor puede escribirle. Lo que no se puede trazar cuenta en contra, nunca a favor.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«¿Un ratio alto significa que está bien testeado?»</p>
+      <p class="sg-a">No, y el reporte lo dice: Keel mide la <em>forma</em> de la verificación, no su calidad. Un repo puede estar 100% anclado con tests pésimos.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«El agente escribe las probes — ¿quién verifica las probes?»</p>
+      <p class="sg-a">Keel audita su propia librería y publica la tasa de acuerdo; en la re-corrida de <code>tiktoken</code> fue 10 de 10. Y una probe nunca puede decir <code>unknown</code>: se abstiene, no opina.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«¿Y si el repo le hace prompt injection al clasificador?»</p>
+      <p class="sg-a">Falla cerrada: <code>unknown</code> cuenta en contra, así que confundirlo solo baja tu número. La clase que sí sube el ratio es <code>not_a_check</code> — por eso el reporte imprime su conteo al lado y la auditoría la muestrea igual que todo lo demás.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«El mismo agente escribió el código y los tests — ¿y qué?»</p>
+      <p class="sg-a">Eso es exactamente el hallazgo: 36% en nuestro propio repo, nueve aristas <code>self_referential</code>, y unos tests que ningún CI corría.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«¿Y ahora el CI sí corre tus tests?»</p>
+      <p class="sg-a">Sí: <code>.github/workflows/test.yml</code> los gatea en cada PR desde que apareció el hallazgo — por eso el bloque 8 va en pasado. El <b>0.357</b> sigue publicado sin re-medir, y eso es a propósito: el número se mueve cuando Keel vuelve a medir el target, no cuando nosotros arreglamos algo.</p>
+    </div>
+    <div class="k-card">
+      <p class="sg-q">«Tu instalador acaba de imprimir <em>High Risk</em>.»</p>
+      <p class="sg-a">Sí — y en la misma corrida Socket marca cero alertas. El instalador imprime las tres evaluaciones antes del resumen. Es una skill de archivos de texto, sin dependencias de runtime: leelas y decidí.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────  NÚMEROS  ─────────────────────────────── -->
+<section class="sg-sec">
+  <h2>Números para tener a mano</h2>
+  <div class="sg-grid sg-grid--2">
+    <div class="k-card">
+      <p class="k-eyebrow">Medidos</p>
+      <div class="sg-num"><span>Repos declarados / medidos</span><b>15 / 14</b></div>
+      <div class="sg-num"><span>Sin nada que juntar (reportado nulo, no cero)</span><b>1</b></div>
+      <div class="sg-num"><span>Nodos juzgados / encontrados</span><b>333 / 1826</b></div>
+      <div class="sg-num"><span>Ratio agrupado</span><b>0.853</b></div>
+      <div class="sg-num"><span>Media por target</span><b>0.867</b></div>
+      <div class="sg-num"><span>Keel sobre Keel</span><b>0.357</b></div>
+      <div class="sg-num"><span>— anchored / self-ref / unknown / not-a-check</span><b>5 / 9 / 0 / 11</b></div>
+      <div class="sg-num"><span>Librería de probes (R² 0.99)</span><b>0 → 29</b></div>
+      <div class="sg-num"><span>Tokens estimados por nodo</span><b>497 → 53</b></div>
+      <div class="sg-num"><span>Tendencia ajustada de costo</span><b>−66,5%</b></div>
+      <div class="sg-num"><span>Re-corrida <code>tiktoken</code>, acuerdo</span><b>10 / 10</b></div>
+      <div class="sg-num"><span>Install en limpio</span><b>exit 0 · 5,3 s</b></div>
+    </div>
+    <div class="k-card">
+      <p class="k-eyebrow">No digas esto</p>
+      <ul class="sg-never">
+        <li><b>«La mayoría de los checks se decidieron sin modelo.»</b> El share agrupado es 28%. Solo las corridas tardías llegan a 56–100%.</li>
+        <li><b>«Está bien testeado.»</b> Keel mide la forma, no la calidad. Es el error que invalida el producto entero.</li>
+        <li><b>«Acabo de clasificar este repo.»</b> No lo clasificaste. Son 21,9 s por nodo de promedio.</li>
+        <li><b>«0.421.»</b> Es de un dogfood anterior. El reporte en pantalla dice <b>0.357</b>: decí el número que la sala está leyendo.</li>
+        <li><b>«El costo cae dos tercios» sin margen.</b> El ajuste tiene R² 0,28 — la tendencia es real y ruidosa. Si te aprietan, el dato limpio es la librería: 0 → 29, R² 0,99.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="k-meta">
+  <p>Hoja de escenario · 9 bloques · 315 palabras · 2:00. Cero requests externos: <code>tokens.css</code> y <code>keel.css</code> van inlineados verbatim y este archivo abre desde <code>file://</code>. Para re-sincronizar tras un cambio de diseño, reemplazá los dos bloques marcados en el <code>&lt;style&gt;</code>. No hay build step, a propósito: un asset de escenario que necesita toolchain para abrirse no es un fallback.</p>
+</footer>
+
+</div>
+</body>
+</html>
