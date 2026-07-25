@@ -18,6 +18,11 @@
  *
  *   -o, --out <file>        curve JSON output           (default reports/curve.json)
  *       --svg <file>        SVG fragment output         (default: --out with .svg)
+ *       --provenance <p>    "measured" | "synthetic". Declares provenance for a
+ *                           corpus whose directory carries no corpus.meta.json.
+ *                           Declared, never inferred — the report records that
+ *                           the declaration came from the CLI, not from a file.
+ *       --label <s>         corpus label, same precedence as --provenance
  *       --shuffled <dir>    a re-run of the SAME targets in a different order.
  *                           Without one, the ratio half of the shuffle check is
  *                           VACUOUS and says so. A corpus can also declare its
@@ -107,6 +112,14 @@ export interface Trend {
   firstValue: number | null;
   lastValue: number | null;
   fit: { x0: number; y0: number; x1: number; y1: number } | null;
+  /** Coefficient of determination of the fit over the usable points. Published
+   *  always: a slope without a goodness-of-fit is a line asserting more than
+   *  the points support. null when the points have zero variance. */
+  r2: number | null;
+  /** Empty when the fitted line stays inside what the data can be. Non-empty
+   *  when it does not — the renderer then refuses to DRAW the line and says
+   *  why. The verdict is unaffected: the verdict comes from the raw points. */
+  fitCaveat: string;
   note: string;
 }
 
@@ -162,7 +175,12 @@ export interface CurveReport {
     reportFiles: number;
     skippedFiles: string[];
     provenance: 'synthetic' | 'measured' | 'undeclared';
+    /** WHERE the declaration came from. Declared-never-inferred is the rule;
+     *  a declaration that lives in the invocation rather than in the corpus
+     *  directory is still a declaration, but the reader is told which. */
+    provenanceSource: 'corpus.meta.json' | 'cli' | 'none';
     label: string;
+    labelSource: 'corpus.meta.json' | 'cli' | 'none';
     note: string;
     orderSource: 'manifest' | 'generatedAt' | 'none';
     orderNote: string;
@@ -242,17 +260,55 @@ function shuffle<T>(arr: T[], rnd: () => number): T[] {
 
 const NON_REPORT_FILES = new Set(['order.json', 'corpus.meta.json']);
 
-function looksLikeReport(v: unknown): v is Report {
+/** Every `RunEconomics` field this script divides, sums, or formats. A file
+ *  that is missing one is not a run this script can plot — and a HALF-present
+ *  economics block is worse than an absent one, because it passes a
+ *  `typeof === 'object'` gate and then produces a chart column labelled
+ *  "measured" with nothing behind it. Mechanical shape test, not a judgment. */
+const ECONOMICS_NUMBERS = [
+  'nodesTotal',
+  'nodesSampled',
+  'decidedByProbe',
+  'decidedByAgent',
+  'probesMinted',
+  'probeLibrarySize',
+  'tokensIn',
+  'tokensOut',
+  'wallClockMs',
+] as const;
+
+const GROUNDING_NUMBERS = ['anchored', 'selfReferential', 'unknown', 'notACheck', 'ratio'] as const;
+
+/** Returns null when `v` is a usable run report, else why it is not. */
+function reportShapeProblem(v: unknown): string | null {
+  if (typeof v !== 'object' || v === null) return 'not a JSON object';
+  const o = v as Record<string, unknown>;
+  if (typeof o.target !== 'string') return 'no string "target"';
+  if (!Array.isArray(o.nodes)) return 'no "nodes" array';
+  if (typeof o.grounding !== 'object' || o.grounding === null) return 'no "grounding" object';
+  if (typeof o.economics !== 'object' || o.economics === null) return 'no "economics" object';
+
+  const g = o.grounding as Record<string, unknown>;
+  const badG = GROUNDING_NUMBERS.filter((k) => !Number.isFinite(g[k]));
+  if (badG.length > 0) {
+    return `grounding.${badG.join(', grounding.')} ${badG.length === 1 ? 'is' : 'are'} not a finite number`;
+  }
+
+  const e = o.economics as Record<string, unknown>;
+  const badE = ECONOMICS_NUMBERS.filter((k) => !Number.isFinite(e[k]));
+  if (badE.length > 0) {
+    return `economics.${badE.join(', economics.')} ${badE.length === 1 ? 'is' : 'are'} not a finite number`;
+  }
+  if (typeof e.tokensEstimated !== 'boolean') return 'economics.tokensEstimated is not a boolean';
+  return null;
+}
+
+/** True when the file is *trying* to be a run report — used to tell "this is
+ *  curve.json, skip it quietly" apart from "this run is malformed, say so". */
+function claimsToBeReport(v: unknown): boolean {
   if (typeof v !== 'object' || v === null) return false;
   const o = v as Record<string, unknown>;
-  return (
-    typeof o.target === 'string' &&
-    typeof o.economics === 'object' &&
-    o.economics !== null &&
-    typeof o.grounding === 'object' &&
-    o.grounding !== null &&
-    Array.isArray(o.nodes)
-  );
+  return typeof o.target === 'string' && 'economics' in o && 'grounding' in o;
 }
 
 async function readJson(path: string): Promise<unknown> {
@@ -299,14 +355,23 @@ async function loadCorpus(dir: string): Promise<LoadedCorpus> {
       skipped.push(`${name} (unparseable: ${(err as Error).message})`);
       continue;
     }
-    if (!looksLikeReport(raw)) {
+    const problem = reportShapeProblem(raw);
+    if (problem !== null) {
       // Mechanical shape test, not a judgment: a file without economics +
       // grounding + nodes is simply not a run report (curve.json and
-      // corpus-summary.json both land here).
-      skipped.push(`${name} (not a Report: missing target/economics/grounding/nodes)`);
+      // corpus-summary.json both land here). A file that *claims* to be one
+      // and is malformed is a different animal — it is a run that will be
+      // missing from the curve, so it gets its own disclosure rather than a
+      // line in the "skipped junk" list.
+      skipped.push(`${name} (${problem})`);
+      if (claimsToBeReport(raw)) {
+        disclosures.push(
+          `${join(dir, name)} declares a run report but ${problem} — EXCLUDED from the curve, from every trend fit, and from the totals. It is not plotted as a gap either, because a malformed run is not a measured zero.`,
+        );
+      }
       continue;
     }
-    loaded.push({ file: name, report: raw });
+    loaded.push({ file: name, report: raw as Report });
   }
 
   // ---- order resolution. The curve is a function of ordering, so where the
@@ -366,7 +431,9 @@ async function loadCorpus(dir: string): Promise<LoadedCorpus> {
   }
 
   if (skipped.length > 0) {
-    disclosures.push(`Skipped ${skipped.length} non-report file(s): ${skipped.join('; ')}.`);
+    disclosures.push(
+      `Skipped ${skipped.length} file(s) that are not usable run reports: ${skipped.join('; ')}.`,
+    );
   }
 
   return { dir, meta, reports: ordered, skipped, orderSource, orderNote, disclosures };
@@ -515,6 +582,8 @@ function trendFor(spec: SeriesSpec, points: CurvePoint[], flatBand: number): Tre
     firstValue: usable.length > 0 ? usable[0].y : null,
     lastValue: usable.length > 0 ? usable[usable.length - 1].y : null,
     fit: null,
+    r2: null,
+    fitCaveat: '',
     note: '',
   };
 
@@ -536,23 +605,54 @@ function trendFor(spec: SeriesSpec, points: CurvePoint[], flatBand: number): Tre
   const x0 = usable[0].x;
   const x1 = usable[usable.length - 1].x;
   const normalized = (fit.slope * (x1 - x0)) / m;
+  const y0 = fit.intercept + fit.slope * x0;
+  const y1 = fit.intercept + fit.slope * x1;
 
   base.slopePerRun = fit.slope;
   base.normalizedSlope = normalized;
-  base.fit = {
-    x0,
-    y0: fit.intercept + fit.slope * x0,
-    x1,
-    y1: fit.intercept + fit.slope * x1,
-  };
-  base.verdict =
-    normalized <= -flatBand ? 'falls' : normalized >= flatBand ? 'rises' : 'flat';
+  base.fit = { x0, y0, x1, y1 };
+  base.verdict = normalized <= -flatBand ? 'falls' : normalized >= flatBand ? 'rises' : 'flat';
+
+  // ---- goodness of fit. A slope is a claim; R^2 is how much of the claim the
+  // points actually carry. Published unconditionally, in the JSON and in words.
+  const ssTot = usable.reduce((a, u) => a + (u.y - m) ** 2, 0);
+  const ssRes = usable.reduce((a, u) => a + (u.y - (fit.intercept + fit.slope * u.x)) ** 2, 0);
+  const r2 = ssTot === 0 ? null : 1 - ssRes / ssTot;
+  base.r2 = r2;
+
+  // ---- does the LINE stay inside what the data can be? A convex decay fitted
+  // with a straight line lands below zero, and a negative estimated-tokens-
+  // per-node is not a weaker claim than the data supports — it is an
+  // impossible one. When that happens the line is withheld, not drawn faintly.
+  const ys = usable.map((u) => u.y);
+  const lo = Math.min(...ys);
+  const hi = Math.max(...ys);
+  const pad = (hi - lo) * 0.25;
+  const reasons: string[] = [];
+  if (lo >= 0 && (y0 < 0 || y1 < 0)) {
+    reasons.push(
+      `it passes below zero (fitted ${y0.toFixed(1)} -> ${y1.toFixed(1)}) while every observed value is >= 0`,
+    );
+  }
+  if (y0 < lo - pad || y0 > hi + pad || y1 < lo - pad || y1 > hi + pad) {
+    reasons.push(
+      `its endpoints (${y0.toFixed(1)}, ${y1.toFixed(1)}) leave the observed range [${lo.toFixed(1)}, ${hi.toFixed(1)}] by more than 25% of that range`,
+    );
+  }
+  if (reasons.length > 0) {
+    base.fitCaveat = `the linear fit is not a description of these points: ${reasons.join('; and ')}. The dashed line is withheld from the chart — read the raw squares. The verdict above comes from the points, not the line.`;
+  }
 
   const pct = `${(normalized * 100).toFixed(1)}%`;
+  const fitQuality =
+    r2 === null
+      ? ' (R^2 undefined — the points have no variance)'
+      : ` (R^2 ${r2.toFixed(2)}${r2 < 0.5 ? ', so the line explains less than half the variance — read the raw squares' : ''})`;
   base.note =
     base.verdict === 'flat'
-      ? `does NOT fall — total fitted change ${pct} of the mean, inside the +/-${(flatBand * 100).toFixed(0)}% flat band across ${usable.length} runs`
-      : `${base.verdict} — total fitted change ${pct} of the mean across ${usable.length} runs`;
+      ? `does NOT fall — total fitted change ${pct} of the mean, inside the +/-${(flatBand * 100).toFixed(0)}% flat band across ${usable.length} runs${fitQuality}`
+      : `${base.verdict} — total fitted change ${pct} of the mean across ${usable.length} runs${fitQuality}`;
+  if (base.fitCaveat !== '') base.note = `${base.note}. ${base.fitCaveat}`;
 
   return base;
 }
@@ -578,9 +678,15 @@ function permutationCheck(
   const caveat =
     'A permutation reorders ALREADY-RECORDED runs; it cannot reproduce what a genuine re-run in a different order would have cost, because the probe library would have accumulated differently. It is a sanity signal on order-dependence, never a substitute for the empirical re-run.';
 
-  const values = points
+  // The baseline slope was normalized over the REAL run-index grid (trendFor
+  // uses p.index, which skips unusable runs). Permutations must be measured on
+  // that same grid or the comparison against `threshold` is scaled wrong — so
+  // the x column is held fixed and only the y column is shuffled.
+  const usable = points
     .filter((p) => p.estTokensPerNode !== null)
-    .map((p) => p.estTokensPerNode as number);
+    .map((p) => ({ x: p.index, y: p.estTokensPerNode as number }));
+  const xs = usable.map((u) => u.x);
+  const values = usable.map((u) => u.y);
 
   if (values.length < 3 || baselineNormalizedSlope === null) {
     return {
@@ -597,13 +703,14 @@ function permutationCheck(
   }
 
   const m = mean(values);
+  const span = xs[xs.length - 1] - xs[0];
   const rnd = lcg(opts.seed);
   const deltas: number[] = [];
   for (let k = 0; k < opts.perms; k++) {
     const permuted = shuffle(values, rnd);
-    const fit = ols(permuted.map((y, x) => ({ x, y })));
+    const fit = ols(xs.map((x, i) => ({ x, y: permuted[i] })));
     if (fit === null || m === null || m === 0) continue;
-    const ns = (fit.slope * (permuted.length - 1)) / m;
+    const ns = (fit.slope * span) / m;
     deltas.push(Math.abs(ns - baselineNormalizedSlope));
   }
 
@@ -812,6 +919,45 @@ function niceMax(v: number): number {
   return 10 * mag;
 }
 
+/**
+ * Clip a fitted segment to the panel's y-domain, in DATA space (Liang-Barsky
+ * on one axis). Returns null when the segment is entirely outside. Nothing
+ * drawn may leave the plot rect: a trend line that exits through the axis
+ * labels is a claim the chart is not making.
+ */
+function clipFitToDomain(
+  seg: { x0: number; y0: number; x1: number; y1: number },
+  dMin: number,
+  dMax: number,
+): { x0: number; y0: number; x1: number; y1: number; clipped: boolean } | null {
+  const dy = seg.y1 - seg.y0;
+  const dx = seg.x1 - seg.x0;
+  let t0 = 0;
+  let t1 = 1;
+  // constraint p*t <= q
+  const clip = (p: number, q: number): boolean => {
+    if (p === 0) return q >= 0;
+    const r = q / p;
+    if (p < 0) {
+      if (r > t1) return false;
+      if (r > t0) t0 = r;
+    } else {
+      if (r < t0) return false;
+      if (r < t1) t1 = r;
+    }
+    return true;
+  };
+  if (!clip(-dy, seg.y0 - dMin)) return null; // y >= dMin
+  if (!clip(dy, dMax - seg.y0)) return null; // y <= dMax
+  return {
+    x0: seg.x0 + t0 * dx,
+    y0: seg.y0 + t0 * dy,
+    x1: seg.x0 + t1 * dx,
+    y1: seg.y0 + t1 * dy,
+    clipped: t0 > 0 || t1 < 1,
+  };
+}
+
 function panelSvg(
   spec: SeriesSpec,
   trend: Trend,
@@ -864,12 +1010,24 @@ function panelSvg(
     );
   }
 
-  // fitted trend — dashed, and never alone
-  if (trend.fit) {
-    const f = trend.fit;
-    parts.push(
-      `<line class="kc-fit ${cls}" x1="${sx(f.x0).toFixed(1)}" y1="${sy(f.y0).toFixed(1)}" x2="${sx(f.x1).toFixed(1)}" y2="${sy(f.y1).toFixed(1)}"/>`,
-    );
+  // fitted trend — dashed, never alone, never outside the plot, and never at
+  // all when the fit predicts values the data cannot take.
+  let fitNote = '';
+  if (trend.fit && trend.fitCaveat !== '') {
+    fitNote = 'linear fit leaves the data range — raw points only';
+  } else if (trend.fit) {
+    const clipped = clipFitToDomain(trend.fit, dMin, dMax);
+    if (clipped === null) {
+      fitNote = 'linear fit lies entirely outside this panel — raw points only';
+    } else {
+      parts.push(
+        `<line class="kc-fit ${cls}" x1="${sx(clipped.x0).toFixed(1)}" y1="${sy(clipped.y0).toFixed(1)}" x2="${sx(clipped.x1).toFixed(1)}" y2="${sy(clipped.y1).toFixed(1)}"/>`,
+      );
+      if (clipped.clipped) fitNote = 'fit clipped at the panel edge';
+    }
+  }
+  if (fitNote !== '') {
+    parts.push(`<text class="kc-fitnote" x="${px1}" y="${y + 37}">${esc(fitNote)}</text>`);
   }
 
   // raw polyline over consecutive present values
@@ -937,12 +1095,13 @@ function renderSvg(c: CurveReport): string {
     : 'nothing gathered';
   body.push(`<text class="kc-h1" x="${PAD}" y="${y}">${esc(headline)}</text>`);
   y += 22;
+  const via = c.source.provenanceSource === 'cli' ? ' (declared on the command line)' : '';
   const prov =
     c.source.provenance === 'synthetic'
-      ? `SYNTHETIC FIXTURE DATA — ${c.source.label}. Not a corpus measurement.`
+      ? `SYNTHETIC FIXTURE DATA — ${c.source.label}. Not a corpus measurement.${via}`
       : c.source.provenance === 'measured'
-        ? `${c.source.label} — measured corpus`
-        : `provenance UNDECLARED for ${c.source.dir} (no corpus.meta.json) — do not present this as measured`;
+        ? `${c.source.label} — measured corpus${via}`
+        : `provenance UNDECLARED for ${c.source.dir} (no corpus.meta.json, no --provenance) — do not present this as measured`;
   body.push(
     `<text class="kc-warn" x="${PAD}" y="${y}">${esc(prov)}</text>`,
   );
@@ -971,7 +1130,7 @@ function renderSvg(c: CurveReport): string {
 
     // ---- axis + mark legend
     const cappedRuns = c.points.filter((p) => p.capped).map((p) => p.index);
-    const legend = `x axis: run index in the recorded corpus order (listed below). Squares are the raw per-run values; the dashed line is an ordinary-least-squares fit and is never shown without them.${
+    const legend = `x axis: run index in the recorded corpus order (listed below). Squares are the raw per-run values; the dashed line is an ordinary-least-squares fit and is never shown without them. The fit is clipped to the panel, and withheld entirely (with the panel saying so) where a straight line would predict values the points cannot take — R^2 for every fit is in the trend notes below.${
       cappedRuns.length > 0
         ? ` * on run ${cappedRuns.join(', ')} = judged fewer nodes than gathered; per-node values are per JUDGED node.`
         : ''
@@ -1057,18 +1216,21 @@ function renderSvg(c: CurveReport): string {
     }
     y += 12;
 
-    // ---- disclosures
-    if (c.disclosures.length > 0) {
-      body.push(`<text class="kc-h2" x="${PAD}" y="${y}">Disclosures</text>`);
-      y += 20;
-      for (const d of c.disclosures) {
-        for (const line of wrap(`- ${d}`, 128)) {
-          body.push(`<text class="kc-note" x="${PAD}" y="${y}">${esc(line)}</text>`);
-          y += 16;
-        }
+  }
+
+  // ---- disclosures. OUTSIDE the has-runs branch on purpose: a corpus whose
+  // only run was malformed reports zero runs, and "nothing gathered" must not
+  // be the whole story the chart tells in that case.
+  if (c.disclosures.length > 0) {
+    body.push(`<text class="kc-h2" x="${PAD}" y="${y}">Disclosures</text>`);
+    y += 20;
+    for (const d of c.disclosures) {
+      for (const line of wrap(`- ${d}`, 128)) {
+        body.push(`<text class="kc-note" x="${PAD}" y="${y}">${esc(line)}</text>`);
+        y += 16;
       }
-      y += 12;
     }
+    y += 12;
   }
 
   // ---- scope note, verbatim
@@ -1097,7 +1259,12 @@ function renderSvg(c: CurveReport): string {
 .keel-curve .kc-axis { fill: var(--k-ink-2, #8b97a5); font-size: 11px; }
 .keel-curve .kc-note { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
 .keel-curve .kc-scope { fill: var(--k-ink-2, #8b97a5); font-size: 12.5px; }
-.keel-curve .kc-warn { fill: var(--k-unknown, #fbbf24); font-size: 12.5px; }
+/* Keel's own caveats are CHROME, not verdicts. tokens.css reserves the accent
+   for the narrator and forbids a verdict hue on chrome — amber here would put
+   "a node could not be traced" and "do not trust this chart" in one colour, in
+   one document. Weight carries the emphasis instead. */
+.keel-curve .kc-warn { fill: var(--k-ink-0, #e8edf2); font-size: 12.5px; font-weight: 600; }
+.keel-curve .kc-fitnote { fill: var(--k-ink-2, #8b97a5); font-size: 10.5px; text-anchor: end; }
 .keel-curve .kc-mono { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; font-family: var(--k-font-mono, ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", Consolas, monospace); }
 .keel-curve .kc-tick { fill: var(--k-ink-2, #8b97a5); font-size: 11px; text-anchor: middle; font-variant-numeric: tabular-nums; }
 .keel-curve .kc-tick--y { text-anchor: end; }
@@ -1138,6 +1305,9 @@ interface Args {
   dir: string;
   out: string;
   svg: string;
+  /** CLI provenance declaration. null = not declared here. */
+  provenance: 'synthetic' | 'measured' | null;
+  label: string | null;
   shuffled: string | null;
   noShuffled: boolean;
   flatBand: number;
@@ -1159,6 +1329,8 @@ function parseArgs(argv: string[]): Args {
   let dir = '';
   let out = 'reports/curve.json';
   let svg = '';
+  let provenance: 'synthetic' | 'measured' | null = null;
+  let label: string | null = null;
   let shuffled: string | null = null;
   let noShuffled = false;
   let flatBand = 0.15;
@@ -1179,6 +1351,19 @@ function parseArgs(argv: string[]): Args {
         break;
       case '--svg':
         svg = argv[++i] ?? svg;
+        break;
+      case '--provenance': {
+        const v = argv[++i];
+        if (v !== 'synthetic' && v !== 'measured') {
+          throw new Error(
+            `--provenance takes "measured" or "synthetic" (got ${v === undefined ? 'nothing' : `"${v}"`}). There is no third value: "undeclared" is what you get by not passing the flag.`,
+          );
+        }
+        provenance = v;
+        break;
+      }
+      case '--label':
+        label = argv[++i] ?? label;
         break;
       case '--shuffled':
         shuffled = argv[++i] ?? null;
@@ -1224,6 +1409,8 @@ function parseArgs(argv: string[]): Args {
     dir,
     out,
     svg,
+    provenance,
+    label,
     shuffled,
     noShuffled,
     flatBand,
@@ -1243,17 +1430,40 @@ export async function buildCurve(args: Args): Promise<CurveReport> {
   const disclosures = [...corpus.disclosures];
   const points = toPoints(corpus, disclosures);
 
-  const provenance: 'synthetic' | 'measured' | 'undeclared' =
+  // ---- provenance. Declared, never inferred — but a corpus produced by a
+  // runner that writes no corpus.meta.json must still have a way to declare,
+  // or the only curve that can be published without a scare banner is the
+  // synthetic one. So: file declaration, else CLI declaration, else UNDECLARED.
+  const metaProvenance: 'synthetic' | 'measured' | null =
     corpus.meta?.synthetic === true
       ? 'synthetic'
       : corpus.meta?.synthetic === false
         ? 'measured'
-        : 'undeclared';
+        : null;
+  const provenance: 'synthetic' | 'measured' | 'undeclared' =
+    args.provenance ?? metaProvenance ?? 'undeclared';
+  const provenanceSource: 'corpus.meta.json' | 'cli' | 'none' =
+    args.provenance !== null ? 'cli' : metaProvenance !== null ? 'corpus.meta.json' : 'none';
+
   if (provenance === 'undeclared') {
     disclosures.push(
-      `${dir} carries no corpus.meta.json, so its provenance is UNDECLARED. Provenance is declared, never inferred — this curve must not be presented as a measurement on that basis alone.`,
+      `${dir} carries no corpus.meta.json and no --provenance flag was passed, so its provenance is UNDECLARED. Provenance is declared, never inferred — this curve must not be presented as a measurement on that basis alone. Declare it with --provenance measured --label "<name>", or commit a corpus.meta.json.`,
     );
   }
+  if (provenanceSource === 'cli') {
+    disclosures.push(
+      `Provenance "${provenance}" was declared on the COMMAND LINE (--provenance), not in ${join(dir, 'corpus.meta.json')}. The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.`,
+    );
+    if (metaProvenance !== null && metaProvenance !== provenance) {
+      disclosures.push(
+        `CONFLICT — corpus.meta.json declares provenance "${metaProvenance}" but --provenance "${provenance}" was passed. The CLI value is used; both are printed here so the disagreement cannot be silent.`,
+      );
+    }
+  }
+
+  const label = args.label ?? corpus.meta?.label ?? '(unlabelled corpus)';
+  const labelSource: 'corpus.meta.json' | 'cli' | 'none' =
+    args.label !== null ? 'cli' : corpus.meta?.label ? 'corpus.meta.json' : 'none';
 
   const estimatedRuns = points.filter((p) => p.tokensEstimated).length;
   if (estimatedRuns > 0) {
@@ -1317,7 +1527,9 @@ export async function buildCurve(args: Args): Promise<CurveReport> {
       reportFiles: points.length,
       skippedFiles: corpus.skipped,
       provenance,
-      label: corpus.meta?.label ?? '(unlabelled corpus)',
+      provenanceSource,
+      label,
+      labelSource,
       note: corpus.meta?.note ?? '',
       orderSource: corpus.orderSource,
       orderNote: corpus.orderNote,
@@ -1341,10 +1553,19 @@ export async function buildCurve(args: Args): Promise<CurveReport> {
 function humanSummary(c: CurveReport): string {
   const L: string[] = [];
   L.push(`curve · ${c.source.dir}`);
-  L.push(`  provenance      ${c.source.provenance}${c.source.label ? ` — ${c.source.label}` : ''}`);
+  L.push(
+    `  provenance      ${c.source.provenance} (declared in: ${c.source.provenanceSource})${c.source.label ? ` — ${c.source.label}` : ''}`,
+  );
   L.push(`  order           ${c.source.orderSource}: ${c.source.orderNote}`);
   if (c.points.length === 0) {
     L.push('  runs            0 — nothing gathered. No ratio and no curve are reported.');
+    // Zero runs is exactly when a disclosure matters most: "nothing gathered"
+    // and "every run in this directory was malformed and excluded" look
+    // identical from the outside unless the reason is printed.
+    if (c.disclosures.length > 0) {
+      L.push('  disclosures:');
+      for (const d of c.disclosures) L.push(`    - ${d}`);
+    }
     return L.join('\n');
   }
   L.push(
@@ -1398,10 +1619,24 @@ async function main(): Promise<number> {
     return 2;
   }
 
+  // Render BEFORE writing anything. curve.json and curve.svg are consumed as a
+  // pair (render.ts inlines the SVG beside the JSON's numbers); a crash between
+  // the two writes would ship a fresh JSON next to a stale chart with nothing
+  // saying they disagree. Failing before either write leaves the pair coherent.
+  let svg: string;
+  try {
+    svg = renderSvg(curve);
+  } catch (err) {
+    console.error(
+      `curve: failed to render the SVG — ${(err as Error).message}. Neither ${resolve(args.out)} nor ${resolve(args.svg)} was written, so the existing pair is left untouched rather than half-updated.`,
+    );
+    return 2;
+  }
+
   await mkdir(dirname(resolve(args.out)), { recursive: true });
   await writeFile(resolve(args.out), `${JSON.stringify(curve, null, 2)}\n`);
   await mkdir(dirname(resolve(args.svg)), { recursive: true });
-  await writeFile(resolve(args.svg), renderSvg(curve));
+  await writeFile(resolve(args.svg), svg);
 
   if (!args.quiet) {
     console.log(humanSummary(curve));
