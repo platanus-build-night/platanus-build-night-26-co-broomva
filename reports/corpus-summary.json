@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T03:58:11.015Z",
+  "generatedAt": "2026-07-25T03:59:42.265Z",
   "corpusFile": "<repo>/corpus.json",
   "nodeCap": 40,
   "corpusOrder": [
@@ -33,7 +33,8 @@
     "flask",
     "sinatra",
     "commander-js",
-    "anthropic-quickstarts"
+    "anthropic-quickstarts",
+    "anthropic-courses"
   ],
   "entries": [
     {
@@ -773,6 +774,45 @@
       "warnings": [
         "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
+    },
+    {
+      "name": "anthropic-courses",
+      "url": "https://github.com/anthropics/courses.git",
+      "revision": "f4dbb137d7b02dddaf3cc73e32e20a702d3b5e77",
+      "status": "nothing_gathered",
+      "runIndex": 14,
+      "recordedAt": "2026-07-25T03:59:42.183Z",
+      "ratio": null,
+      "anchored": null,
+      "selfReferential": null,
+      "unknown": null,
+      "notACheck": null,
+      "nodesTotal": 0,
+      "nodesSampled": 0,
+      "nodesJudged": 0,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": null,
+      "capped": false,
+      "coverageGathered": {},
+      "coverageJudged": {},
+      "probeShare": null,
+      "economics": {
+        "nodesTotal": 0,
+        "nodesSampled": 0,
+        "decidedByProbe": 0,
+        "decidedByAgent": 0,
+        "probesMinted": 0,
+        "probeLibrarySize": 29,
+        "tokensIn": 0,
+        "tokensOut": 0,
+        "tokensEstimated": true,
+        "wallClockMs": 63315
+      },
+      "warnings": [
+        "gatherer found no verification surfaces it can read — this is non-coverage, not a grounding claim",
+        "no reports/<name>.json exists for this target ON PURPOSE: every ratio a Report could carry here would be a claim nobody can defend"
+      ]
     }
   ],
   "totals": {
@@ -780,7 +820,7 @@
     "targetsMeasured": 14,
     "targetsUnjudged": 0,
     "targetsPartial": 0,
-    "targetsNothingGathered": 0,
+    "targetsNothingGathered": 1,
     "targetsFailed": 0,
     "anchored": 122,
     "selfReferential": 14,
