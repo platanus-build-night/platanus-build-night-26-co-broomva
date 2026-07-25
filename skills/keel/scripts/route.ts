@@ -353,7 +353,13 @@ function isRecord(x: unknown): x is Record<string, unknown> {
  * refused and why, not to read its own payload back.
  */
 function describeEffort(x: unknown): string {
-  if (typeof x === 'string') return JSON.stringify(x);
+  if (typeof x === 'string') {
+    // Bounded. The value is echoed so the author can see exactly what was
+    // refused, but a 100 KB string proves nothing a clipped one does not, and
+    // an unbounded echo makes the diagnostic harder to read than the defect it
+    // is reporting.
+    return JSON.stringify(x.length > 60 ? `${x.slice(0, 60)}…` : x);
+  }
   if (x === null) return 'null';
   if (Array.isArray(x)) return 'an array';
   if (typeof x === 'number' || typeof x === 'boolean') return String(x);
@@ -518,7 +524,12 @@ export function bind(
         // values come from the accept-list itself, so this message cannot name
         // a vocabulary the validator does not actually hold.
         warnings.push(
-          `proposal for "${v.nodeId}" gave effort ${describeEffort(p.effort)}, which is not ${EFFORTS.join('|')} — dropped, so this route ranks last among the routable`,
+          // The consequence clause has to hold for BOTH outcomes. An earlier
+          // version said "ranks last among the routable", which is a claim
+          // about a route that may well have come back null — the warning
+          // would then assert a ranking the binding never entered. What is
+          // true either way is the tier: no effort sorts behind every effort.
+          `proposal for "${v.nodeId}" gave effort ${describeEffort(p.effort)}, which is not ${EFFORTS.join('|')} — dropped, and an unstated effort sorts behind every stated one`,
         );
       }
     }

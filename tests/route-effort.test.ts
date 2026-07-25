@@ -325,7 +325,13 @@ describe('the effort vocabulary reaches the agent that has to author it', () => 
     );
   });
 
-  test('the advertised vocabulary cannot be mutated out from under the validator', () => {
+  // Scope note: what is frozen is the shared TABLE and its entries — the thing
+  // every dispatch hands out by reference, and the only path by which one
+  // consumer's write could change what a later caller advertises. Replacing the
+  // `effortValues` property on a dispatch object a caller already owns is not
+  // prevented and is not claimed to be; that mutates one local object and
+  // reaches nothing else.
+  test('the advertised table and its entries refuse writes, so no consumer can retune the vocabulary', () => {
     // Built IN-PROCESS on purpose. The CLI helper above round-trips through a
     // subprocess and `JSON.parse`, which hands back a fresh mutable copy every
     // time — attacking that would prove nothing about what `buildDispatch`

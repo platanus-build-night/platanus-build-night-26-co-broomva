@@ -229,7 +229,7 @@ export interface RouteDispatch {
    * `tests/separation.test.ts` walks this payload and fails on any number that
    * is not a confidence measured in the source report.
    */
-  effortValues: readonly RouteEffortOption[];
+  readonly effortValues: readonly RouteEffortOption[];
   requests: RouteRequest[];
   warnings: string[];
 }
