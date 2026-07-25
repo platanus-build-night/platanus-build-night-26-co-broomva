@@ -628,19 +628,23 @@ function trendFor(spec: SeriesSpec, points: CurvePoint[], flatBand: number): Tre
   const lo = Math.min(...ys);
   const hi = Math.max(...ys);
   const pad = (hi - lo) * 0.25;
+  // Tolerance for "below zero": float noise and a fit that grazes the axis by
+  // a rounding error are not dishonesty. 5% of the observed spread is.
+  const zeroTol = (hi - lo) * 0.05;
+  const f = (v: number) => (Math.abs(v) >= 1 ? v.toFixed(1) : v.toFixed(4));
   const reasons: string[] = [];
-  if (lo >= 0 && (y0 < 0 || y1 < 0)) {
+  if (lo >= 0 && (y0 < -zeroTol || y1 < -zeroTol)) {
     reasons.push(
-      `it passes below zero (fitted ${y0.toFixed(1)} -> ${y1.toFixed(1)}) while every observed value is >= 0`,
+      `it passes below zero (fitted ${f(y0)} -> ${f(y1)}) while every observed value is >= 0`,
     );
   }
   if (y0 < lo - pad || y0 > hi + pad || y1 < lo - pad || y1 > hi + pad) {
     reasons.push(
-      `its endpoints (${y0.toFixed(1)}, ${y1.toFixed(1)}) leave the observed range [${lo.toFixed(1)}, ${hi.toFixed(1)}] by more than 25% of that range`,
+      `its endpoints (${f(y0)}, ${f(y1)}) leave the observed range [${f(lo)}, ${f(hi)}] by more than 25% of that range`,
     );
   }
   if (reasons.length > 0) {
-    base.fitCaveat = `the linear fit is not a description of these points: ${reasons.join('; and ')}. The dashed line is withheld from the chart — read the raw squares. The verdict above comes from the points, not the line.`;
+    base.fitCaveat = `The linear fit is not a description of these points: ${reasons.join('; and ')}. The dashed line is withheld from the chart — read the raw squares. The verdict above comes from the points, not the line.`;
   }
 
   const pct = `${(normalized * 100).toFixed(1)}%`;

@@ -16,6 +16,11 @@
      never nested. Slots are {{ESCAPED}} or {{{RAW}}}; render.ts throws on an
      unfilled slot, so a typo here fails the run instead of shipping a `{{...}}`
      into the artifact.
+
+     A <!--@note ... --> inside a block is stripped from the output — it is
+     addressed to whoever reads THIS file, including the auditor. Ordinary
+     comments are emitted verbatim, which is why `<!-- KEEL:CURVE -->` (the
+     contract with the curve unit) is not written as a note.
      ═══════════════════════════════════════════════════════════════════════ -->
 
 
@@ -189,6 +194,15 @@
     <span class="k-legend__item"><span class="k-mark"></span> no verdict {{N}}</span>
 <!--@endblock -->
 
+<!-- A legend entry with no swatch, for a population the legend has to account
+     for but the grid does not draw (orphan verdicts) or draws without a colour
+     (a class the frozen schema does not define). The class items above count
+     the marks actually drawn, so legend and picture reconcile; these items say
+     out loud what sits outside that sum instead of quietly widening it. -->
+<!--@block legend-item-aside -->
+    <span class="k-legend__item">{{TEXT}}</span>
+<!--@endblock -->
+
 
 <!-- ── The scope note. Verbatim, never paraphrased. ──────────────────────── -->
 <!--@block scope -->
@@ -231,11 +245,20 @@ signal is sufficient.</p>
      element is omitted rather than emitted empty: `keel.css` keys its defect
      banner on `:not(:has(.k-argument))`, so rendering a blank paragraph would
      satisfy the selector and hide exactly the failure the design system exists
-     to surface. `data-specimen-defect` is the design-audit escape hatch for a
-     row whose missing argument IS the point — it stops the gate failing on this
-     template while the artifact shows the defect loudly. -->
+     to surface.
+
+     The audit hatch below is an `@note`, which render.ts strips from the
+     output. That is deliberate and it is the whole point of the mechanism:
+     THIS BLOCK is a specimen of the defect state and design-audit must not
+     fail on it, but a rendered row whose argument is genuinely missing is not
+     a specimen — it is the defect — and stamping the hatch onto it would make
+     `make design-audit` wave through the exact failure it is there to catch.
+     The rendered row carries `data-missing-argument` instead: inert to CSS
+     (the banner keys on `:has()`, not on the attribute), legible in the
+     source, and carrying no exemption. -->
 <!--@block verdict-defect -->
-  <div class="k-verdict" data-specimen-defect>
+  <div class="k-verdict" data-missing-argument>
+    <!--@note data-specimen-defect — audit hatch, template-only; see above. -->
     <div class="k-verdict__name k-mono">{{NAME}}</div>
     <span class="k-verdict__class"><span class="k-class" data-class="{{CLASS}}"{{{SMELL}}}>{{CLASS}}</span></span>
     <div class="k-verdict__source k-mono">{{SOURCE}} · {{KIND}}</div>

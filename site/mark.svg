@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 64" width="100" height="64" role="img" aria-labelledby="keel-mark-title">
+  <title id="keel-mark-title">Keel</title>
+  <!--
+    The Keel mark.
+
+    A block of ledger cells — the verification surface Keel audits — and one
+    cell outside it. The outsider is the same size and shape as every cell in
+    the block, because it is the same kind of thing: a verification node. Only
+    its position differs, and position is the whole argument. A signal counts
+    when its producer sits outside the boundary of the thing being checked.
+
+    Geometry: cell 18, internal gap 5, and the block-to-outsider gap is exactly
+    18 — one full cell width. The outsider sits on the same grid the block
+    does, one step beyond it. The empty slot between them is the cell that
+    would have been inside, and it is left empty on purpose.
+
+  -->
+  <!-- Colors are literal: a standalone SVG loaded via <img> cannot see the
+       document's custom properties. They are exactly the tokens in tokens.css
+       and `make design-audit` fails if they drift.
+
+       There is no prefers-color-scheme block here on purpose. Inside an
+       <img>-loaded SVG that query follows the OS setting, not the background
+       the mark is actually sitting on — so on a light-mode machine it would
+       flip to paper ink while the Keel canvas underneath stayed near-black,
+       and the mark would disappear. The paper variant is a separate file,
+       derived from this one by `make design-sync`. -->
+  <style>
+    .keel-block { fill: #e8edf2 }
+    .keel-outside { fill: #7dd3fc }
+  </style>
+
+  <g class="keel-block">
+    <rect x="0"  y="0"  width="18" height="18" rx="3"/>
+    <rect x="23" y="0"  width="18" height="18" rx="3"/>
+    <rect x="46" y="0"  width="18" height="18" rx="3"/>
+    <rect x="0"  y="23" width="18" height="18" rx="3"/>
+    <rect x="23" y="23" width="18" height="18" rx="3"/>
+    <rect x="46" y="23" width="18" height="18" rx="3"/>
+    <rect x="0"  y="46" width="18" height="18" rx="3"/>
+    <rect x="23" y="46" width="18" height="18" rx="3"/>
+    <rect x="46" y="46" width="18" height="18" rx="3"/>
+  </g>
+
+  <rect class="keel-outside" x="82" y="23" width="18" height="18" rx="3"/>
+</svg>
