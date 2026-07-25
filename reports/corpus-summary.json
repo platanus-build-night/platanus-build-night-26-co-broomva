@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-25T03:13:36.805Z",
+  "generatedAt": "2026-07-25T03:59:42.265Z",
   "corpusFile": "<repo>/corpus.json",
   "nodeCap": 40,
   "corpusOrder": [
@@ -29,7 +29,12 @@
     "mcp-python-sdk",
     "simonw-llm",
     "tiktoken",
-    "requests"
+    "requests",
+    "flask",
+    "sinatra",
+    "commander-js",
+    "anthropic-quickstarts",
+    "anthropic-courses"
   ],
   "entries": [
     {
@@ -553,27 +558,300 @@
       "warnings": [
         "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
+    },
+    {
+      "name": "flask",
+      "url": "https://github.com/pallets/flask.git",
+      "revision": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+      "status": "ok",
+      "runIndex": 10,
+      "recordedAt": "2026-07-25T03:33:58.632Z",
+      "ratio": 1,
+      "anchored": 15,
+      "selfReferential": 0,
+      "unknown": 0,
+      "notACheck": 10,
+      "nodesTotal": 59,
+      "nodesSampled": 25,
+      "nodesJudged": 25,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": 1,
+      "capped": true,
+      "coverageGathered": {
+        "review_gate": 1,
+        "test_target": 17,
+        "ci_step": 40,
+        "script": 1
+      },
+      "coverageJudged": {
+        "review_gate": 1,
+        "test_target": 11,
+        "ci_step": 12,
+        "script": 1
+      },
+      "probeShare": 0,
+      "economics": {
+        "nodesTotal": 59,
+        "nodesSampled": 25,
+        "decidedByProbe": 0,
+        "decidedByAgent": 25,
+        "probesMinted": 3,
+        "probeLibrarySize": 22,
+        "tokensIn": 2808,
+        "tokensOut": 7404,
+        "tokensEstimated": true,
+        "wallClockMs": 512752
+      },
+      "timing": {
+        "cloneMs": 1873,
+        "gatherMs": 35,
+        "probeMs": 422,
+        "recordMs": 11,
+        "judgmentMs": 510411
+      },
+      "warnings": [
+        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+      ]
+    },
+    {
+      "name": "sinatra",
+      "url": "https://github.com/sinatra/sinatra.git",
+      "revision": "cb22afd7902b566b6eaba6c4ea89739494a65d12",
+      "status": "ok",
+      "runIndex": 11,
+      "recordedAt": "2026-07-25T03:41:47.774Z",
+      "ratio": 0.875,
+      "anchored": 7,
+      "selfReferential": 0,
+      "unknown": 1,
+      "notACheck": 17,
+      "nodesTotal": 59,
+      "nodesSampled": 25,
+      "nodesJudged": 25,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": 1,
+      "capped": true,
+      "coverageGathered": {
+        "test_target": 2,
+        "script": 31,
+        "ci_step": 25,
+        "review_gate": 1
+      },
+      "coverageJudged": {
+        "test_target": 2,
+        "script": 11,
+        "ci_step": 11,
+        "review_gate": 1
+      },
+      "probeShare": 0.28,
+      "economics": {
+        "nodesTotal": 59,
+        "nodesSampled": 25,
+        "decidedByProbe": 7,
+        "decidedByAgent": 18,
+        "probesMinted": 1,
+        "probeLibrarySize": 23,
+        "tokensIn": 1747,
+        "tokensOut": 4890,
+        "tokensEstimated": true,
+        "wallClockMs": 423691
+      },
+      "timing": {
+        "cloneMs": 1539,
+        "gatherMs": 10,
+        "probeMs": 261,
+        "recordMs": 18,
+        "judgmentMs": 421863
+      },
+      "warnings": [
+        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+      ]
+    },
+    {
+      "name": "commander-js",
+      "url": "https://github.com/tj/commander.js.git",
+      "revision": "ba6d13ddb4243e5913367734f8c159089ffe7834",
+      "status": "ok",
+      "runIndex": 12,
+      "recordedAt": "2026-07-25T03:48:59.995Z",
+      "ratio": 1,
+      "anchored": 12,
+      "selfReferential": 0,
+      "unknown": 0,
+      "notACheck": 9,
+      "nodesTotal": 21,
+      "nodesSampled": 21,
+      "nodesJudged": 21,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": 1,
+      "capped": false,
+      "coverageGathered": {
+        "script": 11,
+        "ci_step": 10
+      },
+      "coverageJudged": {
+        "script": 11,
+        "ci_step": 10
+      },
+      "probeShare": 0.19047619047619047,
+      "economics": {
+        "nodesTotal": 21,
+        "nodesSampled": 21,
+        "decidedByProbe": 4,
+        "decidedByAgent": 17,
+        "probesMinted": 3,
+        "probeLibrarySize": 26,
+        "tokensIn": 1506,
+        "tokensOut": 5131,
+        "tokensEstimated": true,
+        "wallClockMs": 393405
+      },
+      "timing": {
+        "cloneMs": 1273,
+        "gatherMs": 5,
+        "probeMs": 107,
+        "recordMs": 2,
+        "judgmentMs": 392018
+      },
+      "warnings": [
+        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+      ]
+    },
+    {
+      "name": "anthropic-quickstarts",
+      "url": "https://github.com/anthropics/anthropic-quickstarts.git",
+      "revision": "370e18d4a20ff5fd4bc1a6bf11d5105b2383977c",
+      "status": "ok",
+      "runIndex": 13,
+      "recordedAt": "2026-07-25T03:58:05.194Z",
+      "ratio": 1,
+      "anchored": 10,
+      "selfReferential": 0,
+      "unknown": 0,
+      "notACheck": 15,
+      "nodesTotal": 62,
+      "nodesSampled": 25,
+      "nodesJudged": 25,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": 1,
+      "capped": true,
+      "coverageGathered": {
+        "script": 20,
+        "review_gate": 1,
+        "ci_step": 36,
+        "test_target": 5
+      },
+      "coverageJudged": {
+        "script": 9,
+        "review_gate": 1,
+        "ci_step": 10,
+        "test_target": 5
+      },
+      "probeShare": 0.24,
+      "economics": {
+        "nodesTotal": 62,
+        "nodesSampled": 25,
+        "decidedByProbe": 6,
+        "decidedByAgent": 19,
+        "probesMinted": 3,
+        "probeLibrarySize": 29,
+        "tokensIn": 2612,
+        "tokensOut": 5144,
+        "tokensEstimated": true,
+        "wallClockMs": 510257
+      },
+      "timing": {
+        "cloneMs": 16506,
+        "gatherMs": 7,
+        "probeMs": 108,
+        "recordMs": 1,
+        "judgmentMs": 493635
+      },
+      "warnings": [
+        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+      ]
+    },
+    {
+      "name": "anthropic-courses",
+      "url": "https://github.com/anthropics/courses.git",
+      "revision": "f4dbb137d7b02dddaf3cc73e32e20a702d3b5e77",
+      "status": "nothing_gathered",
+      "runIndex": 14,
+      "recordedAt": "2026-07-25T03:59:42.183Z",
+      "ratio": null,
+      "anchored": null,
+      "selfReferential": null,
+      "unknown": null,
+      "notACheck": null,
+      "nodesTotal": 0,
+      "nodesSampled": 0,
+      "nodesJudged": 0,
+      "nodesUnjudged": 0,
+      "partial": false,
+      "judgedFraction": null,
+      "capped": false,
+      "coverageGathered": {},
+      "coverageJudged": {},
+      "probeShare": null,
+      "economics": {
+        "nodesTotal": 0,
+        "nodesSampled": 0,
+        "decidedByProbe": 0,
+        "decidedByAgent": 0,
+        "probesMinted": 0,
+        "probeLibrarySize": 29,
+        "tokensIn": 0,
+        "tokensOut": 0,
+        "tokensEstimated": true,
+        "wallClockMs": 63315
+      },
+      "warnings": [
+        "gatherer found no verification surfaces it can read — this is non-coverage, not a grounding claim",
+        "no reports/<name>.json exists for this target ON PURPOSE: every ratio a Report could carry here would be a claim nobody can defend"
+      ]
     }
   ],
   "totals": {
     "targetsDeclared": 15,
-    "targetsMeasured": 10,
+    "targetsMeasured": 14,
     "targetsUnjudged": 0,
     "targetsPartial": 0,
-    "targetsNothingGathered": 0,
+    "targetsNothingGathered": 1,
     "targetsFailed": 0,
-    "anchored": 78,
+    "anchored": 122,
     "selfReferential": 14,
-    "unknown": 6,
-    "notACheck": 139,
-    "nodesTotal": 1625,
-    "nodesSampled": 237,
-    "nodesJudged": 237,
+    "unknown": 7,
+    "notACheck": 190,
+    "nodesTotal": 1826,
+    "nodesSampled": 333,
+    "nodesJudged": 333,
     "nodesUnjudged": 0,
-    "ratioPooled": 0.7959183673469388,
-    "ratioMeanOfTargets": 0.8259706959706958
+    "ratioPooled": 0.8531468531468531,
+    "ratioMeanOfTargets": 0.8667647828362114
   },
-  "repeatability": [],
+  "repeatability": [
+    {
+      "name": "tiktoken",
+      "comparedAt": "2026-07-25T03:58:11.014Z",
+      "comparedNodes": 0,
+      "agreed": 0,
+      "agreement": null,
+      "probeComparedNodes": 7,
+      "probeAgreed": 7,
+      "probeAgreement": 1,
+      "mixedComparedNodes": 3,
+      "mixedAgreed": 3,
+      "mixedAgreement": 1,
+      "pooledComparedNodes": 10,
+      "pooledAgreed": 10,
+      "pooledAgreement": 1,
+      "disagreements": []
+    }
+  ],
   "notes": [
     "A ratio never travels alone: read it with the anchored count and the coverage beside it. A 1.0 over one edge and a 0.7 over fifty are different claims.",
     "coverageJudged counts the nodes that were JUDGED, not the whole gathered surface. coverageGathered is the surface the gatherer could see. Surfaces the gatherer cannot read at all are absent from both — that is Keel's own shoppable class, and it is why nodesTotal is printed.",
