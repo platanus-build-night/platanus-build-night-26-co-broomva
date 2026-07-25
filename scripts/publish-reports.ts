@@ -56,9 +56,31 @@ const THIN_DENOMINATOR = 10;
  *
  * Rewritten to a repo-relative form rather than deleted, so the diagnostic still
  * says which file it meant.
+ *
+ * THE PLACEHOLDERS ARE ESCAPED, AND THAT IS LOAD-BEARING. Both call sites run
+ * this over already-rendered HTML, so a raw `<repo>` is not a placeholder — it
+ * is an element. The generators escape their own text correctly (`curve.ts`
+ * emits `<desc>${esc(desc)}</desc>`); substituting a bare angle bracket back in
+ * afterwards re-opens the hole downstream of the escaping that closed it.
+ *
+ * It cost the crystallization curve. The scrubbed path landed inside the SVG's
+ * `<desc>`, the parser read `<repo>` as an unknown element, and every sibling
+ * after it became that element's child — so a 1080x1510 chart occupied its full
+ * height and painted nothing. Silently: the markup is well-formed to a lenient
+ * HTML parser, portability-check passed because the machine path was genuinely
+ * gone, and no test read the rendered pixels. A gate that only asks "is the
+ * private path absent" cannot see that the fix broke the artifact.
  */
+const PLACEHOLDER = {repo: '&lt;repo&gt;', home: '&lt;home&gt;'} as const;
+
 const scrub = (text: string): string =>
-  text.split(REPO + '/').join('<repo>/').split(REPO).join('<repo>').split(HOME + '/').join('<home>/');
+  text
+    .split(REPO + '/')
+    .join(`${PLACEHOLDER.repo}/`)
+    .split(REPO)
+    .join(PLACEHOLDER.repo)
+    .split(HOME + '/')
+    .join(`${PLACEHOLDER.home}/`);
 
 const esc = (s: unknown) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
