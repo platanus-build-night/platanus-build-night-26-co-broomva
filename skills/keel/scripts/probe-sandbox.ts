@@ -98,6 +98,18 @@ import type {
 const SELF = fileURLToPath(import.meta.url);
 const HERE = dirname(SELF);
 
+/**
+ * How a REJECTED seatbelt profile identifies itself, as opposed to probe code
+ * that merely exited early.
+ *
+ * Measured on this machine: feeding `sandbox-exec` a malformed profile gives
+ * exit 65 and `sandbox-exec: syntax error: ...` on stderr, while a clean child
+ * exit gives 0 and says nothing. Only the first is evidence about the sandbox;
+ * the second is under the probe's control, and treating it as evidence would
+ * let hostile probe code request its own unconfined re-run.
+ */
+const SANDBOX_REJECTED = /^\s*sandbox[-_]exec:/im;
+
 /** Classes a probe is allowed to assert. `unknown` is deliberately absent. */
 const PROBE_CLASSES: ReadonlySet<string> = new Set<GroundingClass>([
   'anchored',
@@ -226,12 +238,17 @@ export function sandboxCommand(bunArgs: string[]): {
 async function runChild(
   cmd: string[],
   env: Record<string, string>,
-): Promise<{ code: number; stdout: string; signalled: boolean }> {
+): Promise<{ code: number; stdout: string; stderr: string; signalled: boolean }> {
+  // stderr is PIPED rather than inherited so the caller can read sandbox-exec's
+  // own rejection diagnostic — the one signal a confined probe cannot forge, and
+  // therefore the only safe basis for deciding whether to degrade. It is teed
+  // straight back out to the parent's stderr, so diagnostics still reach the
+  // operator exactly as before.
   const child = Bun.spawn([...cmd], {
     env,
     stdin: 'inherit',
     stdout: 'pipe',
-    stderr: 'inherit',
+    stderr: 'pipe',
   });
   let signalled = false;
   const term = (sig: number) => {
@@ -261,8 +278,13 @@ async function runChild(
   process.on('SIGINT', onInt);
   process.on('exit', onExit);
   try {
-    const [stdout, code] = await Promise.all([new Response(child.stdout).text(), child.exited]);
-    return { code, stdout, signalled: signalled || child.signalCode != null };
+    const [stdout, stderr, code] = await Promise.all([
+      new Response(child.stdout).text(),
+      new Response(child.stderr).text(),
+      child.exited,
+    ]);
+    if (stderr.length > 0) process.stderr.write(stderr);
+    return { code, stdout, stderr, signalled: signalled || child.signalCode != null };
   } finally {
     // Two children can run in one process (confined, then degraded); leaving the
     // first child's handlers installed would have the second run kill a corpse.
@@ -573,11 +595,33 @@ if (import.meta.main) {
       if (run.stdout.length > 0) {
         process.stdout.write(run.stdout);
         process.exitCode = run.code;
+      } else if (run.code !== 0 && SANDBOX_REJECTED.test(run.stderr)) {
+        // A profile the kernel rejects exits non-zero having printed nothing on
+        // stdout, AND names itself on stderr (measured: exit 65 plus a
+        // `sandbox-exec: ...` diagnostic). SBPL is a private interface; a macOS
+        // change can do this to us without warning, and silently dispatching
+        // zero probes is not an option.
+        //
+        // BOTH conditions are required, and that is a security property rather
+        // than belt-and-braces. Empty stdout ALONE is under the probe's control:
+        // a probe that calls `process.exit(0)` at module load produces exactly
+        // zero bytes with code 0, and degrading on that signature lets hostile
+        // probe code select its own unconfined re-run — reading credentials and
+        // reaching the network on the second pass. The discriminator must be
+        // something the confined code cannot forge, so it is sandbox-exec's own
+        // rejection diagnostic, not the absence of output.
+        degradedBecause = `the sandbox-exec re-exec exited ${run.code} and reported a profile error`;
       } else {
-        // A profile the kernel rejects exits non-zero having printed nothing.
-        // SBPL is a private interface; a macOS change can do this to us without
-        // warning, and silently dispatching zero probes is not an option.
-        degradedBecause = `the sandbox-exec re-exec exited ${run.code} without producing any output`;
+        // Confined, produced nothing, and the seatbelt did not complain: the
+        // probe code itself exited early. That is a probe defect, never evidence
+        // about the sandbox. Fail closed — every node pends.
+        const why =
+          `the confined probe child exited ${run.code} without producing any output, and ` +
+          `sandbox-exec reported no profile error — treating this as a probe defect, NOT as a ` +
+          `broken sandbox, so there is no unconfined re-run. No node was decided by a probe.`;
+        console.error(`keel: ${why}`);
+        process.stdout.write(allPending([why]));
+        process.exit(0);
       }
     }
 
