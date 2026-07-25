@@ -167,9 +167,23 @@ function row(e: any): string {
     .map(([k, n]) => `${esc(k)} ${n}`)
     .join(' · ');
 
+  // Keel measuring Keel is the one run where query provenance collapses: the
+  // measured system and the system choosing the question are the same. The number
+  // is still computed the same way, but it does not carry the same weight as a
+  // measurement of a repository that could not select its own audit, and a page
+  // that printed it identically to the others would be quietly overclaiming.
+  const selfNote =
+    e.name === 'keel'
+      ? `<div class="k-selfmeasure">self-measured — Keel judging Keel. The one run
+         where query independence collapses: the measured system and the system that
+         chose the question are the same. Reported because refusing to publish our own
+         number would be the failure this project names, and flagged because it is not
+         evidence of the same kind as the rows above.</div>`
+      : '';
+
   return `<tr>
   <td><a href="${esc(e.name)}.html">${esc(e.name)}</a>
-      <div class="k-sub k-mono">${esc((e.revision ?? '').slice(0, 12))}</div></td>
+      <div class="k-sub k-mono">${esc((e.revision ?? '').slice(0, 12))}</div>${selfNote}</td>
   <td class="k-num">${ratioCell}</td>
   <td class="k-num">${e.anchored ?? 0} of ${classified}</td>
   <td class="k-num">${e.selfReferential ?? 0}</td>
@@ -210,6 +224,7 @@ const html = `<!doctype html>
 .k-cap{display:inline-block;margin-left:var(--k-space-2);color:var(--k-unknown)}
 .k-nothing{color:var(--k-ink-2);font-style:italic}
 .k-thin{color:var(--k-unknown);font-size:var(--k-fs-xs);font-weight:400}
+.k-selfmeasure{color:var(--k-unknown);font-size:var(--k-fs-xs);max-width:34em;margin-top:var(--k-space-1)}
 .k-ratio-inline{font-size:var(--k-fs-ratio);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse}
 th,td{padding:var(--k-space-2);border-bottom:1px solid var(--k-line);vertical-align:top}
