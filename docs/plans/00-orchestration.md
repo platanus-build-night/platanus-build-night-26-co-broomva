@@ -157,6 +157,36 @@ kill-timer must hold a process handle.
 - Both units code to THIS contract, not to each other's implementation.
   Integration happens at merge; neither blocks on the other.
 
+### Working modes — one skill, not several
+
+Keel is one skill with modes, not a family of skills. A package boundary
+asserts nothing about controller/verifier separation: two scripts in one skill
+can have a strictly one-way dependency, and two separate skills can have a
+feedback loop. Splitting for "separation" would be a `not_a_check` — a
+boundary that cannot fail, rendering like a safety property.
+
+```
+keel measure    target     -> Report        reads the world
+keel route      report     -> Binding[]     anchoredOn                (W1·R)
+keel construct  bindings   -> Binding[]     pairedWith/arbitratedBy   (stub)
+keel apply      bindings   -> diff / PR     gated; never agent-completed (stub)
+keel audit      report     -> agreement     the alarm                 (W2·F)
+keel loop       target     -> measure -> route -> [apply] -> measure
+```
+
+**The loop is meant to close.** It is safe because the world is *in* it:
+re-measurement re-derives from the target, never from the proposals, so a
+route's claim never gets to assert its own outcome.
+
+**The one edge that must stay open:** the router receives *verdicts* — what is
+ungrounded and why. It must never receive the *ratio as an objective*. The
+moment the score becomes something to optimize, it becomes a selection signal
+and the number dies while still rising. Inform freely, optimize never.
+
+This is enforced by `tests/separation.test.ts` (W1·R), not by directory
+layout: fabricate an adversarial bindings file, re-measure, assert the
+verdicts and grounding are byte-identical.
+
 ### Cross-cutting: the ratio never travels alone
 
 Every surface that shows a grounding ratio (B's renderer, D's summary, H's
@@ -227,6 +257,7 @@ pure lost wall-clock.
 | **E · tests + CI** | `tests/**` — **except** `tests/fixtures/report.sample.json` (W0), `tests/fixtures/economics/**` (G), and `tests/grounding-ratio.test.ts` (pre-flight) — plus `.github/workflows/test.yml` | schema + fixture |
 | **G · crystallization curve** | `skills/keel/scripts/curve.ts`, **`tests/fixtures/economics/**`**, `reports/curve.json` | schema + fixture (synthetic economics) |
 | **I · demo assets (minus video)** | `docs/demo/**` | handoff + plans only |
+| **R · router (`keel route`)** | `skills/keel/scripts/route.ts`, `skills/keel/schemas/route.ts`, `tests/separation.test.ts`, `reports/*.bindings.{json,html}` | schema (type-only) + fixture |
 
 **Critical path is A → D.** B, C, E, G, I are genuinely independent of A
 because they consume the fixture or the interface, never A's implementation.
@@ -254,7 +285,8 @@ bstack wave dispatch \
   docs/plans/w1-d-corpus-runner.md \
   docs/plans/w1-e-tests-ci.md \
   docs/plans/w1-g-curve.md \
-  docs/plans/w1-i-demo-assets.md
+  docs/plans/w1-i-demo-assets.md \
+  docs/plans/w1-r-router.md
 ```
 
 Per **P19** this is the N>1 / external-trigger / across-session cell: one
@@ -298,9 +330,10 @@ The three demo beats, in priority order:
 (classify one repo twice, publish verdict agreement — the empirical
 stability-of-the-loop claim) and the ratio-stability-under-shuffle check in G.
 
-**Degradation ladder (decide in this order if behind):** drop F, then I₂'s
-fallback video, then G's curve (report ratios only), then D's corpus down to
-3 repos. **Never drop B** — a run with no visual is not demonstrable.
+**Degradation ladder (decide in this order if behind):** drop F, then R (ship
+R's JSON without the HTML page before cutting R entirely), then I₂'s fallback
+video, then G's curve (report ratios only), then D's corpus down to 3 repos.
+**Never drop B** — a run with no visual is not demonstrable.
 
 ---
 

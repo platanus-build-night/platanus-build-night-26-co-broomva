@@ -8,9 +8,11 @@ description: >
   asking whether the actor being verified can write to the signal's producer,
   and reports a grounding ratio. Novel cases are judged by the agent and then
   crystallized into probes — small reviewable scripts — so repeat shapes get
-  cheaper every run. Use when: (1) auditing whether AI-generated or
-  agent-maintained work is genuinely verified, (2) assessing how AI-native a
-  company or repo actually is, (3) reviewing a CI/CD pipeline for circular
+  cheaper every run. Then routes each ungrounded check to an anchored signal
+  that already exists in the same graph. Use when: (1) auditing whether
+  AI-generated or agent-maintained work is genuinely verified, (2) assessing
+  how AI-native a codebase actually is — measured by what fraction of its
+  verification the agents cannot author, (3) reviewing a CI/CD pipeline for circular
   verification, (4) someone claims tests pass and you want to know what that
   claim rests on, (5) measuring verifier independence. Triggers on keel,
   grounding ratio, grounded, is this actually verified, who checks the checker,
@@ -153,6 +155,45 @@ edge and a 0.7 over fifty are different claims, and a bare ratio rewards
 gets an explicit "nothing gathered" state, never a ratio.
 
 Report `unknown` prominently. It is the most honest number Keel produces.
+
+## Modes
+
+Keel is one skill with modes, not a family of skills.
+
+| Mode | Reads | Emits |
+|---|---|---|
+| `keel measure` | a target | `Report` — the four stages above |
+| `keel route` | a `Report` | `Binding[]` — a route from each ungrounded check to an anchored signal already in the graph |
+| `keel audit` | a `Report` | the probe library's agreement rate |
+| `keel construct` | `Binding[]` | counter-metric pairings, arbitration, audit loops — **not yet built** |
+| `keel apply` | `Binding[]` | a diff or PR — gated, **never completed by an agent** |
+
+### The routing rule
+
+**Independence cannot be manufactured, but it can be routed.** A route may only
+point at a node that is present in the same report *and* already classified
+`anchored`. Validate that in code — a proposal that fails the check becomes
+`null` with a reason. "No route found" is a first-class answer and is correct
+whenever the fix needs a policy decision rather than a rewiring.
+
+Routing never moves the ratio. A proposal is not a change. The number moves
+only when a human applies one and Keel re-measures **from the target** — the
+world stays in the loop, so a route's claim never asserts its own outcome.
+
+### The edge that must stay open
+
+The router receives **verdicts** — what is ungrounded and why. It must never
+receive the **ratio as an objective**. The moment the score becomes something
+to optimize, it becomes a selection signal, and the router hill-climbs into the
+scorer's blind spot: the number keeps rising while it stops meaning anything.
+
+*Inform freely, optimize never.*
+
+This is not enforced by putting the router in a separate skill — a package
+boundary asserts nothing, and would itself be a `not_a_check`. It is enforced
+by a test: fabricate an adversarial bindings file claiming everything is
+routable, re-measure, and assert the verdicts and grounding come back
+byte-identical.
 
 ## Scope
 
