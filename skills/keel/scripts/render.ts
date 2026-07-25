@@ -109,9 +109,28 @@ export type Template = Record<string, string>;
 const BLOCK =
   /<!--@block\s+([a-zA-Z0-9_-]+)\s*-->\n?([\s\S]*?)<!--@endblock\s*-->/g;
 
+/**
+ * An authoring note: present in the template file, stripped from the output.
+ *
+ * There is exactly one reason this exists, and it is not tidiness. `make
+ * design-audit` reads the HTML under `templates/` and also reads whatever the
+ * renderer publishes, and one of its rules (`data-specimen-defect`) means
+ * "this markup is a SPECIMEN of the defect state, do not fail on it". The
+ * defect specimen has to live in the template — that is what makes the rule
+ * teachable — but a real argument-less verdict in a real report is not a
+ * specimen, and emitting the hatch onto it would make the gate wave through
+ * precisely the failure the gate exists to catch. A note keeps the hatch on
+ * the file the auditor is auditing and off the artifact it is not.
+ *
+ * `<!-- KEEL:CURVE -->` is deliberately NOT of this form: it is a contract
+ * with W1·G's curve unit and must survive into the output.
+ */
+const NOTE = /[ \t]*<!--@note\b[\s\S]*?-->[ \t]*\n?/g;
+
 export function parseTemplate(text: string): Template {
   const blocks: Template = {};
-  for (const m of text.matchAll(BLOCK)) blocks[m[1] as string] = m[2] as string;
+  for (const m of text.matchAll(BLOCK))
+    blocks[m[1] as string] = (m[2] as string).replace(NOTE, '');
   return blocks;
 }
 
@@ -345,17 +364,51 @@ export function render(report: Report, opts: RenderOptions = {}): string {
       })
       .join('');
 
+    // The legend counts the marks ACTUALLY DRAWN, not the verdict totals. One
+    // mark is drawn per node; a verdict naming a node absent from this report
+    // has no mark, so counting it in the legend would leave a reader who counts
+    // squares unable to reconcile them against the numbers underneath. In a
+    // tool whose entire claim is that counts must reconcile, a legend that
+    // over-counts its own picture is not a cosmetic defect. The orphans are
+    // not dropped — they get their own item, marked as not drawn.
+    const drawnVerdicts = nodes
+      .map((n) => byNode.get(n.id))
+      .filter((v): v is Verdict => v !== undefined);
+    const drawn = new Map<string, number>();
+    for (const v of drawnVerdicts) {
+      drawn.set(v.class, (drawn.get(v.class) ?? 0) + 1);
+    }
+    const unrecognizedDrawn = [...drawn.entries()]
+      .filter(([c]) => !isGroundingClass(c))
+      .reduce((sum, [, n]) => sum + n, 0);
+
+    const aside = (TEXT: string) =>
+      fill(t['legend-item-aside'] as string, { TEXT });
+
     const legend =
-      CLASS_ORDER.filter((c) => countOf(g, c) > 0)
+      CLASS_ORDER.filter((c) => (drawn.get(c) ?? 0) > 0)
         .map((c) =>
-          fill(t['legend-item'] as string, { CLASS: c, N: num(countOf(g, c)) }),
+          fill(t['legend-item'] as string, {
+            CLASS: c,
+            N: num(drawn.get(c) as number),
+          }),
         )
         .join('') +
       (unjudged.length > 0
         ? fill(t['legend-item-unjudged'] as string, { N: num(unjudged.length) })
+        : '') +
+      (unrecognizedDrawn > 0
+        ? aside(
+            `${plural(unrecognizedDrawn, 'mark carries', 'marks carry')} a class the frozen schema does not define — drawn uncoloured, listed below`,
+          )
+        : '') +
+      (orphans.length > 0
+        ? aside(
+            `not drawn — ${plural(orphans.length, 'verdict names a node', 'verdicts name nodes')} absent from this report`,
+          )
         : '');
 
-    const smellCount = verdicts.filter(smellsOf).length;
+    const smellCount = drawnVerdicts.filter(smellsOf).length;
     body.push(
       fill(t.graph as string, {
         COUNT: num(nodes.length),
@@ -364,7 +417,7 @@ export function render(report: Report, opts: RenderOptions = {}): string {
         SMELL_NOTE:
           smellCount > 0
             ? `${plural(smellCount, 'mark is', 'marks are')} ringed in the unknown hue: an anchored verdict asserted below confidence ${SMELL_THRESHOLD}. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.`
-            : `No anchored verdict falls below confidence ${SMELL_THRESHOLD}. Hover a mark for its node.`,
+            : `No mark is ringed: no drawn verdict is anchored below confidence ${SMELL_THRESHOLD}. Hover a mark for its node.`,
       }),
     );
   }
@@ -610,9 +663,22 @@ function main(argv: string[]): number {
 
   for (let i = 0; i < args.length; i++) {
     const a = args[i] as string;
-    if (a === '-o' || a === '--out') out = args[++i] as string;
-    else if (a === '--curve') curvePath = args[++i] as string;
-    else if (a === '--no-curve') noCurve = true;
+    if (a === '-o' || a === '--out' || a === '--curve') {
+      // A flag whose value is missing, empty, or another flag is an error, not
+      // a default. `-o "$OUT"` with an unset $OUT used to fall through to
+      // stdout and exit 0: no file written, 87KB on the caller's terminal, and
+      // a success code saying the report was produced. This tool refuses to
+      // print a number it did not measure; it does not get to report a write
+      // it did not perform either.
+      const value = args[i + 1];
+      if (value === undefined || value === '' || value.startsWith('-')) {
+        console.error(`render: ${a} requires a path\n\n${USAGE}`);
+        return 1;
+      }
+      i++;
+      if (a === '--curve') curvePath = value;
+      else out = value;
+    } else if (a === '--no-curve') noCurve = true;
     else if (a.startsWith('-')) {
       console.error(`render: unknown flag ${a}\n\n${USAGE}`);
       return 1;
@@ -628,19 +694,31 @@ function main(argv: string[]): number {
     return 1;
   }
 
-  let report: Report;
+  let parsed: unknown;
   try {
-    report = JSON.parse(readFileSync(input, 'utf8')) as Report;
+    parsed = JSON.parse(readFileSync(input, 'utf8'));
   } catch (err) {
     console.error(`render: ${input}: not valid JSON — ${(err as Error).message}`);
     return 1;
   }
-  if (!Array.isArray(report.nodes) || !Array.isArray(report.verdicts)) {
+  // The shape is checked before anything is dereferenced. `null`, `7` and
+  // `"a"` are all valid JSON, and reaching for `.nodes` on one of them threw a
+  // raw TypeError with a Bun banner underneath it — the same exit code as the
+  // tidy one-line refusal every other bad input gets, but it reads as a broken
+  // tool rather than a rejected file.
+  const shaped =
+    parsed !== null &&
+    typeof parsed === 'object' &&
+    !Array.isArray(parsed) &&
+    Array.isArray((parsed as Report).nodes) &&
+    Array.isArray((parsed as Report).verdicts);
+  if (!shaped) {
     console.error(
       `render: ${input}: not a Report — \`nodes\` and \`verdicts\` must both be arrays`,
     );
     return 1;
   }
+  const report = parsed as Report;
 
   const opts: RenderOptions = {};
   if (!noCurve) {

@@ -224,6 +224,16 @@ export default probe;
   });
 });
 
+// PLATFORM GAP, stated rather than implied covered. `sandbox-exec` is darwin-only, so
+// on Linux the confinement test below does not run and the `sandboxCommand` test above
+// takes its else-branch — a Linux-only CI would let you delete the `-f <profile>`
+// argument from sandboxCommand and still go green, with the buildProfile tests
+// continuing to assert on a profile string nobody applies. That is an assertion about
+// an assertion, which is what this suite otherwise refuses to be. The fix is in
+// .github/workflows/test.yml: the `test` job runs a `macos-latest` matrix leg
+// specifically so the executed confinement proof runs SOMEWHERE in CI. If that leg is
+// ever removed, the enforcement claim falls back to resting on a developer-machine run
+// and this comment becomes the only record of it — remove the leg only knowingly.
 describe('probe-sandbox CLI · confinement, executed', () => {
   const enforced = process.platform === 'darwin' && existsSync('/usr/bin/sandbox-exec');
 
