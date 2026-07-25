@@ -66,6 +66,7 @@ const esc = (s: unknown) =>
 // --- render each per-repo report through the skill's own renderer -------------
 const rendered: string[] = [];
 const failedRender: string[] = [];
+const routed = new Set<string>();
 for (const e of summary.entries ?? []) {
   const src = join(REPORTS, `${e.name}.json`);
   if (!existsSync(src)) continue;
@@ -76,6 +77,14 @@ for (const e of summary.entries ?? []) {
     stdout: 'pipe',
     stderr: 'pipe',
   });
+  // The constructive half, when it exists: <name>.bindings.html routes each
+  // ungrounded node to an anchored producer already present in the same report.
+  // Copied, never regenerated here — route.ts owns that artifact.
+  const bsrc = join(REPORTS, `${e.name}.bindings.html`);
+  if (existsSync(bsrc)) {
+    writeFileSync(join(OUT, `${e.name}.bindings.html`), scrub(readFileSync(bsrc, 'utf8')), 'utf8');
+    routed.add(e.name);
+  }
   if (r.exitCode === 0 && existsSync(dst)) {
     // The renderer faithfully carries whatever the report contained, so the scrub
     // belongs here — at the boundary where an artifact stops being local.
@@ -186,6 +195,11 @@ function row(e: any): string {
   <td>${e.unknown ?? 0}</td>
   <td>${e.notACheck ?? 0}</td>
   <td>${judged} judged ${disclosure}<div>${cov || '—'}</div></td>
+  <td>${
+    routed.has(e.name)
+      ? `<a href="${esc(e.name)}.bindings.html">routes</a>`
+      : '<span class="k-meta">—</span>'
+  }</td>
 </tr>`;
 }
 
@@ -278,11 +292,20 @@ ${meanOfTargets === null ? 'n/a' : meanOfTargets.toFixed(3)}</strong>.</p>
 <hr class="k-rule" />
 
 <h2 class="k-eyebrow">By repository</h2>
+<p class="k-meta">The <strong>routes</strong> column is the constructive half. A grounding
+ratio on its own is a diagnosis nobody can act on; a route names, for each ungrounded
+check, an anchored producer <em>the repository already owns</em> and the change that would
+wire it in. Keel never invents an anchor — every proposed producer is a node already
+classified <span class="k-class" data-class="anchored">anchored</span> in that same report,
+and one that does not resolve is refused. Where no route exists the page says so and names
+the decision required instead, because a proposal that raises the number without grounding
+the claim is the failure this project exists to name. Every route is a
+<strong>proposal</strong>: the constructing loop emits, a human admits.</p>
 <table class="k-table k-table--num corpus-table">
   <thead><tr>
     <th>target</th><th>ratio</th><th>anchored</th>
     <th>self_referential</th><th>unknown</th>
-    <th>not_a_check</th><th>coverage (judged)</th>
+    <th>not_a_check</th><th>coverage (judged)</th><th>routes</th>
   </tr></thead>
   <tbody>
 ${ok.map(row).join('\n')}

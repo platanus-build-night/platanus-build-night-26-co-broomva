@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>keel route — keel</title>
+<title>keel route — anthropic-sdk-python</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    Keel — design tokens. THE canonical source. There is no second copy.
@@ -626,40 +626,40 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   <p class="k-eyebrow">keel route</p>
   <h1 class="k-display">Independence cannot be manufactured<em>, but it can be routed.</em></h1>
   <p class="k-lede">Every ungrounded verification edge in
-    <span class="k-mono">keel</span>, paired — where a pairing
+    <span class="k-mono">anthropic-sdk-python</span>, paired — where a pairing
     exists — with an <span class="k-mono">anchored</span> producer <em>already
     present in the same measurement</em>. Nothing here invents an anchor, and
     nothing here has been applied.</p>
   <table class="k-table">
-    <tr><th>target</th><td class="k-mono">keel</td></tr>
-    <tr><th>revision</th><td class="k-mono">44f7e8d6cbdfaee7d0e4ff281d59a236ecf0c747</td></tr>
-    <tr><th>source report</th><td class="k-mono">reports/keel.json</td></tr>
-    <tr><th>generated</th><td class="k-mono">2026-07-25T05:12:33.411Z</td></tr>
-    <tr><th>status</th><td class="k-mono">proposed (all 9)</td></tr>
+    <tr><th>target</th><td class="k-mono">anthropic-sdk-python</td></tr>
+    <tr><th>revision</th><td class="k-mono">60c64fba5c2bf340567f627328e57cf0196b868f</td></tr>
+    <tr><th>source report</th><td class="k-mono">reports/anthropic-sdk-python.json</td></tr>
+    <tr><th>generated</th><td class="k-mono">2026-07-25T05:15:24.487Z</td></tr>
+    <tr><th>status</th><td class="k-mono">proposed (all 4)</td></tr>
   </table>
 </header>
 
 <section class="k-ratio">
   <div class="k-route__pair">
     <div class="k-route__side">
-      <span class="k-ratio__value">0.36</span>
+      <span class="k-ratio__value">0.67</span>
       <p class="k-meta">today — measured</p>
     </div>
     <span class="k-route__sep">·</span>
     <div class="k-route__side">
-      <span class="k-ratio__value k-route__projected">0.43</span>
+      <span class="k-ratio__value k-route__projected">0.67</span>
       <p class="k-meta"><span class="k-tag">projection</span> if applied —
-        1 re-grounded · 0 constructed</p>
+        0 re-grounded · 0 constructed</p>
     </div>
   </div>
   <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown)</p>
-  <div class="k-meter"><div class="k-meter__seg" data-class="anchored" style="width:35.7%"></div><div class="k-meter__seg" data-class="self_referential" style="width:64.3%"></div></div>
+  <div class="k-meter"><div class="k-meter__seg" data-class="anchored" style="width:66.7%"></div><div class="k-meter__seg" data-class="self_referential" style="width:16.7%"></div><div class="k-meter__seg" data-class="unknown" style="width:16.7%"></div></div>
   <div class="k-ratio__counts">
-  <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 5</span>
-  <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 9</span>
-  <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 0</span>
+  <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 8</span>
+  <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 2</span>
+  <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 2</span>
   <span class="k-ratio__count k-ratio__count--excluded">
-    <span class="k-class" data-class="not_a_check">not_a_check</span> 11
+    <span class="k-class" data-class="not_a_check">not_a_check</span> 13
     <span class="k-meta">excluded from the denominator</span>
   </span>
 </div>
@@ -669,9 +669,9 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
     hypothetical. It is not written to any report, it is not fed back into the
     grounding ratio, and no proposal on this page has been applied. Projected
     counts, for the same conditional:
-    <span class="k-mono">anchored 6 · self_referential 8 · unknown 0 · not_a_check 11</span>.
+    <span class="k-mono">anchored 8 · self_referential 2 · unknown 2 · not_a_check 13</span>.
     The delta is two different claims and is reported as two:
-    <strong>1 re-grounded</strong> — an existing check whose
+    <strong>0 re-grounded</strong> — an existing check whose
     signal moves outside the write boundary, the proposition it asserts unchanged —
     and <strong>0 constructed</strong> — a
     <span class="k-mono">not_a_check</span> node that becomes a check, entering the
@@ -684,7 +684,7 @@ signal is sufficient.</p>
 </section>
 
 <section>
-  <p class="k-eyebrow">Routes — 1 routable · 8 unroutable</p>
+  <p class="k-eyebrow">Routes — 0 routable · 4 unroutable</p>
   <p class="k-lede">Existing checks whose signal could come from somewhere they cannot
     write. Cheapest effort on top. <span class="k-mono">no route</span> is a
     first-class answer: it means the fix needs a policy decision rather than a
@@ -703,96 +703,44 @@ signal is sufficient.</p>
       <th>effort</th>
     </tr></thead>
     <tbody>
-<tr>
-    <td><div class="k-mono">package.json#test</div>
-      <div class="k-meta">script · test</div>
-      <div class="k-meta">today the signal comes from the Bun test-runner process — a thrown expect() failure inside bun:test sets the process exit code</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
-    <td><div class="k-mono">.github/workflows/portability.yml#25-scan-committed-files-for-absolute-home-paths</div>
-      <div><span class="k-class" data-class="anchored">anchored</span></div>
-      <div class="k-meta">.github/workflows/portability.yml:25</div></td>
-    <td><p class="k-argument">The execution axis of `bun test` is already honest — the Bun runtime's exit code, not any prose in the repo, decides pass or fail. What is ungrounded is the merge-time edge: at this revision no workflow invokes it, so the signal a reviewer actually reads is the `- [ ] bun test` box in the PR template, a field the same author sets. The `paths` job takes its verdict from a GitHub-hosted ubuntu-latest runner that checks out the PR's tree with none of the author's tooling present and reports the process exit status through the checks API; a contributor can edit the command and the tests but cannot write the exit code that runner observes, nor the status GitHub publishes from it. Hosting the suite in that job moves the merge-time fork point from a checkbox the author ticks to a runtime verdict on a machine the author does not control. Limit that this route does not fix and that belongs on the record: the assertions are authored in-repo alongside the implementation, so a green run shows the code does what the tests say, not that the tests say the right thing.</p><p class="k-meta">change: add `oven-sh/setup-bun@v2` + a `bun test` step to the GitHub-hosted ubuntu-latest job at .github/workflows/portability.yml:19-26, which already checks out the PR tree on a fresh runner</p>
-      <p class="k-meta">that producer: exit status of bash+grep in scripts/portability-check.sh, executed over the bytes listed by `git ls-files` on an ubuntu-latest runner</p></td>
-    <td><span class="k-tag">wiring</span></td>
-  </tr>
 <tr class="k-route__none">
-    <td><div class="k-mono">.github/workflows/l3-stability.yml#125-set-final-status</div>
-      <div class="k-meta">ci_step · Set final status</div>
-      <div class="k-meta">today the signal comes from a shell string comparison on steps.compute.outputs.status, which is the exit code compute-lambda.sh returned over the repo's own .control/rcs-parameters.toml</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
+    <td><div class="k-mono">.github/CODEOWNERS#codeowners</div>
+      <div class="k-meta">review_gate · code owners (CODEOWNERS)</div>
+      <div class="k-meta">today the signal comes from GitHub's branch-protection engine, whose configuration is not in the repository</div>
+      <div><span class="k-class" data-class="unknown">unknown</span></div></td>
     <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">This is the one edge in the job that can turn the check red, but it is a wrapper: it exits 1 exactly when compute-lambda returned non-zero over the repo's own asserted constants. Descending it lands on the same unmeasured parameters, and no candidate in this report emits a stability signal for it to read instead.</p>
-      <p class="k-meta">why not: Inherits the parameter-referent decision from the compute step, and adds a repository-administration one: `gh api .../branches/main/protection` returns 404, so this red X blocks no merge today. Making it blocking means a human enabling branch protection and naming required checks, and GitHub's protection API is not a node in this report — proposing it as the anchor would be inventing one.</p></td>
+    <td><p class="k-argument">The proposition here is 'a change reaching main was approved by a party responsible for the code'. It is unknown because the producer of that signal — GitHub's branch-protection engine — is configured outside the clone, so the edge cannot be traced to a fork point at all. Routing requires an anchored node that asserts THAT proposition, and this report contains none: every anchored candidate produces a machine verdict over the committed tree (ruff, pyright, mypy, the interpreter's import, the uv build backend, PyPI's upload response). A machine's verdict on the source is not an approval by a responsible party — substituting one for the other would silently redefine the claim rather than ground it. There is also no node in this report whose producer is a human decision of any kind.</p>
+      <p class="k-meta">why not: Two decisions have to be made before anything can be wired. First, the gating state must be made legible: whether 'Require review from Code Owners' is on lives in repository settings, so someone must decide to commit a GitHub ruleset into the repo or to have a job query the branch-protection API and fail on drift — that is a process choice with an owner and a permissions cost. Second, and independent of it, someone must decide whether review by @anthropics/sdk — the same team that owns the generated source — sits outside the write boundary at all. No rewiring answers that; it is a judgement about the org chart.</p></td>
     <td><span class="k-route__empty">—</span></td>
   </tr>
 <tr class="k-route__none">
-    <td><div class="k-mono">.github/workflows/l3-stability.yml#52-compute-lambda-rcs-stability-budget</div>
-      <div class="k-meta">ci_step · Compute lambda (RCS stability budget)</div>
-      <div class="k-meta">today the signal comes from python3 inside compute-lambda.sh evaluating lambda_i = gamma_i - L_theta_i*rho_i - L_d_i*eta_i - beta_i*tau_bar_i - ln(nu_i)/tau_a_i over the numbers in the repo's own .control/rcs-parameters.toml</div>
+    <td><div class="k-mono">.github/workflows/claude.yml#38-run-claude-code</div>
+      <div class="k-meta">ci_step · Run Claude Code</div>
+      <div class="k-meta">today the signal comes from a large language model invoked through anthropics/claude-code-action</div>
       <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
     <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">The arithmetic executes honestly; what is ungrounded is every input to it. gamma, rho, eta, beta, tau and nu are hand-declared constants in .control/rcs-parameters.toml, a file inside the PR's own tree and itself a trigger path for this workflow. No candidate in this report measures any of those quantities, so none can supply the operands the inequality needs.</p>
-      <p class="k-meta">why not: The required decision is where the RCS parameters get an external referent: either measure them from observed system behaviour, or freeze them in a human-signed registry outside the tree the PR can edit. Both are choices about what the numbers mean and who may set them — precisely the anchor-registry decision the roadmap reserves for a human — and an agent that wired the gate onto some other anchored exit code would leave the constants exactly as asserted.</p></td>
+    <td><p class="k-argument">There is nothing here to re-ground, and that is the first reason. The workflow `if:` at claude.yml:15-19 makes this step mention-triggered, so it is not on the merge path; moving its signal to an anchored producer would change no admission decision. The second reason is that the propositions do not match. Whatever this step asserts is a broad judgement — 'this change or this answer is sound' — while every anchored candidate in the report asserts something strictly narrower and different in kind: ci.yml#34-run-lints and the pyproject linter tables say the tree type-checks, lints and imports; create-releases.yml#34-publish-to-pypi says the tree packages and PyPI took it; pyproject.toml#tool-pytest-ini-options says the collected tests executed to a clean exit. Declaring 'the lints are green' to be the grounded form of 'the model reviewed it' would rename the claim rather than anchor it. Those producers already run on push against anything this job commits, so the honest statement is that they cover what they cover and the model's judgement remains unverified — not that the judgement has been routed.</p>
+      <p class="k-meta">why not: The real defect is a permissions decision, not a missing wire: the job holds `contents: write` and `pull-requests: write` and `allowed_tools` grants `git commit`, `git push`, `git merge` and `gh pr`, so the reviewer can write into the branch whose state it reports on. Closing that means someone decides to strip the write-scoped tools, and separately decides which producers become required status checks on the merge path — and that second decision lives in branch-protection settings that are not in this repository (the same gap that leaves .github/CODEOWNERS#codeowners unknown).</p></td>
     <td><span class="k-route__empty">—</span></td>
   </tr>
 <tr class="k-route__none">
-    <td><div class="k-mono">.github/workflows/l3-stability.yml#68-run-l3-rate-gate</div>
-      <div class="k-meta">ci_step · Run L3 rate gate</div>
-      <div class="k-meta">today the signal comes from l3-rate-gate.sh counting `git log --diff-filter=M --since=@CUTOFF -- &lt;L3 paths&gt;` in the checked-out repo, against a window tau_a read from .control/rcs-parameters.toml</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
+    <td><div class="k-mono">.github/workflows/create-releases.yml#22-stainless-api-trigger-release-please-bb6677c5a04578eec1ccfd9e1913b5b78ed64c61-v1-4-0</div>
+      <div class="k-meta">ci_step · stainless-api/trigger-release-please@bb6677c5a04578eec1ccfd9e1913b5b78ed64c61 # v1.4.0</div>
+      <div class="k-meta">today the signal comes from the stainless-api/trigger-release-please action, whose implementation is not in this repository</div>
+      <div><span class="k-class" data-class="unknown">unknown</span></div></td>
     <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">The counted channel is the repository's own commit history, which is the actor's writes, and the comparison threshold tau_a plus the [gates.l3_paths] pattern list come from an in-repo TOML the same PR may edit. No anchored candidate observes commit rate or supplies a threshold from outside the tree, so there is no producer here to read instead.</p>
-      <p class="k-meta">why not: Requires deciding whether a governance-change rate limit has any referent outside the repo that generates the commits, and who owns the window and path list. The step's second defect — `set +e` then `exit 0`, with `Set final status` reading only the compute step, so this edge cannot fail the job — is a one-line config fix, but applying it alone would turn an actor-authored comparison into a blocking one and raise the anchored count without grounding anything, so it is deliberately not proposed as a route.</p></td>
+    <td><p class="k-argument">The proposition this step asserts is 'a release is warranted now, at this version, with this changelog and tag state'. The only anchored candidate anywhere near it is create-releases.yml#34-publish-to-pypi, and it fails on both counts. Direction: #34 runs BECAUSE of this step's `releases_created` output, so it is downstream and cannot be a producer this step reads — a check cannot be grounded by its own consequence. Proposition: PyPI's upload response asserts that an artefact was built and accepted; it rejects a duplicate version but says nothing about whether a release was warranted, whether the changelog is honest, or whether the version bump matches the diff. A wrongly-triggered release carrying a fresh version number passes #34 cleanly, so wiring these together would raise the number while leaving the actual claim ungrounded. The opacity itself is untouched either way: the action's body is pinned by SHA but not vendored, so nothing in this repo can be read to learn what it validates.</p>
+      <p class="k-meta">why not: The decision required is about a vendor boundary. Either vendor or replace the action so its release logic is inspectable in-tree, or accept it as opaque third-party plumbing — and in accepting it, decide explicitly whether Stainless being both the generator of src/anthropic (per .stats.yml and the tests/conftest.py header) and the operator of the release gate is an acceptable arrangement. That is a human call about a supplier relationship, and no rewiring of existing producers can substitute for it.</p></td>
     <td><span class="k-route__empty">—</span></td>
   </tr>
 <tr class="k-route__none">
-    <td><div class="k-mono">.github/workflows/l3-stability.yml#83-comment-on-pr</div>
-      <div class="k-meta">ci_step · Comment on PR</div>
-      <div class="k-meta">today the signal comes from actions/github-script@v7 calling issues.createComment with a verdict string this same job computed from steps.compute/steps.rate outputs</div>
+    <td><div class="k-mono">tests/conftest.py#conftest-py</div>
+      <div class="k-meta">test_target · pytest config (conftest.py)</div>
+      <div class="k-meta">today the signal comes from a Steady mock server generated from the OpenAPI spec, plus inline_snapshot recordings of the client's own HTTP traffic</div>
       <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
     <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">This step's own success means only that the GitHub API accepted a comment body; the verdict inside that body is computed by the same job from constants in the PR's own tree. Piping an anchored producer's status into the text would change what gets published without changing what the step itself asserts, and no candidate here produces a merge recommendation to relay.</p>
-      <p class="k-meta">why not: The decision is editorial and human: whether a bot comment may print 'composite system unstable — do not merge' and 'All gates pass' when its evidence is numbers the PR author typed. The honest fix is to narrow the verdict text to what its inputs support, which is a choice about the claim, not about where a signal comes from.</p></td>
-    <td><span class="k-route__empty">—</span></td>
-  </tr>
-<tr class="k-route__none">
-    <td><div class="k-mono">Makefile#bstack-check</div>
-      <div class="k-meta">script · bstack-check</div>
-      <div class="k-meta">today the signal comes from bash executing `doctor.sh --strict` from an unpinned local bstack snapshot; its exit code is a count of grep misses over this repo's own CLAUDE.md, AGENTS.md and .control/policy.yaml</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
-    <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">Every anchored producer in this report emits a verdict about something else: whether tracked bytes contain machine-specific paths, whether governed HTML/CSS carries raw literals, whether GitHub accepted a Pages artifact. None of them emits any signal about whether the primitive contract holds, so none can carry this check's proposition.</p>
-      <p class="k-meta">why not: Two decisions are required and neither is a rewiring. First, supply chain: BSTACK is resolved at run time by scanning $HOME and two sibling roots with no lockfile or vendored copy — pinning or vendoring the scanner is a policy choice about dependencies, not a route onto an existing producer. Second, and larger: the gate compares CLAUDE.md, AGENTS.md and .control/policy.yaml against grep patterns, so 'the contract holds' has no referent outside the markdown that declares it; giving it one means re-specifying what the gate asserts (that each declared mechanism actually fires), which is a human decision about the claim. Relocating the same scan onto the anchored portability runner would change the executor and not the comparison — the report already records exactly that outcome for bstack-l3-trust, which does run on that runner and stayed self_referential.</p></td>
-    <td><span class="k-route__empty">—</span></td>
-  </tr>
-<tr class="k-route__none">
-    <td><div class="k-mono">Makefile#bstack-l3-trust</div>
-      <div class="k-meta">script · bstack-l3-trust</div>
-      <div class="k-meta">today the signal comes from make's prerequisite chain — the target's exit status is bstack-primitive-lint's python3 exit code; the target's own recipe is three unconditional `@echo` lines</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
-    <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">The pack prints 'L3 trust gates passed — governance change is structurally valid' on the strength of one child that compares two markdown files. No anchored producer in this report emits a signal about structural validity of a governance change, and attaching one that emits something else — portability-check, say — would make the pack run a second real scan while the sentence it prints stayed exactly as unearned.</p>
-      <p class="k-meta">why not: Needs a scope decision by a human: whether the pack may keep narrating a two-gate verdict while G-L3-2 is deliberately not run, or must narrow its printed claim to what its single child established. Note also that this target already executes on the anchored GitHub runner via portability.yml:79, and the report records that this moved the executor without moving the fork point — so there is no remaining routing move to make here.</p></td>
-    <td><span class="k-route__empty">—</span></td>
-  </tr>
-<tr class="k-route__none">
-    <td><div class="k-mono">Makefile#bstack-primitive-lint</div>
-      <div class="k-meta">script · bstack-primitive-lint</div>
-      <div class="k-meta">today the signal comes from python3 executing scripts/bstack-primitive-lint.py; the exit code is the interpreter's, but every byte it reads is two in-repo markdown files</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
-    <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">The proposition here is that AGENTS.md's P-N sections carry four literal headings and match a table in CLAUDE.md. The two in-repo scanners that are anchored, portability-check and design-audit, are the same shape but assert about committed path strings and about design tokens; their exit codes say nothing about primitive documentation, so reading either one would add a passing signal without asserting this claim.</p>
-      <p class="k-meta">why not: Requires a decision about what the gate should assert, not about where its signal comes from. Both operands and the rule list (REQUIRED_SECTIONS, HOOK_ENFORCED, MECHANISM_ONLY) are edited by the same governance PR the gate polices; the only way out is a human choosing that a documented primitive must be checked against executed behaviour — that the hook it names is registered and fires — which is a re-specification, and the producer for it does not exist in this report yet.</p></td>
-    <td><span class="k-route__empty">—</span></td>
-  </tr>
-<tr class="k-route__none">
-    <td><div class="k-mono">Makefile#bstack-rule-of-three</div>
-      <div class="k-meta">script · bstack-rule-of-three</div>
-      <div class="k-meta">today the signal comes from python3 executing scripts/bstack-rule-of-three.py — but in this repo the exit code comes from a missing-file precondition guard (line 149), never from the audit itself</div>
-      <div><span class="k-class" data-class="self_referential">self_referential</span></div></td>
-    <td><span class="k-route__empty">no route</span></td>
-    <td><p class="k-argument">The claim is that a promoted primitive recurred three or more times. Nothing in this report counts instances of anything: the anchored producers emit a path scan, a token scan, a sync-mode ink check and a Pages deployment status. No candidate can be read as evidence for a recurrence count.</p>
-      <p class="k-meta">why not: Two policy decisions sit ahead of any wiring. The gate currently exits on a missing-file precondition because research/entities/pattern/bstack-engine.md does not exist, so someone must first decide whether a ledger belongs in a repo that promotes no primitives. If it lands, the deeper decision remains: whether a count the promoter writes into a markdown cell can ever be evidence for their own promotion. That is a question about what counts as proof, and an agent moving wires cannot answer it.</p></td>
+    <td><p class="k-argument">The proposition this conftest is trying to assert is behavioural: that the client's requests and its handling of responses match the API it will actually talk to. Its producer is a Steady mock booted from the `openapi_spec_url` in .stats.yml plus inline_snapshot recordings of the client's own traffic — both derived from artefacts inside the write boundary, which is exactly why it is self_referential. Every anchored producer in this report sits on a different axis: ruff/pyright/mypy/`import anthropic` (.github/workflows/ci.yml#34-run-lints and the four pyproject linter tables) assert that the committed tree analyses and imports cleanly, and create-releases.yml#34-publish-to-pypi asserts that the tree packages and that PyPI accepted the upload. None of them observes the behaviour of the Anthropic API, so none of them can supply the oracle this suite is missing. pyproject.toml#tool-pytest-ini-options is the trap: it is anchored, but only on the EXECUTION axis, and its own measured argument names the identical spec-derived-oracle limit. Routing the oracle onto the config of the very suite whose oracle is in question is a circle, and would move the count without grounding the claim.</p>
+      <p class="k-meta">why not: This needs a policy decision, not a rewiring: someone must choose an oracle the SDK cannot author. Either (a) run a contract suite against the live Anthropic API with real credentials — which is a decision about cost, secrets, rate limits and flakiness in the merge path — or (b) declare the OpenAPI spec an external frozen contract, published and versioned independently of the generation input, so the mock is derived from something the SDK's authors do not also write. Both are human calls about what counts as ground truth for this SDK; neither is a wire an agent can move.</p></td>
     <td><span class="k-route__empty">—</span></td>
   </tr>
     </tbody>
@@ -815,12 +763,7 @@ signal is sufficient.</p>
       <th>auditEvery</th>
     </tr></thead>
     <tbody>
-<tr>
-    <td class="k-mono">package.json#test</td>
-    <td><span class="k-route__empty">—</span></td>
-    <td><span class="k-route__empty">—</span></td>
-    <td><span class="k-route__empty">—</span></td>
-  </tr>
+<tr><td colspan="4" class="k-meta">no routes on this run</td></tr>
     </tbody>
   </table>
 </section>
@@ -828,10 +771,10 @@ signal is sufficient.</p>
 
 
 <footer class="k-econ">
-  <div class="k-econ__stat"><span class="k-econ__value">9</span><span>ungrounded edges considered</span></div>
-  <div class="k-econ__stat"><span class="k-econ__value">1</span><span>routable</span></div>
-  <div class="k-econ__stat"><span class="k-econ__value">8</span><span>unroutable</span></div>
-  <div class="k-econ__stat"><span class="k-econ__value">5</span><span>anchored producers available</span></div>
+  <div class="k-econ__stat"><span class="k-econ__value">4</span><span>ungrounded edges considered</span></div>
+  <div class="k-econ__stat"><span class="k-econ__value">0</span><span>routable</span></div>
+  <div class="k-econ__stat"><span class="k-econ__value">4</span><span>unroutable</span></div>
+  <div class="k-econ__stat"><span class="k-econ__value">8</span><span>anchored producers available</span></div>
 </footer>
 </main>
 </body>
