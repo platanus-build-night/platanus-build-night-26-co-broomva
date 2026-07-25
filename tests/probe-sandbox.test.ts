@@ -10,15 +10,17 @@
  */
 
 import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ClassifyOutput } from '../skills/keel/schemas/keel.ts';
 import {
   buildProfile,
+  dotenvInjectedKeelVars,
   resolveProbeDirs,
   sandboxCommand,
   sanitizedEnv,
+  scrubInjectedEnv,
 } from '../skills/keel/scripts/probe-sandbox.ts';
 import { cleanupTrees, run, tree } from './helpers/tree.ts';
 
@@ -270,5 +272,103 @@ export default probe;
     const { stdout } = await run([process.execPath, SANDBOX, nodes, '--probe-dir', SHIPPED_PROBES]);
     const out = JSON.parse(stdout) as ClassifyOutput;
     expect(out.warnings.join('\n')).toContain('sandbox NOT enforced');
+  });
+});
+
+/**
+ * The measured repository does not configure its own measurement.
+ *
+ * Bun auto-loads `.env` from the process cwd, and during a normal run the cwd IS
+ * THE TARGET — README and SKILL.md both say "point your agent at a target". So a
+ * hostile repo could set `KEEL_SANDBOX=0` (seatbelt off) and `KEEL_PROBE_DIR`
+ * (which directory of executable code to load) in a committed dotenv, and since
+ * loading a probe RUNS it, that is arbitrary code execution as the invoking
+ * user — on macOS too, where confinement would otherwise apply.
+ *
+ * Both directions are asserted, because a fix that closes the hole by deleting
+ * the feature is worse than the bug: `KEEL_PROBE_DIR` is documented
+ * (SKILL.md:124) and load-bearing for the fan-out contract. An operator's
+ * exported shell variable must keep working. A dotenv in the target must not.
+ * The difference is precisely this project's own predicate — one of those two is
+ * inside the write boundary of the thing being measured.
+ */
+describe('dotenv injection · the target cannot configure its own measurement', () => {
+  const CLASSIFY = join(import.meta.dir, '..', 'skills', 'keel', 'scripts', 'classify.ts');
+
+  /** A probe that writes a marker AT MODULE LOAD — importing it is executing it. */
+  const markerProbe = (marker: string) => `
+import { writeFileSync } from 'node:fs';
+writeFileSync(${JSON.stringify(marker)}, 'loaded');
+const probe = {
+  id: 'marker', version: 1, mintedAt: '2026-07-25T00:00:00.000Z',
+  mintedFrom: 'synthetic#test', description: 'writes a marker when loaded',
+  match() { return true; },
+  assess() { return { class: 'anchored', writeBoundary: { producer: 'x', actorCanWrite: false, argument: 'x' }, evidence: [], confidence: 1 }; },
+};
+export default probe;
+`;
+
+  test('a .env in the target neither disables the sandbox nor loads its probes', async () => {
+    const target = tree({
+      // The whole payload. No absolute paths: ${PWD} makes it self-contained.
+      '.env': 'KEEL_SANDBOX=0\nKEEL_PROBE_DIR=${PWD}/.keel-probes\n',
+      'nodes.json': JSON.stringify([NODE]),
+    });
+    const marker = join(target, 'LOADED');
+    const probeFile = join(target, '.keel-probes', 'marker.v1.ts');
+    mkdirSync(dirname(probeFile), { recursive: true });
+    writeFileSync(probeFile, markerProbe(marker));
+
+    // cwd is the target — exactly what a user's agent does. `PWD` is set with
+    // it because a shell maintains that variable and `Bun.spawn` does not: the
+    // payload's `${PWD}` expansion is what makes it self-contained, so a test
+    // that left PWD stale would point the attack at the wrong directory and
+    // pass for a reason that has nothing to do with the fix.
+    const { stdout, code } = await run(
+      [process.execPath, CLASSIFY, join(target, 'nodes.json'), '--json'],
+      { cwd: target, env: { ...(process.env as Record<string, string>), PWD: target } },
+    );
+
+    // The claim: the attacker's probe was never loaded, so it never ran.
+    expect(existsSync(marker)).toBe(false);
+
+    const out = JSON.parse(stdout) as ClassifyOutput;
+    expect(code).toBe(0);
+    // Nothing the target supplied got to decide anything about the target.
+    expect(out.decided).toEqual([]);
+    expect(out.pending.map((n) => n.id)).toEqual([NODE.id]);
+    // And the run says it ignored configuration, in the ARTIFACT — a warning
+    // that reaches only the terminal does not survive being saved or published.
+    const warned = out.warnings.join('\n');
+    expect(warned).toContain('KEEL_SANDBOX');
+    expect(warned).toContain('KEEL_PROBE_DIR');
+  });
+
+  test('an operator-exported KEEL_PROBE_DIR still works — the fix did not delete the feature', () => {
+    const saved = process.env.KEEL_PROBE_DIR;
+    try {
+      // No dotenv anywhere near: this is a shell export, outside the boundary of
+      // whatever is being measured, so it is a real configuration choice.
+      process.env.KEEL_PROBE_DIR = '/tmp/keel-operator-probes';
+      expect(scrubInjectedEnv(tree({ 'README.md': 'no dotenv here' }))).toBeNull();
+      expect(process.env.KEEL_PROBE_DIR).toBe('/tmp/keel-operator-probes');
+      expect(resolveProbeDirs([])).toContain('/tmp/keel-operator-probes');
+    } finally {
+      if (saved === undefined) delete process.env.KEEL_PROBE_DIR;
+      else process.env.KEEL_PROBE_DIR = saved;
+    }
+  });
+
+  test('only KEEL_* names are touched — a target’s own dotenv keys are left alone', () => {
+    const saved = process.env.KEEL_SANDBOX;
+    try {
+      const dir = tree({
+        '.env': '# comment\nDATABASE_URL=postgres://x\nexport KEEL_SANDBOX=0\nNOT_KEEL=1\n',
+      });
+      expect(dotenvInjectedKeelVars(dir)).toEqual(['KEEL_SANDBOX']);
+    } finally {
+      if (saved === undefined) delete process.env.KEEL_SANDBOX;
+      else process.env.KEEL_SANDBOX = saved;
+    }
   });
 });

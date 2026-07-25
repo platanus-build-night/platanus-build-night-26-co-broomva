@@ -30,6 +30,45 @@ This has two consequences:
    task scripts, and configuration. Do not run it against a repository you
    would not otherwise clone and open in an editor.
 
+### The sandbox is macOS-only. Stated plainly, because the difference is large.
+
+Probe code runs in a child process. On macOS that child is confined by
+`/usr/bin/sandbox-exec`; **on every other platform it is not confined at all**,
+because the mechanism does not exist there. What the child gets is a stripped
+environment — no inherited credentials — and a kill-timer held by the parent.
+That is real, and it is much less than confinement.
+
+| | macOS | Linux · Windows |
+|---|---|---|
+| Filesystem writes | denied | **allowed** |
+| Network | denied | **allowed** |
+| Subprocess execution | denied except `bun` | **allowed** |
+| `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gh`, `~/.netrc` reads | denied | **allowed** |
+| Other file reads | allowed | allowed |
+| Inherited environment | stripped | stripped |
+| Wall-clock kill-timer | enforced by the parent | enforced by the parent |
+
+So on Linux and Windows, **a probe can do anything you can do.** The
+denylist column above is also a denylist, not coverage: on macOS a probe can
+still read other credential-shaped files, and a probe's verdict text lands in
+`report.json`, so a read is exfiltratable by a probe that chooses to.
+
+Treat an unreviewed probe on a non-macOS machine as you would treat running an
+unreviewed script from the internet, because that is what it is.
+
+### Keel ignores configuration coming from the target
+
+Bun loads `.env` from the working directory, and when you point Keel at a
+target that directory is usually the target itself. A repository under
+measurement therefore must not be able to set Keel's own environment: it could
+otherwise disable the sandbox and choose which directory of executable code
+gets loaded.
+
+So any `KEEL_*` variable defined by a dotenv file in the working directory is
+**dropped before it is read**, and the run records that it was dropped. Export
+the variable in your shell if you meant it — your shell is outside the write
+boundary of the thing being measured, and a file in the target is not.
+
 Keel does not transmit your repository anywhere. Classification that cannot be
 handled by a probe is performed by whichever agent harness you are running
 Keel inside, under that harness's own model and network policy — so the

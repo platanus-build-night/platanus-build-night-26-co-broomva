@@ -157,7 +157,91 @@ export function buildProfile(): string {
  * could hand a fully-confined run a fabricated "sandbox not enforced" warning
  * (or suppress a real one).
  */
-const INTERNAL_KEEL_VARS: ReadonlySet<string> = new Set(['KEEL_SANDBOXED', 'KEEL_DEGRADED']);
+const INTERNAL_KEEL_VARS: ReadonlySet<string> = new Set([
+  'KEEL_SANDBOXED',
+  'KEEL_DEGRADED',
+  'KEEL_NOTICE',
+]);
+
+/**
+ * Dotenv files Bun loads automatically from the process cwd, in its load order.
+ * We only ever read the KEY NAMES out of these — never the values.
+ */
+const DOTENV_FILES = ['.env', '.env.development', '.env.test', '.env.production', '.env.local'];
+
+/**
+ * ---------------------------------------------------------------------------
+ * The measured repository does not get to configure its own measurement.
+ * ---------------------------------------------------------------------------
+ *
+ * Bun auto-loads `.env` from the process cwd, before any line of this file
+ * runs. During a normal run the cwd IS THE TARGET REPOSITORY — that is what
+ * SKILL.md and README tell users to do ("point your agent at a target"). So a
+ * repository under measurement can define any environment variable it likes in
+ * the Keel process, and two of ours are security-critical: `KEEL_SANDBOX`
+ * selects whether the seatbelt is applied at all, and `KEEL_PROBE_DIR` selects
+ * WHICH DIRECTORY OF EXECUTABLE CODE gets loaded. Loading a probe runs it.
+ *
+ * A hostile target carrying nothing but
+ *
+ *     .env                 KEEL_SANDBOX=0
+ *                          KEEL_PROBE_DIR=${PWD}/.keel-probes
+ *     .keel-probes/x.v1.ts <anything at all>
+ *
+ * therefore gets arbitrary code execution as the invoking user, on macOS too —
+ * the one platform where confinement would otherwise apply. `${PWD}` expansion
+ * makes it self-contained: no absolute paths, no user opt-in, no flags.
+ *
+ * The defect is not either variable. It is that a value which arrived from a
+ * file in the current directory is treated as an operator's configuration
+ * choice. It is not one: it is input from wherever the process happens to be
+ * standing. So we read the dotenv files ourselves, and any `KEEL_*` name they
+ * define is removed from the environment before anything reads it.
+ *
+ * This keeps every documented behaviour intact. `KEEL_PROBE_DIR` is a real
+ * feature (SKILL.md:124, the fan-out contract in docs/plans/00-orchestration.md)
+ * and an operator exporting it in their own shell is unaffected — the shell is
+ * outside the target's write boundary and a dotenv in the target is not. Which
+ * is, exactly, the predicate this whole project is built on.
+ */
+export function dotenvInjectedKeelVars(cwd: string = process.cwd()): string[] {
+  const found = new Set<string>();
+  for (const file of DOTENV_FILES) {
+    let text: string;
+    try {
+      text = readFileSync(join(cwd, file), 'utf8');
+    } catch {
+      continue; // absent or unreadable — nothing to distrust
+    }
+    for (const line of text.split('\n')) {
+      // KEY=..., optionally `export KEY=...`. Values are never parsed: we are
+      // deciding what to DELETE, so the name is the whole question.
+      const m = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/.exec(line);
+      const key = m?.[1];
+      if (key?.startsWith('KEEL_')) found.add(key);
+    }
+  }
+  return [...found].sort();
+}
+
+/**
+ * Delete dotenv-injected `KEEL_*` variables from this process's environment.
+ * Returns a warning line when anything was removed, else null.
+ *
+ * MUST run before argument parsing and before any config read. `--no-sandbox`
+ * sets `KEEL_SANDBOX` AFTER this point, so an operator's explicit flag still
+ * works while an injected value is already gone.
+ */
+export function scrubInjectedEnv(cwd: string = process.cwd()): string | null {
+  const injected = dotenvInjectedKeelVars(cwd);
+  if (injected.length === 0) return null;
+  for (const k of injected) delete process.env[k];
+  return (
+    `ignored ${injected.length} KEEL_* variable(s) defined by a dotenv file in the working ` +
+    `directory (${injected.join(', ')}): the target under measurement does not configure its ` +
+    `own measurement. Export them in your shell if you meant them.`
+  );
+}
 
 /** Only these travel into the sandbox. Nothing that looks like a credential. */
 export function sanitizedEnv(extra: Record<string, string> = {}): Record<string, string> {
@@ -548,6 +632,15 @@ function parseArgs(argv: string[]): { nodesPath?: string; dirs: string[] } {
 }
 
 if (import.meta.main) {
+  // FIRST, before argument parsing and before any config read: drop KEEL_* that
+  // a dotenv in the working directory injected. Only the PARENT does this — the
+  // child is re-exec'd with sanitizedEnv() from an already-clean parent, and it
+  // is spawned with a cwd of our own choosing, so re-scrubbing there would only
+  // risk deleting what the parent deliberately passed down.
+  const injectedWarning =
+    process.env.KEEL_SANDBOXED === '1' ? null : scrubInjectedEnv();
+  if (injectedWarning) console.error(`keel: ${injectedWarning}`);
+
   const argv = process.argv.slice(2);
   const { nodesPath, dirs } = parseArgs(argv);
   if (!nodesPath || !existsSync(nodesPath)) {
@@ -563,7 +656,10 @@ if (import.meta.main) {
     } catch {
       /* unreadable input — pending stays empty and the warning says why */
     }
-    return `${JSON.stringify({ decided: [], pending: nodes, warnings: why } satisfies ClassifyOutput, null, 2)}\n`;
+    // The scrub notice leads: it explains a run that ignored part of its own
+    // configuration, which changes how every line below it should be read.
+    const warnings = injectedWarning ? [injectedWarning, ...why] : why;
+    return `${JSON.stringify({ decided: [], pending: nodes, warnings } satisfies ClassifyOutput, null, 2)}\n`;
   };
 
   if (process.env.KEEL_SANDBOXED !== '1') {
@@ -572,6 +668,15 @@ if (import.meta.main) {
     // whether or not the seatbelt is available.
     const { cmd, sandboxed, reason } = sandboxCommand([SELF, ...argv]);
     let degradedBecause: string | null = sandboxed ? null : (reason ?? 'sandbox-exec unavailable');
+
+    /**
+     * Carried to the child so the scrub lands in `warnings` and therefore in the
+     * artifact, not only on this terminal. A run that silently ignored part of
+     * its own configuration must say so where the numbers are read.
+     */
+    const notice: Record<string, string> = injectedWarning
+      ? { KEEL_NOTICE: injectedWarning }
+      : {};
 
     /**
      * We were killed while the child ran. Say so and die — do NOT treat the
@@ -590,7 +695,7 @@ if (import.meta.main) {
     };
 
     if (sandboxed) {
-      const run = await runChild(cmd, sanitizedEnv({ KEEL_SANDBOXED: '1' }));
+      const run = await runChild(cmd, sanitizedEnv({ ...notice, KEEL_SANDBOXED: '1' }));
       dieIfSignalled(run);
       if (run.stdout.length > 0) {
         process.stdout.write(run.stdout);
@@ -633,7 +738,7 @@ if (import.meta.main) {
       console.error(`keel: ${warn}`);
       const run = await runChild(
         [process.execPath, SELF, ...argv],
-        sanitizedEnv({ KEEL_SANDBOXED: '1', KEEL_DEGRADED: warn }),
+        sanitizedEnv({ ...notice, KEEL_SANDBOXED: '1', KEEL_DEGRADED: warn }),
       );
       dieIfSignalled(run);
       if (run.stdout.length > 0) {
@@ -648,6 +753,8 @@ if (import.meta.main) {
   } else {
     // CHILD SIDE. This is the only process that loads and runs probe code.
     const seed: string[] = [];
+    const notice = process.env.KEEL_NOTICE?.trim();
+    if (notice) seed.push(notice);
     const degraded = process.env.KEEL_DEGRADED?.trim();
     if (degraded) seed.push(degraded);
 

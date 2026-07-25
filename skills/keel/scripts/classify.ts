@@ -54,6 +54,14 @@ import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { ClassifyOutput, GroundingClass, Node, Verdict } from '../schemas/keel.ts';
 import { coverageByKind } from '../schemas/keel.ts';
+// A pure function over the filesystem — it loads no probe and executes nothing.
+// Safe here despite the rule above: `probe-loader.ts` is reached from
+// `probe-sandbox.ts` through a DYNAMIC import inside a function (see
+// probe-sandbox.ts:382-390), so importing this module puts nothing that touches
+// probe code into classify's module graph. The alternative — a second copy of
+// the scrub — is worse: duplicated security logic drifts, and this is the one
+// function whose whole job is to be applied consistently.
+import { scrubInjectedEnv } from './probe-sandbox.ts';
 
 const SKILL_ROOT = resolve(import.meta.dir, '..');
 
@@ -821,6 +829,13 @@ function human(out: ClassifyOutput, nodes: Node[], opts: Options): string {
 }
 
 if (import.meta.main) {
+  // Before anything reads configuration: a repository under measurement does not
+  // get to configure its own measurement. `defaultProbeDirs()` below reads
+  // KEEL_PROBE_DIR, and the child is spawned with `env: process.env` — so a
+  // dotenv-injected value would otherwise select which executable code loads.
+  const injectedWarning = scrubInjectedEnv();
+  if (injectedWarning) console.error(`classify: ${injectedWarning}`);
+
   const parsed = parseArgs(process.argv.slice(2));
   if ('error' in parsed) {
     console.error(`classify: ${parsed.error}\n\n${USAGE}`);
@@ -835,6 +850,11 @@ if (import.meta.main) {
   }
 
   const out = await classify(opts, nodes);
+  // Leads the list: it explains a run that ignored part of its own configuration,
+  // which changes how everything below it should be read. On stderr AND in the
+  // artifact — a warning that only reaches the terminal does not survive being
+  // saved, emailed, or published.
+  if (injectedWarning) out.warnings.unshift(injectedWarning);
 
   if (opts.batches) {
     console.log(JSON.stringify(batchPending(out.pending, opts.batchSize), null, 2));

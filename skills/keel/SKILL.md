@@ -88,11 +88,19 @@ For each node:
    'probe'` and move on. This costs no tokens.
 
    Probe code is executed by loading it, so **loading and running probes happen
-   only inside a sandboxed child process** with a kill-timer held by the parent:
+   only inside a separate child process** with a kill-timer held by the parent:
    a synchronous `while(true)` cannot be preempted in JS, so an in-process time
    guard is fiction. A probe that throws, hangs, or exceeds the budget is skipped
    with a warning and its nodes fall through to your judgment — never fatal to
    the run.
+
+   **That child is sandboxed on macOS only.** `sandbox-exec` exists nowhere
+   else, so on Linux and Windows the child gets a stripped environment and the
+   kill-timer and nothing more: a probe there can write files, reach the
+   network, and spawn processes. Say so if you report on probe provenance, and
+   see `SECURITY.md` for the enforced-vs-not table. A run that had to ignore
+   part of its own configuration — a `KEEL_*` variable a dotenv in the target
+   tried to set — records that in `warnings`; carry it into the report.
 2. **On no match, or on abstention, judge it yourself.** Read `raw`. Ask the
    only question that matters:
 

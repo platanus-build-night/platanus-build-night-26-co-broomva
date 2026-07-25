@@ -120,9 +120,15 @@ The agent gathers the verification edges, classifies each one, and writes a
 survives being emailed. Ask it to `route` afterwards to get a proposal per
 ungrounded check.
 
-Nothing is transmitted anywhere. Classification a probe cannot handle happens
-in whatever model your harness is already running, under your existing
-provider terms.
+Keel itself transmits nothing. Classification a probe cannot handle happens in
+whatever model your harness is already running, under your existing provider
+terms.
+
+Probes, though, are **executed code**, and the sandbox that confines them is
+macOS-only — `sandbox-exec` exists nowhere else. On Linux and Windows a probe
+runs with a stripped environment and a kill-timer, but it can write files,
+reach the network, and spawn processes. Review a probe before you install it,
+and see [SECURITY.md](SECURITY.md) for exactly what is enforced where.
 
 ## Scope, honestly
 
