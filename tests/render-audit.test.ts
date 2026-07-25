@@ -414,3 +414,100 @@ describe('render · the tally is arithmetic over what the verdicts carry', () =>
     expect(textOf(render(report))).toContain(`agreed / compared = ${expected} / ${compared}`);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Malformed audit blocks.
+//
+// These bypass the `Spec` builders on purpose. `Spec.audit` is typed to a valid
+// `GroundingClass` plus a boolean, so a well-typed producer cannot express any
+// of the shapes below — and every one of them is reachable from JSON, which is
+// how a `Report` actually arrives. The renderer's job is to refuse them.
+//
+// The direction is the whole point. `{agreed: true}` with no `agentClass` names
+// no re-decided class, so no comparison happened; counting it as agreement lets
+// a verdict assert its own audit passed, on the one number that exists to catch
+// a claim standing in for a check. Counting it as a disagreement is equally
+// false and additionally unshowable: the per-verdict branch has no class to
+// print, so the summary would claim a disagreement no row can be found for.
+// ---------------------------------------------------------------------------
+
+/** A report whose single probe-decided verdict carries `audit` verbatim. */
+function reportWithRawAudit(audit: unknown): Report {
+  const report = reportOf([{ id: 'n1', class: 'anchored', decidedBy: 'probe' }]);
+  (report.verdicts[0] as unknown as Record<string, unknown>).audit = audit;
+  return report;
+}
+
+const MALFORMED: Array<[string, unknown]> = [
+  ['agreed:true with no agentClass', { agreed: true, at: 'x' }],
+  ['agreed:true with a garbage agentClass', { agentClass: 'totally_fine', agreed: true, at: 'x' }],
+  ['agreed as a truthy string', { agentClass: 'anchored', agreed: 'yes', at: 'x' }],
+  ['agreed as 1', { agentClass: 'anchored', agreed: 1, at: 'x' }],
+  ['audit: null', null],
+  ['audit as a bare string', 'audited'],
+];
+
+describe('a malformed audit block is never agreement', () => {
+  for (const [label, audit] of MALFORMED) {
+    test(`${label} — excluded from the denominator, not counted as agreement`, () => {
+      const report = reportWithRawAudit(audit);
+      const tally = auditTally(report.verdicts);
+      expect(tally.compared).toBe(0);
+      expect(tally.agreed).toBe(0);
+      expect(tally.disagreed).toBe(0);
+      expect(tally.malformed).toBe(1);
+
+      // Zero WELL-FORMED comparisons is the not-run state, whatever arrived
+      // alongside — so no rate at all, and specifically not the flattering one.
+      // Asserted on the audit card's OWN strings: a bare `1 / 1` also occurs in
+      // the ratio formula and in "nodes judged / gathered", so matching that
+      // would fail for reasons having nothing to do with this feature.
+      const text = textOf(render(report));
+      expect(text).toContain('ε-audit — not run');
+      expect(text).not.toContain('agreed / compared');
+      expect(text).not.toMatch(/rate \d/);
+    });
+
+    test(`${label} — disclosed, never silently dropped`, () => {
+      const text = textOf(render(reportWithRawAudit(audit)));
+      expect(text).toContain('could not be read');
+      // And it must not be dressed up as a finding about the target.
+      expect(text).toContain('defect in whatever wrote the report');
+    });
+
+    test(`${label} — the verdict row says unreadable, not disagreement`, () => {
+      const html = render(reportWithRawAudit(audit));
+      expect(html).toContain('data-audit-malformed');
+      expect(html).not.toContain('data-audit-disagreed');
+      expect(textOf(html)).toContain('ε-audit block unreadable');
+    });
+  }
+
+  test('a summary disagreement count always has a row a reader can find', () => {
+    // The regression that motivated this: `audit: null` reported "1
+    // disagreement(s)" while zero verdicts carried the marker, so the reader was
+    // told about a disagreement that could not be located.
+    for (const [, audit] of MALFORMED) {
+      const html = render(reportWithRawAudit(audit));
+      const claimed = /(\d+) disagreement\(s\) recorded/.exec(textOf(html));
+      const marked = (html.match(/data-audit-disagreed/g) ?? []).length;
+      expect(marked).toBe(claimed ? Number(claimed[1]) : 0);
+    }
+  });
+
+  test('a well-formed block alongside a malformed one still counts, alone', () => {
+    const report = reportOf([
+      { id: 'good', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'anchored', agreed: true } },
+      { id: 'bad', class: 'anchored', decidedBy: 'probe' },
+    ]);
+    (report.verdicts[1] as unknown as Record<string, unknown>).audit = { agreed: true };
+    const tally = auditTally(report.verdicts);
+    expect(tally.compared).toBe(1);
+    expect(tally.agreed).toBe(1);
+    expect(tally.malformed).toBe(1);
+    const text = textOf(render(report));
+    // The rate is over the ONE readable comparison, not inflated to 2/2.
+    expect(text).toContain('agreed / compared = 1 / 1');
+    expect(text).toContain('could not be read');
+  });
+});

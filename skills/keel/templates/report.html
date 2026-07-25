@@ -166,6 +166,7 @@
 {{{DISAGREEMENT}}}
 {{{COVERAGE}}}
 {{{NONPROBE}}}
+{{{MALFORMED}}}
   <p class="k-meta kr-audit__note">A comparison is one cached verdict re-decided agentically
      with the cached class hidden, then checked against it. Counts print with
      the rate for the reason the grounding ratio prints with its denominator:
@@ -185,16 +186,36 @@
 <!--@block audit-none -->
 <div class="k-card kr-section">
   <p class="k-eyebrow">ε-audit — not run</p>
-  <p>No verdict in this report carries an <span class="k-mono">audit</span>
+  <p>No verdict in this report carries a readable <span class="k-mono">audit</span>
      block, so nothing was re-decided and there is no agreement rate to report.
      This is not agreement, and it is not full agreement either: a rate over
-     zero comparisons would state a measurement that was never taken.</p>
+     zero comparisons would state a measurement that was never taken.
+     (&ldquo;Readable&rdquo; is load-bearing: a block can be present and state no
+     comparison, and this state covers that too — see below if so.)</p>
   <p class="k-meta">This run carries <span class="k-mono">{{PROBE_DECIDED}}</span>
      probe-decided verdict(s), none of them audited. Audit coverage is itself
      shoppable — audit none of the library and no disagreement can ever be
      found — so the absence is printed here rather than left to be inferred
      from a missing section.</p>
+{{{MALFORMED}}}
 </div>
+<!--@endblock -->
+
+<!-- An `audit` block that arrived unreadable — no re-decided class, or `agreed`
+     that is not a boolean. It is NOT counted as agreement (that would let a
+     verdict assert its own audit passed) and NOT counted as a disagreement
+     (that would claim a comparison no verdict can be shown for). It is excluded
+     from the denominator and named here, because a comparison that cannot be
+     read is not evidence — the same fail-closed move classify.ts makes when it
+     drops a probe verdict claiming `unknown`. -->
+<!--@block audit-malformed -->
+  <p class="kr-audit-alert"><strong>{{N}} audit block(s) could not be
+     read.</strong> Each carries no re-decided class, or an
+     <span class="k-mono">agreed</span> that is not a boolean, so it states no
+     comparison. These are excluded from the agreement denominator rather than
+     counted as agreement or as disagreement — an unreadable comparison is not
+     evidence, and neither column would be true. Fix the producer: this is a
+     defect in whatever wrote the report, not a finding about the target.</p>
 <!--@endblock -->
 
 <!--@block audit-coverage -->
@@ -401,6 +422,16 @@ signal is sufficient.</p>
        the verdict carries <span class="k-class" data-class="{{CLASS}}">{{CLASS}}</span>,
        and that is the class the ratio counted. Recorded
        <span class="k-mono">{{AT}}</span>. One of the two is wrong.</p>
+<!--@endblock -->
+
+<!-- No slots: there is nothing trustworthy in the block to interpolate. Printing
+     a garbage `agentClass` back out would dress unreadable input as a finding. -->
+<!--@block verdict-audit-malformed -->
+    <p class="kr-line kr-audit-alert" data-audit-malformed><strong>ε-audit block
+       unreadable.</strong> This verdict carries an <span class="k-mono">audit</span>
+       with no re-decided class, or an <span class="k-mono">agreed</span> that is
+       not a boolean. It states no comparison, so it counts as neither agreement
+       nor disagreement and is excluded from the rate above.</p>
 <!--@endblock -->
 
 <!--@block evidence-item -->

@@ -228,17 +228,28 @@ function smellsOf(v: Verdict): boolean {
  * about whether a verdict "really" agreed. That distinction is the line
  * between arithmetic (allowed here) and judgment (not).
  *
- * `agreed === true` is the only shape counted as agreement, so an `audit`
- * block that arrives malformed lands in `disagreed` and is rendered loudly.
- * That is the fail-closed direction: the alternative — treating an
- * unrecognisable comparison as agreement — is precisely the cheap green this
- * tool exists to name.
+ * A block only counts once it DESCRIBES a comparison. `agreed: true` with no
+ * `agentClass` names no re-decided class, so no comparison happened — counting
+ * it as agreement would let a verdict assert its own audit passed, which is a
+ * status field the actor sets, on the one number that exists to catch that.
+ * Counting it as a *disagreement* is equally false, and worse than it looks: the
+ * summary then claims a disagreement no verdict can be shown for, because the
+ * per-verdict branch has no class to render.
+ *
+ * So malformed blocks are excluded from `compared` and reported as `malformed`.
+ * A comparison that cannot be read is not evidence — the same fail-closed move
+ * `classify.ts` makes when it drops a probe verdict claiming `unknown` and hands
+ * the node back to the agent, rather than letting an unreadable answer become a
+ * cheap one. Zero WELL-FORMED comparisons is therefore "not run", whatever
+ * wreckage arrived alongside.
  */
 export interface AuditTally {
-  /** verdicts carrying an `audit` block. The agreement denominator. */
+  /** verdicts carrying a WELL-FORMED `audit` block. The agreement denominator. */
   compared: number;
   agreed: number;
   disagreed: number;
+  /** blocks present but unreadable. Excluded from `compared`; disclosed, never silent. */
+  malformed: number;
   /** the population the ε-audit samples from. */
   probeDecided: number;
   /** how many of that population were actually audited — coverage. */
@@ -247,17 +258,37 @@ export interface AuditTally {
   auditedNonProbe: number;
 }
 
+/**
+ * Does this verdict carry an audit block that actually states a comparison?
+ *
+ * Both halves are required, and neither is a formality: `agentClass` is the
+ * class the agent re-decided (without it there is nothing to compare against),
+ * and `agreed` must be a real boolean — `"yes"`, `1` and `null` are not
+ * verdicts about the world, they are a producer's typo or a probe.
+ */
+export function auditIsWellFormed(v: Verdict): boolean {
+  const a = v.audit;
+  if (a === null || typeof a !== 'object') return false;
+  return (
+    typeof a.agentClass === 'string' &&
+    isGroundingClass(a.agentClass) &&
+    typeof a.agreed === 'boolean'
+  );
+}
+
 export function auditTally(verdicts: Verdict[]): AuditTally {
-  const audited = verdicts.filter((v) => v.audit !== undefined);
-  const agreed = audited.filter((v) => v.audit?.agreed === true).length;
-  const probeAudited = audited.filter((v) => v.decidedBy === 'probe').length;
+  const present = verdicts.filter((v) => 'audit' in v && v.audit !== undefined);
+  const wellFormed = present.filter(auditIsWellFormed);
+  const agreed = wellFormed.filter((v) => v.audit?.agreed === true).length;
+  const probeAudited = wellFormed.filter((v) => v.decidedBy === 'probe').length;
   return {
-    compared: audited.length,
+    compared: wellFormed.length,
     agreed,
-    disagreed: audited.length - agreed,
+    disagreed: wellFormed.length - agreed,
+    malformed: present.length - wellFormed.length,
     probeDecided: verdicts.filter((v) => v.decidedBy === 'probe').length,
     probeAudited,
-    auditedNonProbe: audited.length - probeAudited,
+    auditedNonProbe: wellFormed.length - probeAudited,
   };
 }
 
@@ -607,18 +638,20 @@ function renderVerdict(
     // the one outcome that says a probe is mis-classifying, and the whole
     // reason stage 4 exists. `agreed === true` is the only shape that takes
     // the quiet variant — see `auditTally`.
-    AUDIT: v.audit
-      ? v.audit.agreed === true
-        ? fill(t['verdict-audit'] as string, {
-            AGENT_CLASS: v.audit.agentClass,
-            AT: v.audit.at,
-          })
-        : fill(t['verdict-audit-disagreed'] as string, {
-            AGENT_CLASS: v.audit.agentClass,
-            CLASS: v.class,
-            AT: v.audit.at,
-          })
-      : '',
+    AUDIT: !('audit' in v) || v.audit === undefined
+      ? ''
+      : !auditIsWellFormed(v)
+        ? (t['verdict-audit-malformed'] as string)
+        : v.audit?.agreed === true
+          ? fill(t['verdict-audit'] as string, {
+              AGENT_CLASS: v.audit.agentClass,
+              AT: v.audit.at,
+            })
+          : fill(t['verdict-audit-disagreed'] as string, {
+              AGENT_CLASS: v.audit?.agentClass ?? '',
+              CLASS: v.class,
+              AT: v.audit?.at ?? '',
+            }),
   });
 }
 
@@ -633,8 +666,19 @@ function renderAudit(t: Template, a: AuditTally): string {
   // figure this file could print and the least earned one, and an unaudited
   // library is an absence of evidence: the tool exists to stop that reading as
   // evidence.
+  // Malformed blocks are disclosed wherever we land, because "an audit arrived
+  // and could not be read" is a fact about the run, and swallowing it would make
+  // non-coverage invisible in exactly the way this card exists to prevent.
+  const malformed =
+    a.malformed > 0
+      ? fill(t['audit-malformed'] as string, { N: num(a.malformed) })
+      : '';
+
   if (a.compared === 0) {
-    return fill(t['audit-none'] as string, { PROBE_DECIDED: num(a.probeDecided) });
+    return fill(t['audit-none'] as string, {
+      PROBE_DECIDED: num(a.probeDecided),
+      MALFORMED: malformed,
+    });
   }
 
   // A coverage percentage over an empty probe population is the same
@@ -662,6 +706,7 @@ function renderAudit(t: Template, a: AuditTally): string {
       a.auditedNonProbe > 0
         ? fill(t['audit-nonprobe'] as string, { N: num(a.auditedNonProbe) })
         : '',
+    MALFORMED: malformed,
   });
 }
 
@@ -727,6 +772,11 @@ export function loadTemplate(path = join(HERE, '..', 'templates', 'report.html')
     // the defect this pair exists to close.
     'audit',
     'audit-none',
+    // Same argument one scope down: without these, a template could ship that
+    // renders unreadable audits as agreement (or as nothing) instead of naming
+    // them, which is the fail-open this pair exists to close.
+    'audit-malformed',
+    'verdict-audit-malformed',
   ];
   const missing = required.filter((b) => !(b in blocks));
   if (missing.length > 0) {
