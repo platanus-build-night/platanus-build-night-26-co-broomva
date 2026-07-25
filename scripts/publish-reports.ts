@@ -19,6 +19,9 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { homedir } from 'node:os';
+
+const HOME = homedir();
 
 const REPO = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const REPORTS = join(REPO, 'reports');
@@ -42,6 +45,21 @@ const css = readFileSync(join(REPO, 'skills/keel/design/tokens.css'), 'utf8') +
 // though it were solid.
 const THIN_DENOMINATOR = 10;
 
+/**
+ * Machine-local absolute paths leak into GENERATED artifacts through diagnostic
+ * strings — a probe-shadow warning naming its probe dir, a curve disclosure
+ * naming the reports dir, a verdict quoting a command's output. They are true
+ * on the machine that wrote them and meaningless anywhere else, and committing
+ * them fails scripts/portability-check.sh for good reason: a path that exists
+ * only on one laptop is exactly the kind of unreproducible detail this project
+ * argues against publishing.
+ *
+ * Rewritten to a repo-relative form rather than deleted, so the diagnostic still
+ * says which file it meant.
+ */
+const scrub = (text: string): string =>
+  text.split(REPO + '/').join('<repo>/').split(REPO).join('<repo>').split(HOME + '/').join('<home>/');
+
 const esc = (s: unknown) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -58,7 +76,12 @@ for (const e of summary.entries ?? []) {
     stdout: 'pipe',
     stderr: 'pipe',
   });
-  if (r.exitCode === 0 && existsSync(dst)) rendered.push(e.name);
+  if (r.exitCode === 0 && existsSync(dst)) {
+    // The renderer faithfully carries whatever the report contained, so the scrub
+    // belongs here — at the boundary where an artifact stops being local.
+    writeFileSync(dst, scrub(readFileSync(dst, 'utf8')), 'utf8');
+    rendered.push(e.name);
+  }
   else {
     failedRender.push(e.name);
     console.error(`publish: render failed for ${e.name}: ${new TextDecoder().decode(r.stderr).slice(0, 300)}`);
@@ -262,7 +285,7 @@ measure is shopping its own denominator.</p>
 </html>
 `;
 
-writeFileSync(join(OUT, 'index.html'), html, 'utf8');
+writeFileSync(join(OUT, 'index.html'), scrub(html), 'utf8');
 
 console.log(`publish: ${rendered.length} report(s) → ${OUT}`);
 if (failedRender.length) console.log(`publish: ${failedRender.length} render failure(s): ${failedRender.join(', ')}`);

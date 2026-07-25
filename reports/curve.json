@@ -2,7 +2,7 @@
   "schema": "keel.curve/1",
   "generatedAt": "2026-07-25T03:25:29.500Z",
   "source": {
-    "dir": "/Users/broomva/keel/reports",
+    "dir": "<repo>/reports",
     "reportFiles": 10,
     "skippedFiles": [
       "corpus-summary.json (no string \"target\")",
@@ -88,7 +88,7 @@
     "Run 6 (mcp-python-sdk) judged 25 of 121 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
     "Run 7 (simonw-llm) judged 25 of 38 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
     "Run 9 (requests) judged 25 of 106 gathered nodes — a cap. Per-node cost below is per JUDGED node.",
-    "Provenance \"measured\" was declared on the COMMAND LINE (--provenance), not in /Users/broomva/keel/reports/corpus.meta.json. The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.",
+    "Provenance \"measured\" was declared on the COMMAND LINE (--provenance), not in <repo>/reports/corpus.meta.json. The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.",
     "Token counts are ESTIMATES in 10 of 10 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill, so the token axis reads \"estimated tokens\" and nothing here claims a measured token count."
   ],
   "points": [
@@ -551,7 +551,7 @@
     "empirical": {
       "ran": false,
       "reason": "no re-run supplied (--shuffled) and none declared in corpus.meta.json",
-      "baselineDir": "/Users/broomva/keel/reports",
+      "baselineDir": "<repo>/reports",
       "shuffledDir": null,
       "matchedTargets": 0,
       "unmatched": [],

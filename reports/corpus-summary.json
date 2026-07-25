@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-07-25T03:13:36.805Z",
-  "corpusFile": "/Users/broomva/keel/corpus.json",
+  "corpusFile": "<repo>/corpus.json",
   "nodeCap": 40,
   "corpusOrder": [
     "keel",
@@ -286,7 +286,7 @@
         "judgmentMs": 417496
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
     },
     {
@@ -339,7 +339,7 @@
         "judgmentMs": 492834
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
     },
     {
@@ -392,7 +392,7 @@
         "judgmentMs": 493133
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
     },
     {
@@ -445,7 +445,7 @@
         "judgmentMs": 292258
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
     },
     {
@@ -494,7 +494,7 @@
         "judgmentMs": 283585
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts",
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts",
         ".github/workflows/build_wheels.yml#73-run-check-manifest: judged by both probe and agent — the agent verdict is recorded",
         ".github/workflows/build_wheels.yml#77-build-sdist: judged by both probe and agent — the agent verdict is recorded"
       ]
@@ -551,7 +551,7 @@
         "judgmentMs": 415955
       },
       "warnings": [
-        "probe \"frozen-dependency-install\" v1 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at /Users/broomva/keel/.keel-probes-corpus/frozen-dependency-install.v2.ts"
+        "probe \"frozen-dependency-install\" v1 at <repo>/.keel-probes-corpus/frozen-dependency-install.v1.ts is shadowed by v2 at <repo>/.keel-probes-corpus/frozen-dependency-install.v2.ts"
       ]
     }
   ],

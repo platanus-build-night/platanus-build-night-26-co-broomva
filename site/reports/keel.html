@@ -878,7 +878,7 @@ signal is sufficient.</p>
       <li>scripts/bstack-rule-of-three.py:29-30 — inputs are AGENTS.md and research/entities/pattern/bstack-engine.md, both in-repo markdown</li>
       <li>scripts/bstack-rule-of-three.py:102-118 — has_three_or_more_instances() regexes &#39;N+&#39; / &#39;N instances&#39; / &#39;meets rule-of-three&#39; out of a table cell the promoter typed</li>
       <li>scripts/bstack-rule-of-three.py:148-150 — `if not BSTACK_ENGINE.exists(): return 1`</li>
-      <li>Empirical: `python3 scripts/bstack-rule-of-three.py` → &#39;[FAIL] /Users/broomva/keel/research/entities/pattern/bstack-engine.md not found&#39;, exit=1</li>
+      <li>Empirical: `python3 scripts/bstack-rule-of-three.py` → &#39;[FAIL] <repo>/research/entities/pattern/bstack-engine.md not found&#39;, exit=1</li>
       <li>`ls research/entities/pattern/` → No such file or directory (the whole research/ tree is absent)</li>
       <li>Makefile:73-93 — documented scope-out; the target is not a prerequisite of bstack-l3-trust and appears in no workflow (.github/workflows/ = l3-stability.yml, pages.yml, portability.yml)</li>
 
@@ -930,7 +930,7 @@ signal is sufficient.</p>
     <ul class="kr-ev">
       <li>.github/workflows/l3-stability.yml:52-66 — `out=$(bash $BSTACK/scripts/compute-lambda.sh --human)`, status captured to $GITHUB_OUTPUT, step forced to `exit 0`</li>
       <li>~/.claude/skills/bstack/scripts/compute-lambda.sh — config lookup order puts `$WORKSPACE/.control/rcs-parameters.toml` first; exit 1 iff any lambda_i &lt;= 0</li>
-      <li>/Users/broomva/keel/.control/rcs-parameters.toml:47-64 — literal gamma/L_theta/rho/L_d/eta/beta/tau_bar/nu/tau_a per level, hand-set</li>
+      <li><repo>/.control/rcs-parameters.toml:47-64 — literal gamma/L_theta/rho/L_d/eta/beta/tau_bar/nu/tau_a per level, hand-set</li>
       <li>.github/workflows/l3-stability.yml:16-21 — workflow triggers on changes to `.control/rcs-parameters.toml` itself</li>
 
     </ul>
@@ -946,7 +946,7 @@ signal is sufficient.</p>
       <li>.github/workflows/l3-stability.yml:68-81 — `set +e`, `bash $BSTACK/scripts/l3-rate-gate.sh`, terminal `exit 0`</li>
       <li>.github/workflows/l3-stability.yml:125-133 — final status branches only on `steps.compute.outputs.status`; comment at 128 says &#39;L3 rate exceeded is informational&#39;</li>
       <li>~/.claude/skills/bstack/scripts/l3-rate-gate.sh — reads `gates.l3_paths.patterns` and L3 `tau_a` from `$WORKSPACE/.control/rcs-parameters.toml`, counts via `git log --diff-filter=M`</li>
-      <li>/Users/broomva/keel/.control/rcs-parameters.toml — the parameter file lives in the same tree as the change under test</li>
+      <li><repo>/.control/rcs-parameters.toml — the parameter file lives in the same tree as the change under test</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.82</span></p>
@@ -975,7 +975,7 @@ signal is sufficient.</p>
       <li>.github/workflows/l3-stability.yml:125-133 — `if [ &quot;${{ steps.compute.outputs.status }}&quot; != &quot;0&quot; ]; then ... exit 1`</li>
       <li>.github/workflows/l3-stability.yml:10-11 — header notes the check &#39;can be made required via branch protection rules&#39;</li>
       <li>`gh api repos/{owner}/{repo}/branches/main/protection` → 404 Not Found (no protection configured)</li>
-      <li>/Users/broomva/keel/.control/rcs-parameters.toml — source of every term in the inequality</li>
+      <li><repo>/.control/rcs-parameters.toml — source of every term in the inequality</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
@@ -1081,7 +1081,7 @@ signal is sufficient.</p>
     <p class="kr-line">producer <span class="k-mono">git clone of https://github.com/broomva/bstack.git (unpinned, --depth 1 of default branch), exporting BSTACK into $GITHUB_ENV</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
       <li>.github/workflows/l3-stability.yml:41-50 — conditional on `.agents/skills/bstack`, else `git clone --depth 1 https://github.com/broomva/bstack.git /tmp/bstack`</li>
-      <li>`ls -d /Users/broomva/keel/.agents/skills/bstack` → No such file or directory (the clone branch is the live path)</li>
+      <li>`ls -d <repo>/.agents/skills/bstack` → No such file or directory (the clone branch is the live path)</li>
       <li>No commit SHA or tag pin on the clone</li>
 
     </ul>
@@ -1149,7 +1149,7 @@ signal is sufficient.</p>
   <div class="kr-curve">
 <svg class="keel-curve" xmlns="http://www.w3.org/2000/svg" width="1080" height="1414" viewBox="0 0 1080 1414" role="img" aria-labelledby="keel-curve-title keel-curve-desc" style="max-width:100%;height:auto">
 <title id="keel-curve-title">Keel crystallization curve</title>
-<desc id="keel-curve-desc">Crystallization curve over 10 runs from /Users/broomva/keel/reports. falls — total fitted change -47.3% of the mean across 10 runs (R^2 0.19, so the line explains less than half the variance — read the raw squares)</desc>
+<desc id="keel-curve-desc">Crystallization curve over 10 runs from <repo>/reports. falls — total fitted change -47.3% of the mean across 10 runs (R^2 0.19, so the line explains less than half the variance — read the raw squares)</desc>
 <style>.keel-curve { font-family: var(--k-font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif); }
 .keel-curve text { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
 .keel-curve .kc-bg { fill: var(--k-bg-0, #07090c); }
@@ -1348,7 +1348,7 @@ signal is sufficient.</p>
 <text class="kc-note" x="32" y="1228">- Run 6 (mcp-python-sdk) judged 25 of 121 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
 <text class="kc-note" x="32" y="1244">- Run 7 (simonw-llm) judged 25 of 38 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
 <text class="kc-note" x="32" y="1260">- Run 9 (requests) judged 25 of 106 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
-<text class="kc-note" x="32" y="1276">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in /Users/broomva/keel/reports/corpus.meta.json.</text>
+<text class="kc-note" x="32" y="1276">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in <repo>/reports/corpus.meta.json.</text>
 <text class="kc-note" x="32" y="1292">The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.</text>
 <text class="kc-note" x="32" y="1308">- Token counts are ESTIMATES in 10 of 10 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill,</text>
 <text class="kc-note" x="32" y="1324">so the token axis reads &quot;estimated tokens&quot; and nothing here claims a measured token count.</text>

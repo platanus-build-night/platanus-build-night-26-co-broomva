@@ -385,7 +385,7 @@
         "scripts/bstack-rule-of-three.py:29-30 — inputs are AGENTS.md and research/entities/pattern/bstack-engine.md, both in-repo markdown",
         "scripts/bstack-rule-of-three.py:102-118 — has_three_or_more_instances() regexes 'N+' / 'N instances' / 'meets rule-of-three' out of a table cell the promoter typed",
         "scripts/bstack-rule-of-three.py:148-150 — `if not BSTACK_ENGINE.exists(): return 1`",
-        "Empirical: `python3 scripts/bstack-rule-of-three.py` → '[FAIL] /Users/broomva/keel/research/entities/pattern/bstack-engine.md not found', exit=1",
+        "Empirical: `python3 scripts/bstack-rule-of-three.py` → '[FAIL] <repo>/research/entities/pattern/bstack-engine.md not found', exit=1",
         "`ls research/entities/pattern/` → No such file or directory (the whole research/ tree is absent)",
         "Makefile:73-93 — documented scope-out; the target is not a prerequisite of bstack-l3-trust and appears in no workflow (.github/workflows/ = l3-stability.yml, pages.yml, portability.yml)"
       ],
@@ -472,7 +472,7 @@
       },
       "evidence": [
         ".github/workflows/l3-stability.yml:41-50 — conditional on `.agents/skills/bstack`, else `git clone --depth 1 https://github.com/broomva/bstack.git /tmp/bstack`",
-        "`ls -d /Users/broomva/keel/.agents/skills/bstack` → No such file or directory (the clone branch is the live path)",
+        "`ls -d <repo>/.agents/skills/bstack` → No such file or directory (the clone branch is the live path)",
         "No commit SHA or tag pin on the clone"
       ],
       "confidence": 0.8,
@@ -489,7 +489,7 @@
       "evidence": [
         ".github/workflows/l3-stability.yml:52-66 — `out=$(bash $BSTACK/scripts/compute-lambda.sh --human)`, status captured to $GITHUB_OUTPUT, step forced to `exit 0`",
         "~/.claude/skills/bstack/scripts/compute-lambda.sh — config lookup order puts `$WORKSPACE/.control/rcs-parameters.toml` first; exit 1 iff any lambda_i <= 0",
-        "/Users/broomva/keel/.control/rcs-parameters.toml:47-64 — literal gamma/L_theta/rho/L_d/eta/beta/tau_bar/nu/tau_a per level, hand-set",
+        "<repo>/.control/rcs-parameters.toml:47-64 — literal gamma/L_theta/rho/L_d/eta/beta/tau_bar/nu/tau_a per level, hand-set",
         ".github/workflows/l3-stability.yml:16-21 — workflow triggers on changes to `.control/rcs-parameters.toml` itself"
       ],
       "confidence": 0.85,
@@ -507,7 +507,7 @@
         ".github/workflows/l3-stability.yml:68-81 — `set +e`, `bash $BSTACK/scripts/l3-rate-gate.sh`, terminal `exit 0`",
         ".github/workflows/l3-stability.yml:125-133 — final status branches only on `steps.compute.outputs.status`; comment at 128 says 'L3 rate exceeded is informational'",
         "~/.claude/skills/bstack/scripts/l3-rate-gate.sh — reads `gates.l3_paths.patterns` and L3 `tau_a` from `$WORKSPACE/.control/rcs-parameters.toml`, counts via `git log --diff-filter=M`",
-        "/Users/broomva/keel/.control/rcs-parameters.toml — the parameter file lives in the same tree as the change under test"
+        "<repo>/.control/rcs-parameters.toml — the parameter file lives in the same tree as the change under test"
       ],
       "confidence": 0.82,
       "decidedBy": "agent"
@@ -540,7 +540,7 @@
         ".github/workflows/l3-stability.yml:125-133 — `if [ \"${{ steps.compute.outputs.status }}\" != \"0\" ]; then ... exit 1`",
         ".github/workflows/l3-stability.yml:10-11 — header notes the check 'can be made required via branch protection rules'",
         "`gh api repos/{owner}/{repo}/branches/main/protection` → 404 Not Found (no protection configured)",
-        "/Users/broomva/keel/.control/rcs-parameters.toml — source of every term in the inequality"
+        "<repo>/.control/rcs-parameters.toml — source of every term in the inequality"
       ],
       "confidence": 0.85,
       "decidedBy": "agent"
