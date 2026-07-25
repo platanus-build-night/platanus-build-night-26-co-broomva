@@ -87,6 +87,7 @@ preserve when editing.
 | Figure | Source |
 |---|---|
 | grounding ratio **0.421** — anchored 8, self_referential 11, unknown 0, not_a_check 13 | dogfood run against this repo, 2026-07-24 |
+| the credibility slide's finding — `bun test` / `tsc --noEmit` gated nothing | **stated in the past tense on purpose.** `.github/workflows/test.yml` now gates both on every PR, so the present-tense version became false the moment that merged. The slide carries the fix, and the ratio has **not** been re-measured since — the number moves only when Keel re-measures from the target |
 | **32** edges gathered from `keel` | `bun scripts/gather.ts` |
 | corpus ratios — `keel` **0.357** · `anthropic-sdk-python` **0.667** · `openai-python` **0.769** | `reports/corpus-summary.json`, 3 of 15 targets run, 25-node cap per target, pinned shas. Keel scores **last**, which is the slide's whole point |
 | **54** edges from `pallets/click` · **9** from `sindresorhus/got` | ad-hoc gather runs on screened backup repos — **not corpus members**, and the moat slide now says so |
