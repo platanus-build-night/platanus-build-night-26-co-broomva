@@ -36,6 +36,12 @@ mkdirSync(OUT, { recursive: true });
 const css = readFileSync(join(REPO, 'skills/keel/design/tokens.css'), 'utf8') +
   '\n' + readFileSync(join(REPO, 'skills/keel/design/keel.css'), 'utf8');
 
+// Below this many classified edges, a ratio is reported but flagged: it is too
+// few for the decimals to mean much. Not a cutoff for publishing — suppressing a
+// thin number would be its own dishonesty — just a cutoff for presenting it as
+// though it were solid.
+const THIN_DENOMINATOR = 10;
+
 const esc = (s: unknown) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -93,7 +99,14 @@ function row(e: any): string {
       ? `<span class="k-nothing">nothing gathered</span>`
       : classified === 0
         ? `<span class="k-nothing">no denominator — every judged edge is not_a_check</span>`
-        : `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>`;
+        : // A ratio over a handful of edges is a weak claim however precise the
+          // decimals look, and 1.000 over 7 is the shape most likely to be quoted
+          // and least able to bear it. Mark it in the number itself: a reader who
+          // sees only this cell must still see the weakness.
+          `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>` +
+          (classified < THIN_DENOMINATOR
+            ? `<div class="k-thin">thin — ${classified} classified edge${classified === 1 ? '' : 's'}</div>`
+            : '');
 
   // Two independent disclosures, and a target can trip either or both:
   //  - `capped`: the run judged fewer nodes than it gathered (a sampling cap)
@@ -102,7 +115,12 @@ function row(e: any): string {
   //    disclosure indefensible, and it is right.
   const notes: string[] = [];
   if (e.capped || (e.nodesSampled != null && e.nodesTotal != null && e.nodesSampled !== e.nodesTotal)) {
-    notes.push(`sampled ${e.nodesSampled} of ${e.nodesTotal}`);
+    // The fraction, not just the pair. "sampled 25 of 1014" is technically a
+    // disclosure and reads like a footnote; "2%" reads like what it is. A ratio
+    // computed over 2% of a surface and one computed over 78% are different
+    // claims, and the number that makes them different has to be legible.
+    const pct = e.nodesTotal ? Math.round((e.nodesSampled / e.nodesTotal) * 100) : null;
+    notes.push(`sampled ${e.nodesSampled} of ${e.nodesTotal}${pct !== null ? ` — ${pct}% of the surface` : ''}`);
   }
   if (e.partial || (e.nodesUnjudged ?? 0) > 0) {
     const frac = typeof e.judgedFraction === 'number' ? ` (${(e.judgedFraction * 100).toFixed(0)}% judged)` : '';
@@ -159,6 +177,7 @@ const html = `<!doctype html>
 .k-sub{font-size:var(--k-fs-xs);color:var(--k-ink-2)}
 .k-cap{display:inline-block;margin-left:var(--k-space-2);color:var(--k-unknown)}
 .k-nothing{color:var(--k-ink-2);font-style:italic}
+.k-thin{color:var(--k-unknown);font-size:var(--k-fs-xs);font-weight:400}
 .k-ratio-inline{font-size:var(--k-fs-ratio);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse}
 th,td{padding:var(--k-space-2);border-bottom:1px solid var(--k-line);vertical-align:top}
