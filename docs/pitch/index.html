@@ -876,7 +876,7 @@ body[data-help] .dk-help { display: flex; }
   </section>
 
   <!-- ════════════════ 8 · WE MEASURED OURSELVES ════════════════ -->
-  <section class="dk-slide" data-notes="THE CREDIBILITY SLIDE. Land it slowly. Refusing to publish your own number is precisely the failure this project names, so we published ours first, and it is not flattering. 32 edges gathered from this repo: 8 anchored, 11 self-referential, 0 unknown, 13 not_a_check excluded. 8 over 19 is 0.421.">
+  <section class="dk-slide" data-notes="THE CREDIBILITY SLIDE. Land it slowly. Refusing to publish your own number is precisely the failure this project names, so we published ours first, and it is not flattering. 32 edges gathered from this repo: 8 anchored, 11 self-referential, 0 unknown, 13 not_a_check excluded. 8 over 19 is 0.421. THE LOOP CLOSES ON THIS SLIDE: the tool found that our own test and typecheck gated nothing, and the CI workflow that now gates them was merged tonight — its header comment names Keel as the reason. Measured, found, fixed, in one evening. If asked whether the ratio has been re-measured since the fix: no, and say so — the number moves only when Keel re-measures from the target, which is the same rule that stops routing from moving it.">
     <div class="dk-slide__inner">
       <p class="dk-eyebrow">Proof · we measured ourselves first</p>
       <div class="dk-split dk-split--narrow" style="align-items:center;">
@@ -895,9 +895,12 @@ body[data-help] .dk-help { display: flex; }
         <div class="dk-stack">
           <p class="dk-body" style="margin:0;">Refusing to publish your own number is precisely the failure this project names. So ours went first — and the most useful thing Keel found was about us:</p>
           <div class="dk-callout">
-            <span class="dk-mono">bun test</span> and <span class="dk-mono">tsc --noEmit</span> are not run by any CI workflow. <strong>They gate nothing.</strong> Keel gathered both edges and surfaced the question; the audit pass overturned the verdict from <span class="dk-mono" style="color:var(--k-anchored)">anchored</span> to <span class="dk-mono" style="color:var(--k-self-referential)">self_referential</span>.
+            <span class="dk-mono">bun test</span> and <span class="dk-mono">tsc --noEmit</span> were run by <strong>no CI workflow at all</strong>. They gated nothing. Keel gathered both edges and surfaced the question; the audit pass overturned the verdict from <span class="dk-mono" style="color:var(--k-anchored)">anchored</span> to <span class="dk-mono" style="color:var(--k-self-referential)">self_referential</span>.
           </div>
-          <p class="dk-body" style="margin:0;">We had been running those locally and believing them. That is the finding, it is against us, and it is the strongest evidence in this deck that the tool works.</p>
+          <p class="dk-body" style="margin:0;">We had been running those locally and believing them. It is a finding against us, and it is the strongest evidence in this deck that the tool works.</p>
+          <div class="dk-callout">
+            <strong>So we fixed it.</strong> <span class="dk-mono">.github/workflows/test.yml</span> now gates both on every PR — and the workflow's header says, in the file, that it exists because Keel found the gap.
+          </div>
         </div>
       </div>
     </div>
