@@ -19,14 +19,16 @@
  * disclosure if that disagrees with the ratio the report carried, rather than
  * trusting a field the producer could have written by hand.
  *
- * THE FOUR REFUSALS, all of them load-bearing:
+ * THE FIVE REFUSALS, all of them load-bearing:
  *   - a ratio never renders alone (absolute anchored count, coverage by kind,
  *     and the raw counts sit beside it, always),
  *   - `not_a_check` prints beside the fraction, never inside it,
  *   - zero gathered nodes renders "nothing gathered", never 0.00,
- *   - an empty denominator renders "no denominator", never 0.00.
- * The last two matter most: 0.00 reads as a measurement, and neither of those
- * states measured anything.
+ *   - an empty denominator renders "no denominator", never 0.00,
+ *   - zero ε-audit comparisons renders "not run", never an agreement rate and
+ *     never 1.00.
+ * The last three matter most: a printed number reads as a measurement, and
+ * none of those states measured anything.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -90,13 +92,88 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * is measuring its own prose. This renderer's entire subject is checks that
  * read something other than what they claim to read, so the distinction is not
  * a convenience.
+ *
+ * The embedding elements (`object`, `embed`, `iframe`, `video`, `audio`,
+ * `source`, `track`) are refused on the TAG, with no URL test, because the
+ * cross-review found they slipped through a guard written around `src=` and
+ * `href=`: an `<object data="https://…">` or a `<video poster="…">` fetches on
+ * load through an attribute neither pattern names. Enumerating their attributes
+ * would just move the hole, and this artifact has no legitimate use for any of
+ * them — a document whose argument is that it depends on nothing does not embed
+ * a subdocument. Gathered target text cannot trip this: `esc()` turns a snippet
+ * containing `<object` into `&lt;object` long before the guard runs.
+ *
+ * `<img>` is the one exception, and it is narrow in both directions. A
+ * `src="data:…"` image is carried IN the document and fetches nothing, so
+ * refusing it would enforce self-containment against something already
+ * self-contained — and the error would say "off-origin" about bytes that never
+ * leave the file. Every other `<img>` is refused, `src=` or not, because
+ * `srcset` and a protocol-relative `//host` both fetch through spellings a
+ * `https?:` test does not see.
+ *
+ * The exemption is written as TWO clauses because one is not enough, and the
+ * cross-review demonstrated exactly why: `<img src="data:…"
+ * srcset="https://…">` satisfies "the src is a data URI" while still fetching
+ * through the other attribute. An exemption that inspects one attribute of a
+ * tag that fetches through several is not an exemption, it is a hole. So the
+ * second clause refuses ANY `<img>` carrying `srcset`, however innocent its
+ * `src` looks.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|<(?:object|embed|iframe|video|audio|source|track|image)\b|<img\b(?![^>]*\bsrc\s*=\s*["']data:)|<img\b[^>]*\bsrcset\s*=|<meta[^>]+\bhttp-equiv\s*=\s*["']?refresh/i;
 
-/** The same question asked of an SVG fragment we did not write. */
-const SVG_EXTERNAL_REF =
-  /<script\b|<image\b|xlink:href\s*=\s*["']https?:|\bhref\s*=\s*["']https?:|@import\s+(?:url\(|["'])|url\(\s*["']?https?:/i;
+/**
+ * An off-origin fetch from CSS — checked only where CSS is EXECUTED.
+ *
+ * The scoping is the entire point, and it is why `@import` moved out of
+ * `EXTERNAL_REF` and into here. `esc()` neutralises markup from a gathered
+ * snippet — `<object` becomes `&lt;object` — but it does not escape
+ * parentheses, colons or `@`, so a target whose own config contains the text
+ * `@import url(https://cdn.example.com/x.css)` (a stylesheet is a perfectly
+ * ordinary thing for a repository to contain) tripped a document-wide scan and
+ * the whole report refused to render. Rejecting a valid report because the
+ * repository it measured mentions a URL is exactly the check that reads
+ * something other than what it claims to read — the failure this tool is named
+ * after, committed by the tool itself.
+ *
+ * In body text these strings are inert. They fetch in exactly two places: a
+ * `<style>` block and a `style="…"` attribute. Both are enumerated below, and
+ * both are ours — the only `style` attribute the template emits is the meter's
+ * `width:{{WIDTH}}%`, whose slot is a number.
+ *
+ * `image-set()` is named alongside `url()` because it is a second CSS function
+ * that fetches, and a guard that knows only about the first is a guard with a
+ * documented hole. Protocol-relative `//host/…` counts: it inherits the page's
+ * scheme and fetches just as well as an absolute URL.
+ */
+const STYLE_BLOCK = /<style\b[^>]*>([\s\S]*?)<\/style>/gi;
+const STYLE_ATTR = /\bstyle\s*=\s*"([^"]*)"|\bstyle\s*=\s*'([^']*)'/gi;
+const CSS_EXTERNAL_REF =
+  /@import\s+(?:url\(|["'])|(?:url|(?:-webkit-)?image-set)\(\s*["']?\s*(?:https?:|\/\/)/i;
+
+/**
+ * The same question asked of an SVG fragment we did not write.
+ *
+ * It reuses `CSS_EXTERNAL_REF` rather than carrying its own copy of the CSS
+ * rules: the two had drifted, and the drift was reachable — an SVG carrying
+ * `style=background-image:image-set(https://…)` passed this while the same
+ * declaration in a `<style>` block was refused, because only one of the two
+ * patterns had learned about `image-set`. One definition of "this CSS fetches"
+ * means a hole closed in one place is closed in both.
+ *
+ * Protocol-relative `//host/…` is included for the same reason it is there:
+ * it inherits the page scheme and fetches exactly like an absolute URL.
+ */
+const SVG_EXTERNAL_REF = new RegExp(
+  [
+    '<script\\b',
+    '<image\\b',
+    'xlink:href\\s*=\\s*["\'](?:https?:|//)',
+    '\\bhref\\s*=\\s*["\'](?:https?:|//)',
+    CSS_EXTERNAL_REF.source,
+  ].join('|'),
+  'i',
+);
 
 // ---------------------------------------------------------------------------
 // Template engine — substitution only, on purpose.
@@ -217,6 +294,118 @@ function smellsOf(v: Verdict): boolean {
   return v.class === 'anchored' && v.confidence < SMELL_THRESHOLD;
 }
 
+/**
+ * The ε-audit tally — Keel's counter-metric, counted rather than judged.
+ *
+ * Every field below is a count over verdicts that already carry their own
+ * `audit.agreed`. This function decides nothing: it does not re-open a
+ * comparison, does not weigh one against another, and does not have an opinion
+ * about whether a verdict "really" agreed. That distinction is the line
+ * between arithmetic (allowed here) and judgment (not).
+ *
+ * A block only counts once it DESCRIBES a comparison. `agreed: true` with no
+ * `agentClass` names no re-decided class, so no comparison happened — counting
+ * it as agreement would let a verdict assert its own audit passed, which is a
+ * status field the actor sets, on the one number that exists to catch that.
+ * Counting it as a *disagreement* is equally false, and worse than it looks: the
+ * summary then claims a disagreement no verdict can be shown for, because the
+ * per-verdict branch has no class to render.
+ *
+ * So malformed blocks are excluded from `compared` and reported as `malformed`.
+ * A comparison that cannot be read is not evidence — the same fail-closed move
+ * `classify.ts` makes when it drops a probe verdict claiming `unknown` and hands
+ * the node back to the agent, rather than letting an unreadable answer become a
+ * cheap one. Zero WELL-FORMED comparisons is therefore "not run", whatever
+ * wreckage arrived alongside.
+ */
+export interface AuditTally {
+  /** verdicts carrying a WELL-FORMED `audit` block. The agreement denominator. */
+  compared: number;
+  agreed: number;
+  disagreed: number;
+  /** blocks present but unreadable. Excluded from `compared`; disclosed, never silent. */
+  malformed: number;
+  /** the population the ε-audit samples from. */
+  probeDecided: number;
+  /** how many of that population were actually audited — coverage. */
+  probeAudited: number;
+  /** audited verdicts outside that population. Counted in agreement, stated separately. */
+  auditedNonProbe: number;
+  /**
+   * Agreement restricted to probe-decided verdicts — the number SKILL.md §4
+   * actually names.
+   *
+   * `compared` pools every well-formed comparison, and an audit may legally sit
+   * on an agent-decided verdict, so the pooled figure is not the probe library's
+   * agreement whenever the two populations differ. Both are carried so the card
+   * can print both rather than letting one borrow the other's meaning — the same
+   * partition `corpus.ts` already makes between agent, probe, mixed and pooled
+   * repeatability, and for the same reason.
+   */
+  probeAgreed: number;
+}
+
+/**
+ * Does this verdict carry an audit block that actually states a comparison?
+ *
+ * Four conditions, none of them a formality:
+ *
+ *   `agentClass` — the class the agent re-decided. Without it there is nothing
+ *   to compare against.
+ *
+ *   `agreed` — a real boolean. `"yes"`, `1` and `null` are not verdicts about
+ *   the world, they are a producer's typo.
+ *
+ *   `at` — a non-empty string. The frozen schema requires it, and without it
+ *   the per-verdict row printed the literal text `undefined` as the moment the
+ *   comparison happened. A record that cannot say when it was made is not a
+ *   record of a comparison, and a `1 / 1 · rate 1.00` sitting above an
+ *   `undefined` timestamp is the cheap green this card exists to catch.
+ *
+ *   INTERNAL CONSISTENCY — `agreed` must equal `agentClass === v.class`. This
+ *   is the condition the artifact already claims in prose: the disagreement row
+ *   says the two classes differ and that one of them is wrong. A block saying
+ *   `agreed: false` while naming the class the verdict already carries makes
+ *   that sentence false, and a block saying `agreed: true` while naming a
+ *   different class hides a real disagreement inside the agreement count —
+ *   which is the one direction this whole card exists to prevent.
+ *
+ * This last check is arithmetic on two fields that arrived together, not a
+ * judgment about the world: it does not decide which of the two is right, and
+ * it never promotes or demotes a node. It says the record contradicts itself,
+ * and a self-contradictory record states no comparison. Like every other
+ * unreadable shape it is excluded from the denominator and named — because the
+ * honest answer to "these two fields disagree" is to report that, not to pick
+ * a winner.
+ */
+export function auditIsWellFormed(v: Verdict): boolean {
+  const a = v.audit;
+  if (a === null || typeof a !== 'object') return false;
+  if (typeof a.agentClass !== 'string' || !isGroundingClass(a.agentClass)) return false;
+  if (typeof a.agreed !== 'boolean') return false;
+  if (typeof a.at !== 'string' || a.at.trim() === '') return false;
+  return a.agreed === (a.agentClass === v.class);
+}
+
+export function auditTally(verdicts: Verdict[]): AuditTally {
+  const present = verdicts.filter((v) => 'audit' in v && v.audit !== undefined);
+  const wellFormed = present.filter(auditIsWellFormed);
+  const agreed = wellFormed.filter((v) => v.audit?.agreed === true).length;
+  const probeAudited = wellFormed.filter((v) => v.decidedBy === 'probe').length;
+  return {
+    compared: wellFormed.length,
+    agreed,
+    disagreed: wellFormed.length - agreed,
+    malformed: present.length - wellFormed.length,
+    probeDecided: verdicts.filter((v) => v.decidedBy === 'probe').length,
+    probeAudited,
+    auditedNonProbe: wellFormed.length - probeAudited,
+    probeAgreed: wellFormed.filter(
+      (v) => v.decidedBy === 'probe' && v.audit?.agreed === true,
+    ).length,
+  };
+}
+
 export function render(report: Report, opts: RenderOptions = {}): string {
   const t = opts.template ?? loadTemplate();
   const styles = opts.styles ?? loadStyles();
@@ -286,6 +475,12 @@ export function render(report: Report, opts: RenderOptions = {}): string {
     });
     body.push(`<div class="kr-split">${ratioBlock}${coverageBlock}</div>`);
   }
+
+  // ── Keel's own counter-metric, beside Keel's own number ──────────────────
+  // Unconditional. The zero state is the whole reason this is not rendered
+  // "when there is something to show": a run that audited nothing has to say
+  // so, in the same place a run that audited something says what it found.
+  body.push(renderAudit(t, auditTally(verdicts)));
 
   // ── Disclosures: every place a number is narrower than it looks ──────────
   const econ = report.economics;
@@ -460,6 +655,28 @@ export function render(report: Report, opts: RenderOptions = {}): string {
   // ── Curve insertion point ────────────────────────────────────────────────
   let curveInner = '';
   if (opts.curveSvg) {
+    // The curve is the ONE fragment spliced in raw, and it is the only content
+    // in the document that `esc()` never touched. So it is asked the fragment
+    // question HERE, at the boundary it enters, rather than left to a scan of
+    // the finished document.
+    //
+    // That placement is the fix for a real pair of defects the cross-review
+    // found, which pulled in opposite directions and together showed the
+    // document-wide scan was the wrong instrument: an unquoted
+    // `style=fill:url(https://…)` slipped past an attribute matcher that
+    // expects quotes, while `<text>style="background:url(https://…)"</text>` —
+    // inert prose inside an SVG label — was falsely refused. A regex reading a
+    // finished document cannot tell an attribute from text shaped like one.
+    // Reading the fragment as a fragment can, and `loadCurve` already applied
+    // exactly this check on the CLI path — so this closes the gap for every
+    // caller that passes `curveSvg` directly, rather than only the one that
+    // went through the loader.
+    const offending = opts.curveSvg.match(SVG_EXTERNAL_REF);
+    if (offending) {
+      throw new Error(
+        `refusing to write: the supplied curve references something off-origin (${offending[0]})`,
+      );
+    }
     curveInner = fill(t.curve as string, { SVG: opts.curveSvg });
   } else if (opts.curveRejectedPath) {
     curveInner = fill(t['curve-rejected'] as string, {
@@ -484,6 +701,21 @@ export function render(report: Report, opts: RenderOptions = {}): string {
     throw new Error(
       `refusing to write: output contains an off-origin document reference (${offending[0]})`,
     );
+  }
+  // The CSS question, asked in both places CSS executes. See CSS_EXTERNAL_REF.
+  for (const [where, pattern] of [
+    ['<style> block', STYLE_BLOCK],
+    ['style="" attribute', STYLE_ATTR],
+  ] as const) {
+    for (const m of html.matchAll(pattern)) {
+      const css = m[1] ?? m[2] ?? '';
+      const fetched = css.match(CSS_EXTERNAL_REF);
+      if (fetched) {
+        throw new Error(
+          `refusing to write: a ${where} fetches something off-origin (${fetched[0]})`,
+        );
+      }
+    }
   }
   return html;
 }
@@ -552,6 +784,90 @@ function renderVerdict(
     SMELL_NOTE: smellsOf(v)
       ? fill(t['smell-note'] as string, { THRESHOLD: String(SMELL_THRESHOLD) })
       : '',
+    // The re-decided class is printed as it arrived. A disagreement gets the
+    // loud variant because it is the most informative thing on the page: it is
+    // the one outcome that says a probe is mis-classifying, and the whole
+    // reason stage 4 exists. `agreed === true` is the only shape that takes
+    // the quiet variant — see `auditTally`.
+    AUDIT: !('audit' in v) || v.audit === undefined
+      ? ''
+      : !auditIsWellFormed(v)
+        ? (t['verdict-audit-malformed'] as string)
+        : v.audit?.agreed === true
+          ? fill(t['verdict-audit'] as string, {
+              AGENT_CLASS: v.audit.agentClass,
+              AT: v.audit.at,
+            })
+          : fill(t['verdict-audit-disagreed'] as string, {
+              AGENT_CLASS: v.audit?.agentClass ?? '',
+              CLASS: v.class,
+              AT: v.audit?.at ?? '',
+            }),
+  });
+}
+
+/**
+ * The ε-audit card. Every branch here is a lookup into `t`; the prose lives in
+ * `templates/report.html` and the numbers arrive already counted.
+ */
+function renderAudit(t: Template, a: AuditTally): string {
+  // Zero comparisons is a STATE, not a rate — the same refusal `nothing
+  // gathered` makes above, by the same mechanism (a different block, not a
+  // different number). `1.00` over an empty audit is the most flattering
+  // figure this file could print and the least earned one, and an unaudited
+  // library is an absence of evidence: the tool exists to stop that reading as
+  // evidence.
+  // Malformed blocks are disclosed wherever we land, because "an audit arrived
+  // and could not be read" is a fact about the run, and swallowing it would make
+  // non-coverage invisible in exactly the way this card exists to prevent.
+  const malformed =
+    a.malformed > 0
+      ? fill(t['audit-malformed'] as string, { N: num(a.malformed) })
+      : '';
+
+  if (a.compared === 0) {
+    return fill(t['audit-none'] as string, {
+      PROBE_DECIDED: num(a.probeDecided),
+      MALFORMED: malformed,
+    });
+  }
+
+  // A coverage percentage over an empty probe population is the same
+  // fabrication one scope down, so it gets the same treatment.
+  const coverage =
+    a.probeDecided === 0
+      ? (t['audit-coverage-none'] as string)
+      : fill(t['audit-coverage'] as string, {
+          AUDITED: num(a.probeAudited),
+          PROBE_DECIDED: num(a.probeDecided),
+          PCT: pct(a.probeAudited, a.probeDecided).toFixed(0),
+        });
+
+  return fill(t.audit as string, {
+    AGREED: num(a.agreed),
+    COMPARED: num(a.compared),
+    RATE: (a.agreed / a.compared).toFixed(2),
+    DISAGREED: num(a.disagreed),
+    DISAGREEMENT:
+      a.disagreed > 0
+        ? fill(t['audit-disagreement'] as string, { N: num(a.disagreed) })
+        : '',
+    COVERAGE: coverage,
+    NONPROBE:
+      // Only when the populations differ. Where every comparison is
+      // probe-decided the headline already IS the probe library's agreement,
+      // and restating it would read as a second, independent number.
+      a.auditedNonProbe === 0
+        ? ''
+        : a.probeAudited === 0
+          ? fill(t['audit-nonprobe-only'] as string, { N: num(a.auditedNonProbe) })
+          : fill(t['audit-nonprobe'] as string, {
+              N: num(a.auditedNonProbe),
+              PROBE_AGREED: num(a.probeAgreed),
+              PROBE_COMPARED: num(a.probeAudited),
+              PROBE_RATE: ` (rate ${(a.probeAgreed / a.probeAudited).toFixed(2)})`,
+            }),
+    MALFORMED: malformed,
   });
 }
 
@@ -605,7 +921,36 @@ const HERE = import.meta.dir;
 
 export function loadTemplate(path = join(HERE, '..', 'templates', 'report.html')): Template {
   const blocks = parseTemplate(readFileSync(path, 'utf8'));
-  const required = ['document', 'header', 'ratio', 'verdict', 'scope', 'econ'];
+  const required = [
+    'document',
+    'header',
+    'ratio',
+    'verdict',
+    'scope',
+    'econ',
+    // Both, not either: `audit` alone would let a template ship that renders a
+    // rate when there is one and silently nothing when there is not, which is
+    // the defect this pair exists to close.
+    'audit',
+    'audit-none',
+    // Same argument one scope down: without these, a template could ship that
+    // renders unreadable audits as agreement (or as nothing) instead of naming
+    // them, which is the fail-open this pair exists to close.
+    'audit-malformed',
+    'verdict-audit-malformed',
+    // EVERY auxiliary block, not the headline ones only. Each of these renders
+    // for one specific report shape, so a template missing one loads fine, most
+    // reports render fine, and the shape that needed it emits `undefined` or
+    // throws — a defect that surfaces on the least common input, which is the
+    // worst possible time. Loading is the cheap place to find out.
+    'audit-coverage',
+    'audit-coverage-none',
+    'audit-disagreement',
+    'audit-nonprobe',
+    'audit-nonprobe-only',
+    'verdict-audit',
+    'verdict-audit-disagreed',
+  ];
   const missing = required.filter((b) => !(b in blocks));
   if (missing.length > 0) {
     throw new Error(`${path}: template is missing block(s): ${missing.join(', ')}`);
