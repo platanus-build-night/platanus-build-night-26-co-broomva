@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Keel — is your verification touching the world?</title>
 <meta name="description" content="Keel measures whether a codebase's verification actually touches the world, or whether it is checking itself. Grounding ratio for agent-maintained systems." />
-<!-- mark-compact.png is a zoomed crop of the mark, not a scaled copy — the
-     full composition thins to a sliver below ~32px. -->
-<link rel="icon" type="image/png" href="./mark-compact.png" />
-<link rel="apple-touch-icon" href="./icon.png" />
-<meta property="og:image" content="./icon.png" />
+<!-- The compact mark is a redraw, not a scaled primary — below ~24px the 3x3
+     block stops resolving. See skills/keel/design/mark-compact.svg. -->
+<link rel="icon" type="image/svg+xml" href="./mark-compact.svg" />
+<link rel="apple-touch-icon" href="./icon.svg" />
+<meta property="og:image" content="./icon.svg" />
 <meta property="og:title" content="Keel — is your verification touching the world?" />
 <!-- Design system. Canonical source is skills/keel/design/; these are copies
      kept byte-identical by `make design-sync` and gated by `make design-audit`
@@ -18,10 +18,11 @@
 <link rel="stylesheet" href="./keel.css" />
 <style>
   /* Page-specific layout only. Every value is a token — see design-audit. */
-  /* The lockup is composed from the mark plus real text, so the wordmark stays
-     selectable, translatable, and indexable rather than baked into pixels. */
+  /* The lockup is composed from the mark plus real text rather than loaded as
+     lockup.svg, so the wordmark stays selectable, translatable, and indexable.
+     lockup.svg is for contexts that cannot compose — README, slides, favicons. */
   .site-head { display: flex; align-items: center; gap: var(--k-space-3); margin: 0 0 var(--k-space-12); }
-  .site-head img { display: block; height: var(--k-space-8); width: auto; border-radius: var(--k-r-md); }
+  .site-head img { display: block; height: var(--k-space-6); width: auto; }
   .hero { margin: 0 0 var(--k-space-6); }
   .lede { margin: 0 0 var(--k-space-10); }
   /* Sections that follow a rule get their air from the rule; back-to-back
@@ -36,7 +37,7 @@
 <body>
 <div class="k-page">
 
-  <h1 class="site-head"><img src="./mark-compact.png" alt="" /><span class="k-wordmark">Keel</span></h1>
+  <h1 class="site-head"><img src="./mark.svg" alt="" /><span class="k-wordmark">Keel</span></h1>
 
   <p class="k-display hero">Your agents are grading their&nbsp;own homework. <em>Keel measures how much.</em></p>
 

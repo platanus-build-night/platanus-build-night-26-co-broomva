@@ -1,0 +1,109 @@
+name: test
+
+# This workflow exists because Keel measured itself and found that `bun test` and
+# `tsc --noEmit` were run by NO workflow — so they gated nothing, and both were
+# correctly downgraded from `anchored` to `self_referential` (grounding-classes.md:
+# "classify the edge that actually blocks the merge, not the file that could have").
+#
+# The point is the gate, not the file: these steps must run on a fresh runner, and a
+# non-zero exit must block the merge. If someone later adds `continue-on-error: true`
+# or `|| true` here, this edge becomes `not_a_check` by Keel's own definition — a step
+# that cannot fail asserts nothing.
+
+# The two path lists below are written out literally, and duplicated between the two
+# triggers, ON PURPOSE. GitHub Actions parses this file with a YAML reader that does
+# not support anchors/aliases — a `&name` here is rejected server-side with "Anchors
+# are not currently supported" and NO job is created, so the gate silently ceases to
+# exist while the file still looks like a gate. Every local check (actionlint,
+# PyYAML, js-yaml) resolves the alias happily, which makes such a verification a
+# signal from something other than the system under test — `self_referential` by this
+# repo's own definition. Four duplicated lines are the correct trade.
+#
+# The list is also deliberately short. An earlier version ignored `site/**` and
+# `docs/**`; that skipped the whole workflow — including `make design-audit` — for
+# exactly the changes design-audit governs (its GOVERNED_GLOBS include `site/**/*.html`
+# and `docs/design/**/*.html`), which makes the gate `not_a_check`. Only paths that
+# cannot change what ANY of the three gates decides are ignored: Markdown (no test
+# reads a repo `.md`; the suite builds its own trees, and design-audit governs no
+# `.md`) and the logo raster.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'project-logo.png'
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'project-logo.png'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # macos-latest is not redundancy. `probe-sandbox`'s confinement claim — "a probe
+    # cannot write to disk" — is enforced by `/usr/bin/sandbox-exec`, which exists only
+    # on darwin, so the one test that EXECUTES a hostile probe and then checks the
+    # filesystem (tests/probe-sandbox.test.ts) is skipped on Linux. With ubuntu as the
+    # sole runner, deleting the `-f <profile>` argument from sandboxCommand ships green:
+    # the profile-text tests still pass and look like coverage, while nothing confines
+    # anything. This leg is what makes the confinement claim an executed one.
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install toolchain baseline
+        run: bun install --frozen-lockfile
+
+      # The exit code comes from the runtime executing the assertions on a machine the
+      # PR author does not control. Documented limit, and it is the honest one: the
+      # oracle is authored in-repo alongside the implementation, so a green run proves
+      # the code does what the tests say — not that the tests say the right thing.
+      - name: bun test
+        run: bun test
+
+      - name: tsc --noEmit
+        run: bunx tsc --noEmit
+
+      # The design system encodes the report's invariants in CSS: not_a_check outside
+      # the denominator, the confidence-smell ring, and a visible defect state when a
+      # verdict is missing its writeBoundary.argument. Platform-independent (a Python
+      # read of the real files), so one leg runs it; running it twice would add a
+      # second copy of the same signal, not a second signal.
+      - name: design adherence gate
+        if: matrix.os == 'ubuntu-latest'
+        run: make design-audit
+
+      # The fixture is the contract between the engine and every consumer. Recomputing
+      # its ratio from its own verdicts catches a fixture edited into disagreeing with
+      # itself, which would silently invalidate the renderer, the curve, and the tests.
+      - name: fixture recomputes
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          bun -e '
+            import { groundingRatio } from "./skills/keel/schemas/keel.ts";
+            const r = await Bun.file("tests/fixtures/report.sample.json").json();
+            const g = groundingRatio(r.verdicts);
+            if (JSON.stringify(g) !== JSON.stringify(r.grounding)) {
+              throw new Error("stored grounding disagrees with a recomputation");
+            }
+            const naked = r.verdicts.filter((v) => !v.writeBoundary?.argument?.trim());
+            if (naked.length) {
+              throw new Error(naked.length + " verdict(s) carry no argument — a class without its causal path is an unaccountable green check");
+            }
+            console.log("fixture OK — ratio", g.ratio.toFixed(4), "over", r.verdicts.length, "verdicts");
+          '

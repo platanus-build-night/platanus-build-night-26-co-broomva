@@ -1,0 +1,384 @@
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     Keel — report template. Consumed by ../scripts/render.ts.
+
+     This file is MARKUP ONLY. Every block below is emitted verbatim with its
+     {{SLOT}} placeholders substituted; render.ts contains no HTML string
+     literals for the same reason the design system is a stylesheet and not a
+     component library — the markup has to be readable, diffable, and gated.
+
+     `make design-audit` reads this file (skills/keel/templates/**/*.html is a
+     governed glob), so the invariants are checked HERE rather than trusted:
+     no raw hex, no raw px, no `data-class` outside the frozen GroundingClass,
+     no `.k-ratio__value` without `.k-ratio__counts` and `.k-scope`, and no
+     `.k-verdict` without its `.k-argument`.
+
+     Block syntax: <!--@block name --> ... <!--@endblock -->. Blocks are flat,
+     never nested. Slots are {{ESCAPED}} or {{{RAW}}}; render.ts throws on an
+     unfilled slot, so a typo here fails the run instead of shipping a `{{...}}`
+     into the artifact.
+
+     A <!--@note ... --> inside a block is stripped from the output — it is
+     addressed to whoever reads THIS file, including the auditor. Ordinary
+     comments are emitted verbatim, which is why `<!-- KEEL:CURVE -->` (the
+     contract with the curve unit) is not written as a note.
+     ═══════════════════════════════════════════════════════════════════════ -->
+
+
+<!--@block document -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+{{{STYLES}}}
+</style>
+</head>
+<body>
+<main class="k-report">
+{{{BODY}}}
+</main>
+</body>
+</html>
+<!--@endblock -->
+
+
+<!-- ── Header ───────────────────────────────────────────────────────────── -->
+<!--@block header -->
+<header>
+  <p class="k-wordmark">Keel</p>
+  <h1 class="k-display">Grounding report<em>.</em></h1>
+  <p class="k-lede">Every verification edge in <span class="k-mono">{{TARGET}}</span>,
+     classified by who produces the signal and whether the actor being verified
+     can write to that producer.</p>
+  <table class="k-table">
+    <tr><th>target</th><td class="k-mono">{{TARGET}}</td></tr>
+    <tr><th>revision</th><td class="k-mono">{{REVISION}}</td></tr>
+    <tr><th>generated</th><td class="k-mono">{{GENERATED}}</td></tr>
+  </table>
+</header>
+<!--@endblock -->
+
+
+<!-- ── The headline number ───────────────────────────────────────────────────
+     Rule 4 of the design contract: `.k-ratio__value` never ships without
+     `.k-ratio__counts`, and `not_a_check` is printed BESIDE the fraction using
+     `.k-ratio__count--excluded` rather than folded into it. The meter carries
+     the three denominator classes only, for the same reason.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block ratio -->
+<div class="k-ratio">
+  <span class="k-ratio__value">{{VALUE}}</span>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = {{ANCHORED}} / {{DENOMINATOR}}</p>
+  <div class="k-meter">
+{{{METER}}}
+  </div>
+  <div class="k-ratio__counts">
+{{{COUNTS}}}
+  </div>
+</div>
+<!--@endblock -->
+
+<!--@block meter-seg -->
+    <div class="k-meter__seg" data-class="{{CLASS}}" style="width:{{WIDTH}}%"></div>
+<!--@endblock -->
+
+<!--@block count -->
+    <span class="k-ratio__count"><span class="k-class" data-class="{{CLASS}}">{{CLASS}}</span> {{N}}</span>
+<!--@endblock -->
+
+<!--@block count-excluded -->
+    <span class="k-ratio__count k-ratio__count--excluded">
+      <span class="k-class" data-class="not_a_check">not_a_check</span> {{N}}
+      <span class="k-meta">excluded from the denominator</span>
+    </span>
+<!--@endblock -->
+
+
+<!-- ── The two states that are NOT a ratio ───────────────────────────────────
+     "unverified" and "unreadable" have to look different. A target with no
+     gathered edges has no ratio to report, and a target whose every judged
+     edge landed in `not_a_check` has an empty denominator — printing 0.00 for
+     either would be a fabricated number, and 0.00 is the worst possible lie
+     here because it reads as a measurement.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block nothing-gathered -->
+<div class="k-card kr-section">
+  <p class="k-eyebrow">Nothing gathered</p>
+  <p>No verification edge was gathered from this target, so there is no ratio
+     to report. This is not a score of zero: a zero would be a claim that
+     nothing here is anchored. Nothing was read.</p>
+  <p class="k-meta">Check that the target path is a repository the gatherer can
+     read, and that it contains a surface the gatherer knows how to open.</p>
+</div>
+<!--@endblock -->
+
+<!--@block no-denominator -->
+<div class="k-card">
+  <p class="k-eyebrow">No denominator</p>
+  <p>{{JUDGED}} node(s) were judged and every one of them landed in
+     <span class="k-mono">not_a_check</span>, which is excluded from the ratio.
+     The denominator is empty, so there is no ratio to report — printing 0.00
+     would state a measurement that was never taken.</p>
+  <p class="k-meta">`not_a_check` is the one shoppable class. A run that lands
+     entirely there is the shape that inflates a score, so it is called out
+     rather than smoothed into a number.</p>
+</div>
+<!--@endblock -->
+
+
+<!-- ── Coverage ──────────────────────────────────────────────────────────────
+     Labelled "coverage (judged)": `Report.nodes` carries the nodes that were
+     judged, so calling this coverage-of-gathered would overclaim the surface.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block coverage -->
+<div>
+  <p class="k-eyebrow">Coverage (judged)</p>
+  <table class="k-table k-table--num">
+    <thead><tr><th>node kind</th><th>judged</th></tr></thead>
+    <tbody>
+{{{ROWS}}}
+    </tbody>
+  </table>
+  <p class="k-meta">Nodes by kind, over the {{JUDGED}} node(s) carried in this
+     report. Surfaces the gatherer cannot read are absent here rather than
+     counted as <span class="k-mono">unknown</span>, which makes non-coverage
+     Keel's own shoppable class — so it is stated, not implied.</p>
+</div>
+<!--@endblock -->
+
+<!--@block coverage-row -->
+      <tr><td class="k-mono">{{KIND}}</td><td>{{N}}</td></tr>
+<!--@endblock -->
+
+
+<!-- ── Disclosures ───────────────────────────────────────────────────────── -->
+<!--@block disclosure -->
+<p class="k-callout">{{{TEXT}}}</p>
+<!--@endblock -->
+
+
+<!-- ── Node graph ────────────────────────────────────────────────────────────
+     One square per node on a wrapping grid. Squares, not circles: a circle in
+     a verification UI reads as a status dot, and the status dot is the thing
+     being audited. The grid wraps rather than scaling, so 15 nodes and 200
+     nodes share a mark size and neither clips.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block graph -->
+<section class="kr-section">
+  <p class="k-eyebrow">Node graph — {{COUNT}} node(s), in gather order</p>
+  <div class="k-graph">
+{{{MARKS}}}
+  </div>
+  <div class="k-legend">
+{{{LEGEND}}}
+  </div>
+  <p class="k-meta">{{SMELL_NOTE}}</p>
+</section>
+<!--@endblock -->
+
+<!--@block mark -->
+    <span class="k-mark" data-class="{{CLASS}}"{{{SMELL}}} title="{{TITLE}}"></span>
+<!--@endblock -->
+
+<!--@block mark-unjudged -->
+    <span class="k-mark" title="{{TITLE}}"></span>
+<!--@endblock -->
+
+<!--@block legend-item -->
+    <span class="k-legend__item"><span class="k-mark" data-class="{{CLASS}}"></span> {{CLASS}} {{N}}</span>
+<!--@endblock -->
+
+<!--@block legend-item-unjudged -->
+    <span class="k-legend__item"><span class="k-mark"></span> no verdict {{N}}</span>
+<!--@endblock -->
+
+<!-- A legend entry with no swatch, for a population the legend has to account
+     for but the grid does not draw (orphan verdicts) or draws without a colour
+     (a class the frozen schema does not define). The class items above count
+     the marks actually drawn, so legend and picture reconcile; these items say
+     out loud what sits outside that sum instead of quietly widening it. -->
+<!--@block legend-item-aside -->
+    <span class="k-legend__item">{{TEXT}}</span>
+<!--@endblock -->
+
+
+<!-- ── The scope note. Verbatim, never paraphrased. ──────────────────────── -->
+<!--@block scope -->
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
+verification, not its quality. A repo can be 100% anchored with terrible
+tests. Anchoring says the signal comes from outside; it does not say the
+signal is sufficient.</p>
+<!--@endblock -->
+
+
+<!-- ── Verdicts ──────────────────────────────────────────────────────────────
+     Rule 3: no verdict without its argument. `writeBoundary.argument` is the
+     deliverable — a class shown without its causal path is exactly the
+     unaccountable green check Keel exists to criticize — so it sits directly
+     under the node name, not behind a disclosure.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block verdict-section -->
+<section class="kr-section">
+  <p class="k-eyebrow">{{LABEL}} — {{N}}</p>
+  <p class="k-meta">{{NOTE}}</p>
+{{{VERDICTS}}}
+</section>
+<!--@endblock -->
+
+<!--@block verdict -->
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">{{NAME}}</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="{{CLASS}}"{{{SMELL}}}>{{CLASS}}</span></span>
+    <div class="k-verdict__source k-mono">{{SOURCE}} · {{KIND}}</div>
+    <p class="k-argument">{{ARGUMENT}}</p>
+    <p class="kr-line">producer <span class="k-mono">{{PRODUCER}}</span> — actor can write to it: <span class="k-mono">{{ACTOR_CAN_WRITE}}</span></p>
+    <ul class="kr-ev">
+{{{EVIDENCE}}}
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">{{DECIDED_BY}}</span>{{{PROBE}}} · confidence <span class="k-mono">{{CONFIDENCE}}</span>{{{SMELL_NOTE}}}</p>
+  </div>
+<!--@endblock -->
+
+<!-- A verdict that arrived WITHOUT its write-boundary argument. The `.k-argument`
+     element is omitted rather than emitted empty: `keel.css` keys its defect
+     banner on `:not(:has(.k-argument))`, so rendering a blank paragraph would
+     satisfy the selector and hide exactly the failure the design system exists
+     to surface.
+
+     The audit hatch below is an `@note`, which render.ts strips from the
+     output. That is deliberate and it is the whole point of the mechanism:
+     THIS BLOCK is a specimen of the defect state and design-audit must not
+     fail on it, but a rendered row whose argument is genuinely missing is not
+     a specimen — it is the defect — and stamping the hatch onto it would make
+     `make design-audit` wave through the exact failure it is there to catch.
+     The rendered row carries `data-missing-argument` instead: inert to CSS
+     (the banner keys on `:has()`, not on the attribute), legible in the
+     source, and carrying no exemption. -->
+<!--@block verdict-defect -->
+  <div class="k-verdict" data-missing-argument>
+    <!--@note data-specimen-defect — audit hatch, template-only; see above. -->
+    <div class="k-verdict__name k-mono">{{NAME}}</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="{{CLASS}}"{{{SMELL}}}>{{CLASS}}</span></span>
+    <div class="k-verdict__source k-mono">{{SOURCE}} · {{KIND}}</div>
+    <p class="kr-line">producer <span class="k-mono">{{PRODUCER}}</span> — actor can write to it: <span class="k-mono">{{ACTOR_CAN_WRITE}}</span></p>
+    <ul class="kr-ev">
+{{{EVIDENCE}}}
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">{{DECIDED_BY}}</span>{{{PROBE}}} · confidence <span class="k-mono">{{CONFIDENCE}}</span>{{{SMELL_NOTE}}}</p>
+  </div>
+<!--@endblock -->
+
+<!--@block evidence-item -->
+      <li>{{TEXT}}</li>
+<!--@endblock -->
+
+<!--@block evidence-empty -->
+      <li class="kr-missing">no evidence cited</li>
+<!--@endblock -->
+
+<!--@block probe-id -->
+ (<span class="k-mono">{{ID}}</span>)
+<!--@endblock -->
+
+<!--@block smell-note -->
+ · <span class="kr-smell">confidence below {{THRESHOLD}} on an anchored verdict</span>
+<!--@endblock -->
+
+
+<!-- ── Crystallization curve ─────────────────────────────────────────────────
+     The marker line below is the fixed insertion point between this renderer
+     and the curve unit. It is emitted whether or not a curve exists; when no
+     curve is available the marker stands alone and nothing is drawn.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block curve-slot -->
+<section class="kr-section">
+  <!-- KEEL:CURVE -->
+{{{CURVE}}}
+</section>
+<!--@endblock -->
+
+<!--@block curve -->
+  <p class="k-eyebrow">Crystallization curve</p>
+  <div class="kr-curve">
+{{{SVG}}}
+  </div>
+<!--@endblock -->
+
+<!--@block curve-rejected -->
+  <p class="k-eyebrow">Crystallization curve</p>
+  <p class="k-meta">A curve was found at <span class="k-mono">{{PATH}}</span>
+     but was not inlined: it references something off-origin, and this artifact
+     issues zero external requests. Rendering it would trade the invariant for
+     a picture.</p>
+<!--@endblock -->
+
+
+<!-- ── Economics ─────────────────────────────────────────────────────────────
+     No silent caps: where nodesSampled differs from nodesTotal, both are
+     printed and the gap is named. Where token counts are estimates, the label
+     says "estimated".
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block econ -->
+<section class="kr-section">
+  <p class="k-eyebrow">Run economics</p>
+  <div class="k-econ">
+{{{STATS}}}
+  </div>
+  <p class="k-meta">{{NOTE}}</p>
+</section>
+<!--@endblock -->
+
+<!--@block econ-stat -->
+    <div class="k-econ__stat">
+      <span class="k-econ__value">{{VALUE}}</span>
+      <span>{{LABEL}}</span>
+    </div>
+<!--@endblock -->
+
+
+<!-- ── Renderer-local layout ─────────────────────────────────────────────────
+     `kr-*`, not `k-*`: these are report-layout helpers, not design-system
+     components, and the namespace says so. No colour, no size, no radius that
+     is not already a token — every value below is a var() from tokens.css.
+     Proposed for promotion into keel.css in the PR body rather than written
+     there, because design/ is not this unit's to edit.
+     ─────────────────────────────────────────────────────────────────────── -->
+<!--@block layout-css -->
+.kr-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--k-space-12);
+  align-items: start;
+  margin: var(--k-space-12) 0 0;
+}
+@media (max-width: 760px) {
+  .kr-split { grid-template-columns: minmax(0, 1fr); gap: var(--k-space-8); }
+}
+.kr-section { margin: var(--k-space-16) 0 0; }
+.kr-line {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+}
+.kr-ev {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--k-measure-prose);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+  line-height: var(--k-lh-snug);
+}
+.kr-ev li { margin-top: var(--k-space-1); word-break: break-word; }
+.kr-ev li::before { content: "· "; color: var(--k-ink-3); }
+.kr-missing { color: var(--k-self-referential); }
+.kr-smell { color: var(--k-smell); }
+.kr-curve { overflow-x: auto; }
+.kr-curve svg { max-width: 100%; height: auto; }
+<!--@endblock -->

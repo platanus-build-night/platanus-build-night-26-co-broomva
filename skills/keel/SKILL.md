@@ -86,6 +86,13 @@ For each node:
    and from `~/.config/keel/probes/`. Run `match(node)`; on a hit, run
    `assess(node)`. A non-null result is the verdict — record `decidedBy:
    'probe'` and move on. This costs no tokens.
+
+   Probe code is executed by loading it, so **loading and running probes happen
+   only inside a sandboxed child process** with a kill-timer held by the parent:
+   a synchronous `while(true)` cannot be preempted in JS, so an in-process time
+   guard is fiction. A probe that throws, hangs, or exceeds the budget is skipped
+   with a warning and its nodes fall through to your judgment — never fatal to
+   the run.
 2. **On no match, or on abstention, judge it yourself.** Read `raw`. Ask the
    only question that matters:
 
@@ -110,7 +117,11 @@ look anchored and are not.
 ### 3. Crystallize (optional)
 
 When you judged a node the library could not, and the shape will recur, write a
-probe to `~/.config/keel/probes/<id>.ts` implementing the `Probe` interface.
+probe to `~/.config/keel/probes/<id>.v<n>.ts` implementing the `Probe` interface.
+Probes are versioned in the filename because `ProbeMeta.version` exists and two
+versions cannot share one path: minting never overwrites, it writes the next
+version, and the loader takes the highest version per id and warns about the
+ones it shadowed. Set `KEEL_PROBE_DIR` to point the library somewhere else.
 
 Rules:
 

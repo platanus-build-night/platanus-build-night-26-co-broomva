@@ -1,0 +1,109 @@
+{
+  "$comment": [
+    "Keel corpus — the targets the published grounding ratios are computed over.",
+    "Every revision is a pinned 40-char sha, verified with `git ls-remote <url> HEAD`",
+    "on 2026-07-24. Pinning is not bookkeeping: an unpinned corpus produces a number",
+    "nobody can reproduce, and an unreproducible number is not a result.",
+    "Order is load-bearing. corpus.ts walks this list top to bottom, sequentially, and",
+    "records the order it ran in — the crystallization curve measures probe-library",
+    "growth, so a reshuffle or a parallel run destroys the signal being measured.",
+    "Selection is a deliberate spread of verification cultures — agent/AI tools,",
+    "generated SDKs, heavily-tested infrastructure, an LLM-wrapper app, and two",
+    "docs-heavy repos with almost no CI. A corpus that is all one shape yields one",
+    "number and no insight. `keel` is first because refusing to publish your own",
+    "number is precisely the failure this project names."
+  ],
+  "nodeCap": 40,
+  "targets": [
+    {
+      "name": "keel",
+      "url": "https://github.com/broomva/keel.git",
+      "revision": "44f7e8d6cbdfaee7d0e4ff281d59a236ecf0c747",
+      "culture": "self — the tool measuring itself"
+    },
+    {
+      "name": "anthropic-sdk-python",
+      "url": "https://github.com/anthropics/anthropic-sdk-python.git",
+      "revision": "60c64fba5c2bf340567f627328e57cf0196b868f",
+      "culture": "code-generated SDK, pyproject + Actions"
+    },
+    {
+      "name": "openai-python",
+      "url": "https://github.com/openai/openai-python.git",
+      "revision": "d4c151d92ba713e56518a4483d3b7918dd1be838",
+      "culture": "code-generated SDK, pyproject + Actions"
+    },
+    {
+      "name": "vercel-ai",
+      "url": "https://github.com/vercel/ai.git",
+      "revision": "e29788dd545f8bf2300db0885658e639b4fd91bd",
+      "culture": "TS monorepo, LLM toolkit, package.json + Actions"
+    },
+    {
+      "name": "aider",
+      "url": "https://github.com/Aider-AI/aider.git",
+      "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "culture": "coding agent — agents maintain the code here"
+    },
+    {
+      "name": "browser-use",
+      "url": "https://github.com/browser-use/browser-use.git",
+      "revision": "b909fbfba0ae42790f8402dd3daecc8f265be246",
+      "culture": "browser agent, young repo, fast-moving CI"
+    },
+    {
+      "name": "mcp-python-sdk",
+      "url": "https://github.com/modelcontextprotocol/python-sdk.git",
+      "revision": "00a70148bcd39b40ee0b0745e0b468eac0a44efb",
+      "culture": "protocol SDK, pyproject + Actions"
+    },
+    {
+      "name": "simonw-llm",
+      "url": "https://github.com/simonw/llm.git",
+      "revision": "0392226e6630746ef51ffd309c2bee6a5f72b58e",
+      "culture": "LLM CLI, single-maintainer, pytest-heavy"
+    },
+    {
+      "name": "tiktoken",
+      "url": "https://github.com/openai/tiktoken.git",
+      "revision": "08a5f3b2c987ada4fc5aa1f16c643c203fa8acaa",
+      "culture": "small Rust/Python library, narrow CI"
+    },
+    {
+      "name": "requests",
+      "url": "https://github.com/psf/requests.git",
+      "revision": "69f84847045bef7a849cc994a26fe7ba8a169e95",
+      "culture": "mature infrastructure, Makefile + pyproject + Actions"
+    },
+    {
+      "name": "flask",
+      "url": "https://github.com/pallets/flask.git",
+      "revision": "36e4a824f340fdee7ed50937ba8e7f6bc7d17f81",
+      "culture": "mature infrastructure, tox + Actions, heavy pre-commit"
+    },
+    {
+      "name": "sinatra",
+      "url": "https://github.com/sinatra/sinatra.git",
+      "revision": "cb22afd7902b566b6eaba6c4ea89739494a65d12",
+      "culture": "Ruby — Rakefile + Actions, a different verification idiom"
+    },
+    {
+      "name": "commander-js",
+      "url": "https://github.com/tj/commander.js.git",
+      "revision": "ba6d13ddb4243e5913367734f8c159089ffe7834",
+      "culture": "small JS library, package.json scripts + Actions"
+    },
+    {
+      "name": "anthropic-quickstarts",
+      "url": "https://github.com/anthropics/anthropic-quickstarts.git",
+      "revision": "370e18d4a20ff5fd4bc1a6bf11d5105b2383977c",
+      "culture": "LLM-wrapper apps — demo-grade verification"
+    },
+    {
+      "name": "anthropic-courses",
+      "url": "https://github.com/anthropics/courses.git",
+      "revision": "f4dbb137d7b02dddaf3cc73e32e20a702d3b5e77",
+      "culture": "docs/notebooks — near-zero CI, the low-coverage control"
+    }
+  ]
+}
