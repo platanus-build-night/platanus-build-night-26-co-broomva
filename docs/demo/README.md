@@ -41,22 +41,42 @@ Everything on the sheets marked "real output" was run:
   byte-for-byte what beat 2 transcribes. Both the plain and `--json` forms were
   run; the sheet shows the plain form, because `--json` is a wall of node
   objects and the beat-2 fallback prose promises the probe/agent split.
-- `https://broomva.github.io/keel/` → 200. `…/keel/reports/` → **404** (W2·H
-  had not shipped).
 - `node -v` → `v22.14.0`, below the `skills` v1.5.19+ floor of 22.20.
 
-Three further facts are on the sheets on the orchestrator's authority, not this
-unit's execution — they come from the dogfood run recorded in
-[`docs/handoffs/2026-07-24-keel-mvp-build.md`](../handoffs/2026-07-24-keel-mvp-build.md),
-and each is sourced there rather than asserted here:
+**Closed since the first draft** (this is what replaced the sheets' 18 TODOs):
 
-- **Keel's own grounding ratio, 0.421** — anchored 8 of 19 classified edges,
-  `self_referential` 11, `unknown` 0, `not_a_check` 13 excluded and printed
-  beside it. Run sheet beat 1 (the callout) and objections · numbers.
-- **Keel's own `bun test` and `tsc --noEmit` are run by no CI workflow, so they
-  gate nothing** — both downgraded `anchored` → `self_referential` by the
-  adversarial reviewer. Run sheet beat 1 and objections card 6. This is the
+- **Four live URLs confirmed by fetching CONTENT, not a status code**: the
+  landing page, `…/keel/reports/`, `…/keel/reports/keel.html`, and
+  `…/keel/reports/openai-python.bindings.html`. Each page's `<title>` was read
+  back. The earlier `404` on `…/reports/` is gone; W2·H shipped.
+- **Beat 2 executed end to end on `sharkdp/fd`**, a repo Keel had never
+  gathered and not one of the 15 corpus names: 33 nodes in 0.08 s, clone
+  4.21 s, classify 0.11 s from an empty library, 9 nodes judged in ~150 s,
+  2 probes minted, re-run decided 3 nodes by probe with zero model calls (one
+  of them never judged by hand). Every timing on run sheet beat 2 comes from
+  that run. Not confirmed by it: that a probe lands in the *default*
+  `~/.config/keel/probes/`, since it minted into an explicit `/tmp` dir. The
+  sheet says so.
+- **The corpus**: pooled **0.853**, 122 anchored of 143 classified edges
+  across 14 measured repositories; 15 pinned, judged sequentially from an empty
+  library; `anthropic-courses` gathered zero nodes and is recorded
+  `nothing_gathered` with a null ratio.
+- **Keel's own grounding ratio, 0.357, the lowest in its own corpus**:
+  anchored 5 of 14 classified edges, `self_referential` 9, `unknown` 0,
+  `not_a_check` 11 excluded and printed beside it, 25 of 32 gathered nodes
+  judged. This supersedes the 0.421 the first draft carried. Run sheet beat 1
+  (the callout) and objections · numbers.
+- **Keel's own `bun test` and `tsc --noEmit` were run by no workflow at the
+  measured revision, so they gated nothing**: both downgraded `anchored` →
+  `self_referential` by the adversarial reviewer. `.github/workflows/test.yml`
+  is the fix and now exists; the published 0.357 has *not* been re-run, and both
+  sheets say so. Run sheet beat 1 and objections card 6. This is still the
   strongest line on either sheet and it is a finding *against* us.
+- **The ε-audit mechanism was run by hand on one target and found real drift**:
+  two verdicts from our own probe filed toward the shoppable class, blast radius
+  checked at 13 verdicts with only those 2 wrong, both confined to the audit
+  side-file so no published report carried them, probe-vs-agent 3/5 → 3/3 after
+  the match was narrowed. Objections card 4 and the run sheet's close.
 - **Zero `unknown` in the fixture is a result, not a gap** — three independent
   judges converged on *inside* the write boundary for unpinned out-of-repo
   dependencies, because the resolution mechanism is itself committed
@@ -68,28 +88,42 @@ The sandbox behaviours on objections card 1 (loading runs in the child; a
 through to agent judgment and exit 0; a throwing probe is skipped and named; a
 probe returning `unknown` is rejected at assess-time inside the child) are
 likewise orchestrator-verified against W1·C, not run by this unit. The *network*
-claim is deliberately still an open slot — see below.
+slot is now filled from the sentence `skills/keel/scripts/probe-sandbox.ts`
+actually prints, quoted verbatim, together with what that file says it does
+**not** enforce (read confinement, exfiltration through verdict text, CPU or
+memory bounds).
 
 **No timed rehearsal was performed.** Per `docs/plans/00-orchestration.md`
 pre-dispatch correction #9, the timed dry runs are a human task, recorded in
-the run sheet's "Human tasks" section rather than claimed as done here. Nothing
-that depends on W1·A, W1·B, W1·C, W1·D, W1·G or W2·H has been executed — those
-paths carry an explicit verify-before-the-pitch marker on the sheet.
+the run sheet's "Human tasks" section rather than claimed as done here. It is
+now the *only* item left open on either sheet: the paths that depended on W1·A,
+W1·B, W1·C and W2·H have since been executed or confirmed, and the two that will
+not happen (W2·I₂, the fallback video, and W2·F, the scheduled ε-audit) are
+recorded as cuts.
 
-## Open items the orchestrator must close
+## Open items, all closed
 
-| Where | Item |
-|---|---|
-| run sheet · pre-flight | fallback video path (W2·I₂) |
-| run sheet · pre-flight, beat 1 | corpus report URL returning 200 (W2·H) |
-| run sheet · beat 1 | run both beat-1 fallbacks for real once W1·B and W2·H merge |
-| run sheet · beat 2 | run beat 2 end to end; confirm a probe file appears in `~/.config/keel/probes/` |
-| objections · card 1 | **the network line only.** The four kill-timer/subprocess behaviours are now stated as enforced. Network and filesystem confinement is platform-conditional (macOS `sandbox-exec` deny-default) and W1·C is correcting an overclaim there — read the final sentence W1·C ships in `probe-sandbox.ts` and say *that sentence*, not a paraphrase |
-| objections · cards 2, 4 | repeatability % and ε-audit agreement rate, or "did not run" |
-| objections · numbers | corpus size, ratio range across the corpus, crystallization-curve endpoints |
-| run sheet · beat-close | which closing sentence — present tense only if W2·F shipped **and ran**; the weaker "that ships next" line is on the sheet verbatim and was correct at the time of writing |
+Zero `[TODO]` blocks remain on either page. Each is now either a verified fact
+in an `rs-fact` block or an explicitly recorded **cut**.
 
-Every one of these is a visible `[TODO]` block on the page, not a silent gap.
+| Where | Was | Now |
+|---|---|---|
+| run sheet · pre-flight | fallback video path (W2·I₂) | **CUT.** No recording of any beat exists. The sheet names the per-beat fallbacks that do, and rungs 4–5 are rewritten to assume no video. A 90.0 s `video/out/keel-explainer.mp4` exists on disk and is explicitly *not* this |
+| run sheet · pre-flight, beat 1 | corpus report URL returning 200 | **CONFIRMED by content**: title read back from four live pages, never a status code |
+| run sheet · beat 1 | run both beat-1 fallbacks for real | **CONFIRMED**: site path live and on disk; `render.ts` over the fixture yields a self-contained artifact |
+| run sheet · beat 2 | run beat 2 end to end | **EXECUTED** on `sharkdp/fd`; real timings folded in, plus three risks the run surfaced (see below) |
+| objections · card 1 | the network line | **FILLED** with the sentence `probe-sandbox.ts` actually prints, verbatim, plus the macOS-only enforcement list, the three things not claimed, and the P20 finding that a probe could once force its own unconfined re-run |
+| objections · card 2 | repeatability % | **No number, and the reason is the answer**: zero nodes were re-judged by an agent on the one re-run, so agent agreement is undefined. The pooled 10/10 is explicitly banned from the stage |
+| objections · card 4 | ε-audit agreement rate | **Scheduled audit CUT**; the mechanism ran once by hand and found real drift in our own probe. The finding replaces the rate |
+| objections · numbers | corpus size, ratio range, curve endpoints | **FILLED**, including the R² of every trend and the instruction never to present the curve as smooth |
+| run sheet · beat-close | which closing sentence | **DECIDED.** W2·F was cut, so "we publish the agreement rate" is unavailable; the close says the audit ran once, by hand, on one target, and caught our own probe |
+
+Three risks the beat-2 run surfaced, now on the sheet: judgment is ~15 s/node
+against 0.22 s for all plumbing (bound the depth in the prompt); the 4.21 s
+clone is the only network hop and the likeliest stall; and a **known defect**,
+in which a probe verdict carries the *minting* node's evidence, so a citation points
+at the wrong line. The sheet tells the presenter not to read probe-decided
+evidence off the projector, and what to say if someone catches it.
 
 ## Notes for whoever edits these
 
