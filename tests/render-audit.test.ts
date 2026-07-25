@@ -22,9 +22,12 @@
  */
 
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import type { GroundingClass, Node, Report, Verdict } from '../skills/keel/schemas/keel.ts';
 import { groundingRatio } from '../skills/keel/schemas/keel.ts';
-import { auditTally, render } from '../skills/keel/scripts/render.ts';
+import { auditTally, loadTemplate, render } from '../skills/keel/scripts/render.ts';
 
 // ---------------------------------------------------------------------------
 // Builders. Deliberately minimal and deliberately valid: the point of each
@@ -208,8 +211,19 @@ describe('render · a report with mixed agreement', () => {
   test('independence is not claimed anywhere in the output', () => {
     // `Report` carries no `mintedFrom`, so the renderer cannot know which
     // comparisons are independent. It must not say that it does.
-    expect(text).not.toMatch(/independent (re-)?judgment/i);
+    //
+    // The cross-review noted the first form of this test was narrow enough that
+    // adding "these are independent comparisons" would have passed it. So: the
+    // disclaimer must be present, AND no POSITIVE independence claim may appear
+    // anywhere — matched by looking for "independent" in any sentence that is
+    // not the disclaimer, rather than for one hard-coded phrasing.
     expect(text).toContain('not described as independent');
+    const claims = text
+      .split(/(?<=\.)\s+/)
+      .filter((s) => /\bindependen/i.test(s))
+      .filter((s) => !/not described as independent/.test(s));
+    expect(claims).toEqual([]);
+    expect(text).toContain('mintedFrom');
   });
 });
 
@@ -321,7 +335,111 @@ describe('render · audits outside the probe population', () => {
   });
 
   test('the difference between the two denominators is stated out loud', () => {
-    expect(text).toContain('1 audited verdict(s) were not probe-decided');
+    expect(text).toContain('sit on verdicts that were not probe-decided');
+  });
+
+  test('the probe library gets its OWN figure, not the pooled one', () => {
+    // The cross-review's finding: a headline labelled "probe library agreement"
+    // over a pooled population is a metric named after a population it does not
+    // measure. The label now says "agreement", and the probe-only number is
+    // printed where it is actually true.
+    expect(text).toContain('ε-audit — agreement');
+    expect(text).not.toContain('ε-audit — probe library agreement');
+    expect(text).toMatch(/Probe-decided verdicts alone: 1 \/ 1 \(rate 1\.00\)/);
+  });
+});
+
+describe('render · pooled agreement must not speak for the probe library', () => {
+  // The exact input the cross-review named: one agent audit agrees, one probe
+  // audit disagrees. Pooled reads 1/2; the probe library's own result is 0/1.
+  // A reader must be able to see the second number, not infer it.
+  const report = reportOf([
+    { id: 'p#1', class: 'anchored', decidedBy: 'agent', audit: { agentClass: 'anchored', agreed: true } },
+    { id: 'p#2', class: 'anchored', decidedBy: 'probe', audit: { agentClass: 'unknown', agreed: false } },
+  ]);
+  const text = textOf(render(report));
+
+  test('both populations are reported, and neither borrows the other', () => {
+    expect(auditTally(report.verdicts)).toMatchObject({
+      compared: 2,
+      agreed: 1,
+      probeAudited: 1,
+      probeAgreed: 0,
+      auditedNonProbe: 1,
+    });
+    expect(text).toContain('agreed / compared = 1 / 2');   // pooled
+    expect(text).toMatch(/Probe-decided verdicts alone: 0 \/ 1 \(rate 0\.00\)/);
+    // The pooled rate must never be presented as the probe library's.
+    expect(text).not.toMatch(/probe library[^.]*0\.50/i);
+  });
+});
+
+describe('render · every comparison sits outside the probe population', () => {
+  const report = reportOf([
+    { id: 'q#1', class: 'anchored', decidedBy: 'agent', audit: { agentClass: 'anchored', agreed: true } },
+    { id: 'q#2', class: 'anchored', decidedBy: 'probe' },
+  ]);
+  const text = textOf(render(report));
+
+  test('no probe-library agreement is invented from agent-only comparisons', () => {
+    expect(auditTally(report.verdicts)).toMatchObject({ compared: 1, probeAudited: 0 });
+    expect(text).toContain('says nothing about the probe library');
+    // 1/1 is true of the pooled figure and false of the probe library. The
+    // probe-only line must not appear at all rather than print 1/0 or 0/0.
+    expect(text).not.toMatch(/Probe-decided verdicts alone/);
+  });
+});
+
+describe('render · the template must be complete at load time', () => {
+  // The cross-review's third finding: a template missing an auxiliary block
+  // loaded fine and failed later, on the one report shape that needed it.
+  const AUXILIARY = [
+    'audit-coverage',
+    'audit-coverage-none',
+    'audit-disagreement',
+    'audit-nonprobe',
+    'audit-nonprobe-only',
+    'verdict-audit',
+    'verdict-audit-disagreed',
+    'audit-malformed',
+    'verdict-audit-malformed',
+  ];
+
+  const TEMPLATE_PATH = join(
+    import.meta.dir,
+    '..',
+    'skills',
+    'keel',
+    'templates',
+    'report.html',
+  );
+  const source = readFileSync(TEMPLATE_PATH, 'utf8');
+
+  for (const block of AUXILIARY) {
+    test(`loadTemplate refuses a template missing \`${block}\``, () => {
+      // Delete the block from a COPY of the real template on disk and call the
+      // real loader on it. This executes `loadTemplate`'s own required-list —
+      // re-deriving the list inside the test would assert against a copy of the
+      // thing under test, which is `self_referential` by this repo's definition
+      // and would keep passing after someone shortened the real list.
+      const stripped = source.replace(
+        new RegExp(`<!--@block ${block}\\s*-->[\\s\\S]*?<!--@endblock\\s*-->`),
+        '',
+      );
+      expect(stripped).not.toBe(source); // the block really was there to remove
+
+      const tmp = join(mkdtempSync(join(tmpdir(), 'keel-tpl-')), 'report.html');
+      writeFileSync(tmp, stripped);
+      try {
+        expect(() => loadTemplate(tmp)).toThrow(block);
+      } finally {
+        rmSync(dirname(tmp), { recursive: true, force: true });
+      }
+    });
+  }
+
+  test('the shipped template satisfies the whole required list', () => {
+    expect(() => loadTemplate()).not.toThrow();
   });
 });
 
@@ -348,6 +466,10 @@ describe('render · the artifact stays self-contained', () => {
   // it depends on nothing. `render()` throws on an off-origin reference before
   // returning, so reaching these assertions is already most of the proof —
   // they close the gap for shapes the guard does not match.
+  // The embedding elements are here because the cross-review found they slipped
+  // through a guard written around `src=`/`href=`: `<object data="https://…">`
+  // and `<video poster="…">` both fetch on load through an attribute neither
+  // pattern names. `render()` now refuses the tags outright and these assert it.
   const EXTERNAL = [
     /<script[^>]+\bsrc\s*=/i,
     /<link[^>]+\bhref\s*=/i,
@@ -355,7 +477,9 @@ describe('render · the artifact stays self-contained', () => {
     /<img[^>]/i,
     /url\(\s*["']?https?:/i,
     /\bsrcset\s*=/i,
-    /<iframe\b/i,
+    /<(?:iframe|object|embed|video|audio|source|track)\b/i,
+    /\bdata\s*=\s*["']https?:/i,
+    /\bposter\s*=/i,
     /@font-face/i,
   ];
 
@@ -379,6 +503,39 @@ describe('render · the artifact stays self-contained', () => {
       expect(html).not.toMatch(/(?:href|src)\s*=\s*["']\/\//i);
     });
   }
+
+  test('the guard FIRES on an embedding element, rather than merely not seeing one', () => {
+    // Asserting that clean output is clean proves the output, not the guard. A
+    // guard that cannot fire is decoration — the same argument this repo makes
+    // about SMELL_THRESHOLD. So: inject each offending element through the
+    // template option and assert `render()` refuses to return it.
+    const base = loadTemplate();
+    for (const offending of [
+      '<object data="https://example.com/x.svg"></object>',
+      '<embed src="https://example.com/x.swf">',
+      '<video poster="https://example.com/p.png"></video>',
+      '<iframe src="https://example.com"></iframe>',
+    ]) {
+      const sabotaged = { ...base, scope: `${base.scope}\n${offending}` };
+      expect(() =>
+        render(reportOf([{ id: 'x#1', class: 'anchored', decidedBy: 'probe' }]), {
+          template: sabotaged,
+        }),
+      ).toThrow(/off-origin document reference/);
+    }
+  });
+
+  test('a target snippet that MENTIONS such an element is not refused', () => {
+    // The other half, and the one that makes the guard a real check rather than
+    // one that fires on the data it measures: gathered `raw` text routinely
+    // contains markup, and `esc()` neutralises it long before the guard runs.
+    // If this ever throws, the guard has started reading the target instead of
+    // the document.
+    const report = reportOf([{ id: 'y#1', class: 'anchored', decidedBy: 'probe' }]);
+    (report.nodes[0] as Node).raw = '<object data="https://example.com/x"></object>';
+    (report.nodes[0] as Node).name = '<iframe src="https://example.com">';
+    expect(() => render(report)).not.toThrow();
+  });
 
   test('no unfilled slot survives into either output', () => {
     // `fill()` throws on a slot it was not given a value for, but a slot in a

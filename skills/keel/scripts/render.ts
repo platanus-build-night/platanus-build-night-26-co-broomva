@@ -92,9 +92,19 @@ const CLASS_NOTE: Record<GroundingClass, string> = {
  * is measuring its own prose. This renderer's entire subject is checks that
  * read something other than what they claim to read, so the distinction is not
  * a convenience.
+ *
+ * The embedding elements (`object`, `embed`, `iframe`, `video`, `audio`,
+ * `source`, `track`) are refused on the TAG, with no URL test, because the
+ * cross-review found they slipped through a guard written around `src=` and
+ * `href=`: an `<object data="https://…">` or a `<video poster="…">` fetches on
+ * load through an attribute neither pattern names. Enumerating their attributes
+ * would just move the hole, and this artifact has no legitimate use for any of
+ * them — a document whose argument is that it depends on nothing does not embed
+ * a subdocument. Gathered target text cannot trip this: `esc()` turns a snippet
+ * containing `<object` into `&lt;object` long before the guard runs.
  */
 const EXTERNAL_REF =
-  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:/i;
+  /<script[^>]+\bsrc\s*=|<link[^>]+\bhref\s*=|@import\s+(?:url\(|["'])|<img[^>]+\bsrc\s*=\s*["']https?:|<(?:object|embed|iframe|video|audio|source|track)\b/i;
 
 /** The same question asked of an SVG fragment we did not write. */
 const SVG_EXTERNAL_REF =
@@ -256,6 +266,18 @@ export interface AuditTally {
   probeAudited: number;
   /** audited verdicts outside that population. Counted in agreement, stated separately. */
   auditedNonProbe: number;
+  /**
+   * Agreement restricted to probe-decided verdicts — the number SKILL.md §4
+   * actually names.
+   *
+   * `compared` pools every well-formed comparison, and an audit may legally sit
+   * on an agent-decided verdict, so the pooled figure is not the probe library's
+   * agreement whenever the two populations differ. Both are carried so the card
+   * can print both rather than letting one borrow the other's meaning — the same
+   * partition `corpus.ts` already makes between agent, probe, mixed and pooled
+   * repeatability, and for the same reason.
+   */
+  probeAgreed: number;
 }
 
 /**
@@ -289,6 +311,9 @@ export function auditTally(verdicts: Verdict[]): AuditTally {
     probeDecided: verdicts.filter((v) => v.decidedBy === 'probe').length,
     probeAudited,
     auditedNonProbe: wellFormed.length - probeAudited,
+    probeAgreed: wellFormed.filter(
+      (v) => v.decidedBy === 'probe' && v.audit?.agreed === true,
+    ).length,
   };
 }
 
@@ -703,9 +728,19 @@ function renderAudit(t: Template, a: AuditTally): string {
         : '',
     COVERAGE: coverage,
     NONPROBE:
-      a.auditedNonProbe > 0
-        ? fill(t['audit-nonprobe'] as string, { N: num(a.auditedNonProbe) })
-        : '',
+      // Only when the populations differ. Where every comparison is
+      // probe-decided the headline already IS the probe library's agreement,
+      // and restating it would read as a second, independent number.
+      a.auditedNonProbe === 0
+        ? ''
+        : a.probeAudited === 0
+          ? fill(t['audit-nonprobe-only'] as string, { N: num(a.auditedNonProbe) })
+          : fill(t['audit-nonprobe'] as string, {
+              N: num(a.auditedNonProbe),
+              PROBE_AGREED: num(a.probeAgreed),
+              PROBE_COMPARED: num(a.probeAudited),
+              PROBE_RATE: ` (rate ${(a.probeAgreed / a.probeAudited).toFixed(2)})`,
+            }),
     MALFORMED: malformed,
   });
 }
@@ -777,6 +812,18 @@ export function loadTemplate(path = join(HERE, '..', 'templates', 'report.html')
     // them, which is the fail-open this pair exists to close.
     'audit-malformed',
     'verdict-audit-malformed',
+    // EVERY auxiliary block, not the headline ones only. Each of these renders
+    // for one specific report shape, so a template missing one loads fine, most
+    // reports render fine, and the shape that needed it emits `undefined` or
+    // throws — a defect that surfaces on the least common input, which is the
+    // worst possible time. Loading is the cheap place to find out.
+    'audit-coverage',
+    'audit-coverage-none',
+    'audit-disagreement',
+    'audit-nonprobe',
+    'audit-nonprobe-only',
+    'verdict-audit',
+    'verdict-audit-disagreed',
   ];
   const missing = required.filter((b) => !(b in blocks));
   if (missing.length > 0) {

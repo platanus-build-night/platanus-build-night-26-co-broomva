@@ -157,7 +157,14 @@
      ─────────────────────────────────────────────────────────────────────── -->
 <!--@block audit -->
 <div class="k-card kr-section">
-  <p class="k-eyebrow">ε-audit — probe library agreement</p>
+  <!--@note The label says "agreement", NOT "probe library agreement". The
+       denominator is every well-formed comparison in the report, and an audit
+       may legally sit on an agent-decided verdict, so naming the headline after
+       the probe library would describe a population it does not measure. When
+       the two populations differ, `audit-nonprobe` prints the probe-only figure
+       beside it — the specific claim SKILL.md §4 asks for, stated where it is
+       actually true rather than borrowed by a title. -->
+  <p class="k-eyebrow">ε-audit — agreement</p>
   <p class="kr-audit__figure">
     <span class="kr-audit__count">{{AGREED}} / {{COMPARED}}</span>
     <span class="kr-audit__rate">rate {{RATE}}</span>
@@ -233,11 +240,32 @@
      fabricated number.</p>
 <!--@endblock -->
 
+<!-- Rendered only when the two populations differ. The headline is agreement
+     over EVERY well-formed comparison; SKILL.md §4's counter-metric is
+     specifically the PROBE library's agreement. When a report mixes the two,
+     printing only the pooled figure would let a run of agreeing agent audits
+     carry a disagreeing probe library — so the probe-only number is printed
+     here, next to the pooled one, and neither is allowed to stand in for the
+     other. -->
 <!--@block audit-nonprobe -->
-  <p class="kr-line"><span class="k-mono">{{N}}</span> audited verdict(s) were
-     not probe-decided. They count in the agreement above because they carry a
-     comparison, and they sit outside the coverage fraction, which is over the
-     probe-decided population the ε-audit samples.</p>
+  <p class="kr-line"><span class="k-mono">{{N}}</span> of those comparison(s)
+     sit on verdicts that were not probe-decided. They count in the pooled
+     agreement above because they are comparisons, and they sit outside the
+     coverage fraction, which is over the probe-decided population the ε-audit
+     samples. Probe-decided verdicts alone:
+     <span class="k-mono">{{PROBE_AGREED}} / {{PROBE_COMPARED}}</span>{{PROBE_RATE}} —
+     that is the probe library's own agreement, and it is the number
+     <span class="k-mono">SKILL.md</span> §4 names.</p>
+<!--@endblock -->
+
+<!-- The same disclosure when the probe population contributed NO comparison at
+     all: the pooled number is then entirely agent-vs-agent, and calling any part
+     of it the probe library's agreement would be inventing a measurement. -->
+<!--@block audit-nonprobe-only -->
+  <p class="kr-line">All <span class="k-mono">{{N}}</span> comparison(s) sit on
+     verdicts that were not probe-decided, so the figure above says nothing
+     about the probe library: no probe verdict was re-decided, and there is no
+     probe-library agreement to report.</p>
 <!--@endblock -->
 
 <!-- A disagreement is the most informative thing this stage can produce: a
