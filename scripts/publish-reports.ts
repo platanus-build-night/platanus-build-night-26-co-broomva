@@ -63,14 +63,14 @@ for (const e of summary.entries ?? []) {
 let curve = '';
 const curveSvg = join(REPORTS, 'curve.svg');
 if (existsSync(curveSvg)) {
-  curve = `<section class="k-section"><h2>Crystallization curve</h2>
-<p class="k-note">Cost per node against corpus run index. The run order is part of the
+  curve = `<section class="k-card"><h2>Crystallization curve</h2>
+<p class="k-scope">Cost per node against corpus run index. The run order is part of the
 measurement — the curve is a claim about ordered probe accumulation, so a reshuffle
 changes it by design. If cost per node does not fall, that is published as-is.</p>
 ${readFileSync(curveSvg, 'utf8')}</section>`;
 } else {
-  curve = `<section class="k-section"><h2>Crystallization curve</h2>
-<p class="k-note">Not yet produced for this run.</p></section>`;
+  curve = `<section class="k-card"><h2>Crystallization curve</h2>
+<p class="k-scope">Not yet produced for this run.</p></section>`;
 }
 
 // --- the ratio table ---------------------------------------------------------
@@ -80,18 +80,43 @@ const bad = (summary.entries ?? []).filter((e: any) => e.status !== 'ok');
 function row(e: any): string {
   const judged = e.nodesJudged ?? 0;
   const classified = (e.anchored ?? 0) + (e.selfReferential ?? 0) + (e.unknown ?? 0);
-  // A ratio over zero classified edges is not a result — say so instead of printing 0.000.
+
+  // Three distinct states, and collapsing any two of them publishes a false
+  // statement. "nothing gathered" means the gatherer found no surface at all.
+  // "no denominator" means edges WERE judged and every one landed in
+  // `not_a_check` — a real finding (nothing here asserts correctness), and
+  // emphatically not the same claim. A ratio is printed only when something is
+  // actually in the denominator; `0.000` over an empty denominator would read as
+  // "this repo has no grounded checks", which is a different and false claim.
   const ratioCell =
-    classified === 0
+    judged === 0
       ? `<span class="k-nothing">nothing gathered</span>`
-      : `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>`;
-  const cap =
-    e.nodesSampled != null && e.nodesTotal != null && e.nodesSampled !== e.nodesTotal
-      ? `<span class="k-cap">sampled ${e.nodesSampled} of ${e.nodesTotal}</span>`
-      : '';
-  const cov = Object.entries(e.coverageByKind ?? e.coverage ?? {})
+      : classified === 0
+        ? `<span class="k-nothing">no denominator — every judged edge is not_a_check</span>`
+        : `<strong class="k-ratio-inline">${(e.ratio ?? 0).toFixed(3)}</strong>`;
+
+  // Two independent disclosures, and a target can trip either or both:
+  //  - `capped`: the run judged fewer nodes than it gathered (a sampling cap)
+  //  - `partial`: some sampled nodes came back unjudged, so the ratio rests on
+  //    less than the sample it claims. corpus.ts calls publishing that without
+  //    disclosure indefensible, and it is right.
+  const notes: string[] = [];
+  if (e.capped || (e.nodesSampled != null && e.nodesTotal != null && e.nodesSampled !== e.nodesTotal)) {
+    notes.push(`sampled ${e.nodesSampled} of ${e.nodesTotal}`);
+  }
+  if (e.partial || (e.nodesUnjudged ?? 0) > 0) {
+    const frac = typeof e.judgedFraction === 'number' ? ` (${(e.judgedFraction * 100).toFixed(0)}% judged)` : '';
+    notes.push(`PARTIAL — ${e.nodesUnjudged ?? 0} unjudged${frac}`);
+  }
+  const disclosure = notes.length ? `<span class="k-cap">${esc(notes.join(' · '))}</span>` : '';
+
+  // The field is `coverageJudged`. Reading a name corpus.ts never writes left this
+  // column silently empty, which broke "the ratio never travels alone" on the one
+  // surface the public actually sees.
+  const cov = Object.entries(e.coverageJudged ?? {})
     .map(([k, n]) => `${esc(k)} ${n}`)
     .join(' · ');
+
   return `<tr>
   <td><a href="${esc(e.name)}.html">${esc(e.name)}</a>
       <div class="k-sub k-mono">${esc((e.revision ?? '').slice(0, 12))}</div></td>
@@ -100,7 +125,7 @@ function row(e: any): string {
   <td class="k-num">${e.selfReferential ?? 0}</td>
   <td class="k-num">${e.unknown ?? 0}</td>
   <td class="k-num k-inert">${e.notACheck ?? 0}</td>
-  <td class="k-sub">${judged} judged ${cap}<div class="k-sub">${cov}</div></td>
+  <td class="k-sub">${judged} judged ${disclosure}<div class="k-sub">${cov || '—'}</div></td>
 </tr>`;
 }
 
@@ -112,6 +137,16 @@ const totalClassified = ok.reduce(
 const totalNotACheck = ok.reduce((n: number, e: any) => n + (e.notACheck ?? 0), 0);
 const pooled = totalClassified === 0 ? null : totalAnchored / totalClassified;
 
+// The unweighted mean over targets that actually have a denominator. A target whose
+// every judged edge is `not_a_check` has no ratio to average — including it as 0 would
+// invent a claim the measurement never made.
+const withDenominator = ok.filter(
+  (e: any) => (e.anchored ?? 0) + (e.selfReferential ?? 0) + (e.unknown ?? 0) > 0
+);
+const meanOfTargets = withDenominator.length
+  ? withDenominator.reduce((n: number, e: any) => n + (e.ratio ?? 0), 0) / withDenominator.length
+  : null;
+
 const html = `<!doctype html>
 <html lang="en" data-theme="dark">
 <head>
@@ -121,45 +156,47 @@ const html = `<!doctype html>
 <style>${css}
 .k-num{text-align:right;white-space:nowrap}
 .k-inert{color:var(--k-not-a-check)}
-.k-sub{font-size:var(--k-fs-0);color:var(--k-ink-2)}
-.k-cap{display:inline-block;margin-left:var(--k-s-2);color:var(--k-unknown)}
+.k-sub{font-size:var(--k-fs-xs);color:var(--k-ink-2)}
+.k-cap{display:inline-block;margin-left:var(--k-space-2);color:var(--k-unknown)}
 .k-nothing{color:var(--k-ink-2);font-style:italic}
-.k-ratio-inline{font-size:var(--k-fs-3);font-variant-numeric:tabular-nums}
+.k-ratio-inline{font-size:var(--k-fs-ratio);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse}
-th,td{padding:var(--k-s-2);border-bottom:1px solid var(--k-rule);vertical-align:top}
-th{text-align:left;font-size:var(--k-fs-0);color:var(--k-ink-2);text-transform:uppercase;letter-spacing:.08em}
+th,td{padding:var(--k-space-2);border-bottom:1px solid var(--k-line);vertical-align:top}
+th{text-align:left;font-size:var(--k-fs-xs);color:var(--k-ink-2);text-transform:uppercase;letter-spacing:.08em}
 th.k-num{text-align:right}
 </style>
 </head>
 <body class="k-page">
-<main class="k-wrap">
-<header class="k-hero">
+<main class="k-report">
+<header class="k-meta">
   <h1>Keel — corpus grounding ratios</h1>
   <p class="k-lede">Every verification edge in each repository below was classified by who
   produces the signal, and whether the actor being verified can write to that producer.
   <strong>A check is only a check if the signal it reads comes from somewhere the thing
   being checked cannot write to.</strong></p>
-  <p class="k-note k-mono">generated ${esc(summary.generatedAt ?? '')} ·
+  <p class="k-scope k-mono">generated ${esc(summary.generatedAt ?? '')} ·
   ${ok.length} target(s) measured${bad.length ? ` · ${bad.length} failed` : ''}</p>
 </header>
 
-<section class="k-section">
+<section class="k-card">
   <h2>Pooled across the corpus</h2>
-  <p class="k-ratio-block">
+  <p class="k-ratio">
     ${pooled === null ? '<span class="k-nothing">nothing gathered</span>' : `<strong>${pooled.toFixed(3)}</strong>`}
-    <span class="k-note">= ${totalAnchored} anchored / ${totalClassified} classified edges
+    <span class="k-scope">= ${totalAnchored} anchored / ${totalClassified} classified edges
     across ${ok.length} repositories · ${totalNotACheck} <span class="k-inert">not_a_check</span>
     excluded from the denominator</span>
   </p>
-  <p class="k-note"><strong>Scope.</strong> Keel measures the shape of verification, not its
+  <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of verification, not its
   quality. A repo can be 100% anchored with terrible tests. Anchoring says the signal comes
   from outside; it does not say the signal is sufficient.</p>
-  <p class="k-note">The pooled figure weights repositories by how many edges each
-  contributed, so it is not the mean of the column below. Both are reported because neither
-  alone is honest: the mean hides size, the pooled figure hides spread.</p>
+  <p class="k-scope">The pooled figure weights repositories by how many edges each
+  contributed, so it is not the mean of the per-repository column below. Both are printed
+  because neither alone is honest: the mean hides size, the pooled figure hides spread.
+  <strong>Mean of the ${withDenominator.length} target(s) that have a denominator:
+  ${meanOfTargets === null ? 'n/a' : meanOfTargets.toFixed(3)}</strong>.</p>
 </section>
 
-<section class="k-section">
+<section class="k-card">
   <h2>By repository</h2>
   <table>
     <thead><tr>
@@ -171,7 +208,7 @@ th.k-num{text-align:right}
 ${ok.map(row).join('\n')}
     </tbody>
   </table>
-  <p class="k-note"><code class="k-mono">not_a_check</code> is excluded from the ratio
+  <p class="k-scope"><code class="k-mono">not_a_check</code> is excluded from the ratio
   entirely, which makes it the one <em>shoppable</em> class: mis-filing a real check there
   shrinks the denominator and inflates the score. It is printed here for exactly that
   reason. <code class="k-mono">unknown</code> fails closed and counts against the ratio
@@ -182,24 +219,24 @@ ${curve}
 
 ${
   bad.length
-    ? `<section class="k-section"><h2>Targets that failed</h2>
-<p class="k-note">Listed rather than dropped. A corpus that quietly omits what it could not
+    ? `<section class="k-card"><h2>Targets that failed</h2>
+<p class="k-scope">Listed rather than dropped. A corpus that quietly omits what it could not
 measure is shopping its own denominator.</p>
 <ul>${bad.map((e: any) => `<li class="k-mono">${esc(e.name)} — ${esc(e.error ?? e.status)}</li>`).join('')}</ul>
 </section>`
     : ''
 }
 
-<section class="k-section">
+<section class="k-card">
   <h2>Reproducing this</h2>
-  <p class="k-note">Every target is pinned to a revision (shown under its name). The corpus
+  <p class="k-scope">Every target is pinned to a revision (shown under its name). The corpus
   ran sequentially in a recorded order, because the crystallization curve measures ordered
   probe-library growth and a parallel run would destroy the signal being measured.</p>
-  <pre class="k-mono k-pre">npx skills add broomva/keel</pre>
+  <pre class="k-mono k-code">npx skills add broomva/keel</pre>
 </section>
 
-<footer class="k-foot">
-  <p class="k-note">Run order: <span class="k-mono">${esc((summary.runOrder ?? []).join(' → '))}</span></p>
+<footer class="k-meta">
+  <p class="k-scope">Run order: <span class="k-mono">${esc((summary.runOrder ?? []).join(' → '))}</span></p>
 </footer>
 </main>
 </body>
