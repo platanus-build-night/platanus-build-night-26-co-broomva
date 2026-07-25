@@ -1,0 +1,224 @@
+{
+  "target": "platanus-build-night-26-co-FreddyB200",
+  "revision": "hack-night-2026-07-24",
+  "generatedAt": "2026-07-25T06:03:02.698Z",
+  "nodes": [
+    {
+      "id": "vercel.json#vercel-json",
+      "kind": "deploy_gate",
+      "name": "deploy config (vercel.json)",
+      "source": "vercel.json",
+      "raw": "{\n  \"$schema\": \"https://openapi.vercel.sh/vercel.json\",\n  \"functions\": {\n    \"api/analyze.ts\": {\n      \"maxDuration\": 30\n    },\n    \"api/download.ts\": {\n      \"maxDuration\": 60\n    }\n  }\n}\n"
+    },
+    {
+      "id": "package.json#dev",
+      "kind": "script",
+      "name": "dev",
+      "source": "package.json",
+      "raw": "\"dev\": \"vite\""
+    },
+    {
+      "id": "package.json#dev-vercel",
+      "kind": "script",
+      "name": "dev:vercel",
+      "source": "package.json",
+      "raw": "\"dev:vercel\": \"vercel dev\""
+    },
+    {
+      "id": "package.json#build",
+      "kind": "script",
+      "name": "build",
+      "source": "package.json",
+      "raw": "\"build\": \"tsc -b --noEmit && vite build\""
+    },
+    {
+      "id": "package.json#preview",
+      "kind": "script",
+      "name": "preview",
+      "source": "package.json",
+      "raw": "\"preview\": \"vite preview\""
+    },
+    {
+      "id": "package.json#typecheck",
+      "kind": "script",
+      "name": "typecheck",
+      "source": "package.json",
+      "raw": "\"typecheck\": \"tsc -b --noEmit\""
+    },
+    {
+      "id": "package.json#tags-list",
+      "kind": "script",
+      "name": "tags:list",
+      "source": "package.json",
+      "raw": "\"tags:list\": \"node scripts/tags.mjs list\""
+    },
+    {
+      "id": "package.json#tags-apply",
+      "kind": "script",
+      "name": "tags:apply",
+      "source": "package.json",
+      "raw": "\"tags:apply\": \"node scripts/tags.mjs apply\""
+    },
+    {
+      "id": "package.json#tags-status",
+      "kind": "script",
+      "name": "tags:status",
+      "source": "package.json",
+      "raw": "\"tags:status\": \"node scripts/tags.mjs status\""
+    }
+  ],
+  "verdicts": [
+    {
+      "nodeId": "package.json#build",
+      "class": "anchored",
+      "writeBoundary": {
+        "producer": "the TypeScript compiler process (tsc -b --noEmit) and the Vite bundler, run by Vercel's build container on every deployment",
+        "actorCanWrite": false,
+        "argument": "This is the only edge in the repo that both executes an independent analyzer and sits on a path that can block something. The author writes the source; tsc computes the type graph over tsconfig.app.json (include: src) and tsconfig.node.json (include: vite.config.ts, api) with strict:true and emits the exit code. No sentence the author writes changes whether a type error exists. The path to a blocking decision is Vercel zero-config detection: vercel.json sets only function maxDuration and no buildCommand, so Vercel's Vite preset invokes `npm run build`; a non-zero exit from tsc aborts the deployment and the previous alias stays live. Limit: this is the type axis only, and this repo has no test runner of any kind, so nothing anywhere executes the runtime behavior of api/analyze.ts or the React app. Type-correct and wrong is fully reachable here."
+      },
+      "evidence": [
+        "package.json: \"build\": \"tsc -b --noEmit && vite build\"",
+        "tsconfig.app.json / tsconfig.node.json: strict:true, include [\"src\"] and [\"vite.config.ts\",\"api\"]",
+        "vercel.json contains no buildCommand override -> Vercel Vite preset runs npm run build",
+        "repo has no test runner in dependencies or devDependencies"
+      ],
+      "confidence": 0.72,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#typecheck",
+      "class": "unknown",
+      "writeBoundary": {
+        "producer": "tsc, but only when a human types the command",
+        "actorCanWrite": null,
+        "argument": "The producer is the same independent compiler as in `build`, so the execution axis is fine — but nothing invokes this script. There is no .github/ directory, no CI config of any kind, and no committed hook (the pre-push hook present in .git/hooks is the auditing machine's local template, not a repo artifact, and it filters branch names, not code). The signal therefore only reaches a decision if the author chooses to run it and chooses to report the result, and I cannot trace that choice. This is the 'test that exists but is not in the pipeline path' case: the identical command is duplicated inside `build`, which is the edge that actually blocks, so classifying this one anchored would double-count a gate it does not own."
+      },
+      "evidence": [
+        "package.json: \"typecheck\": \"tsc -b --noEmit\"",
+        "no .github/ directory in repo root (ls -a)",
+        "no other config references npm run typecheck"
+      ],
+      "confidence": 0.7,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "vercel.json#vercel-json",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "Vercel's platform config parser",
+        "actorCanWrite": true,
+        "argument": "The whole file declares two serverless function timeouts (analyze 30s, download 60s). It expresses no condition a deployment must satisfy — no buildCommand, no ignoreCommand, no check or protection clause. A deploy gate that ships whatever is pushed asserts nothing about correctness; the timeout budget is a resource limit, not a verdict. The genuine verification content of this deploy lives entirely in the build script it implicitly triggers, judged separately, so counting this node in the denominator would double-count that one edge."
+      },
+      "evidence": [
+        "vercel.json: only $schema + functions.maxDuration keys"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#dev",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Vite dev server process",
+        "actorCanWrite": true,
+        "argument": "Starts a long-running server. It has no terminal exit state that encodes pass or fail, and it makes no assertion about the artifact — a project with every feature broken starts a dev server just as successfully as a correct one."
+      },
+      "evidence": [
+        "package.json: \"dev\": \"vite\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#dev-vercel",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the `vercel dev` local emulator process",
+        "actorCanWrite": true,
+        "argument": "Same shape as `dev`: an interactive local server that emulates the serverless functions. It exists so a human can look at the app, which is a human observation, not an edge that emits a verdict anything consumes."
+      },
+      "evidence": [
+        "package.json: \"dev:vercel\": \"vercel dev\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#preview",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "the Vite static preview server",
+        "actorCanWrite": true,
+        "argument": "Serves the already-built dist/ directory over HTTP. It re-reads an artifact that was produced upstream and asserts nothing about it; whatever was built is what gets served."
+      },
+      "evidence": [
+        "package.json: \"preview\": \"vite preview\""
+      ],
+      "confidence": 0.95,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#tags-list",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "scripts/tags.mjs reading Supabase and writing supabase/tags.local.json",
+        "actorCanWrite": true,
+        "argument": "Reads photos and attendees out of the project's own Supabase instance and writes a template file for a human to fill in. Its only non-zero exit is a missing-env precondition. It is a data-entry convenience; nothing about the correctness of the app varies with its output."
+      },
+      "evidence": [
+        "scripts/tags.mjs header: 'list -> imprime fotos + attendees y escribe la plantilla'",
+        "scripts/tags.mjs: process.exit(1) only when VITE_SUPABASE_URL/ANON_KEY missing"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#tags-apply",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "scripts/tags.mjs writing rows into the photo_tags table",
+        "actorCanWrite": true,
+        "argument": "This is a mutation, the opposite direction of a check: it pushes human-declared tags into the database that the demo then reads back. The script's own comment states the correctness rule ('etiqueta SOLO gente que realmente sale en la foto') is enforced by the operator's honesty, and schema.sql confirms the DB will not push back — RLS is enabled with `for all using (true) with check (true)` on every table, so the only DB-side producers are foreign keys and not-null. Writing data you will later display is a claim, not a verification of one."
+      },
+      "evidence": [
+        "scripts/tags.mjs: 'apply -> aplica supabase/tags.local.json'",
+        "supabase/schema.sql: create policy \"open access\" ... for all using (true) with check (true)"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    },
+    {
+      "nodeId": "package.json#tags-status",
+      "class": "not_a_check",
+      "writeBoundary": {
+        "producer": "scripts/tags.mjs printing the current graph from Supabase",
+        "actorCanWrite": true,
+        "argument": "Prints the graph as it currently stands so a human can eyeball it before the pitch. There is no expected value anywhere for the printed graph to be compared against, so the process cannot fail on content — only on connectivity. A report a human reads is not an edge that emits a verdict."
+      },
+      "evidence": [
+        "scripts/tags.mjs: 'status -> muestra el grafo que saldria ahora'"
+      ],
+      "confidence": 0.85,
+      "decidedBy": "agent"
+    }
+  ],
+  "grounding": {
+    "anchored": 1,
+    "selfReferential": 0,
+    "unknown": 1,
+    "notACheck": 7,
+    "ratio": 0.5
+  },
+  "economics": {
+    "nodesTotal": 9,
+    "nodesSampled": 9,
+    "decidedByProbe": 0,
+    "decidedByAgent": 9,
+    "probesMinted": 0,
+    "probeLibrarySize": 0,
+    "tokensIn": 0,
+    "tokensOut": 0,
+    "tokensEstimated": true,
+    "wallClockMs": 0
+  }
+}
