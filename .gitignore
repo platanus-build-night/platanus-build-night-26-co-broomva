@@ -40,3 +40,4 @@ docs/conversations/
 video/node_modules
 video/out/*
 !video/out/keel-explainer.mp4
+!video/out/keel-pitch-60.mp4
