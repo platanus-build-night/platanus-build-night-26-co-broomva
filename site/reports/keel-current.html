@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Keel — grounding report — keel</title>
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — design tokens. THE canonical source. There is no second copy.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Every Keel surface reads these: the report artifact (inlined by render.ts),
+   the marketing site, the agents page, and the governance docs. `site/` gets a
+   byte-identical copy written by `make site-tokens`; `make design-audit`
+   executes a diff and exits non-zero if it has drifted. That check is anchored
+   under Keel's own definition — the signal is a diff exit code, not an
+   assertion this repo also writes.
+
+   WHY ONE FILE AND NOT FIVE. Systems this size usually split color/type/space
+   into separate files behind an @import entry point. Keel cannot: the report
+   must open from file:// with zero external requests, so `render.ts` inlines
+   this text verbatim into a <style> block. One file is one read. The section
+   rules below carry the structure the file split would have carried.
+
+   NAMESPACE. Every token is `--k-*`. Keel's output gets embedded in other
+   people's pages and pasted into other people's docs; an unprefixed `--accent`
+   would collide and silently restyle someone else's surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ═══ CANVAS ══════════════════════════════════════════════════════════════
+     Dark, because Keel is an instrument, not a document. Elevation is
+     expressed as a background step plus a hairline — never a shadow. On a
+     #07090c canvas a shadow is a smudge: it costs paint and reads as nothing.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-bg-0: #07090c;          /* page */
+  --k-bg-1: #0c1015;          /* raised: cards, code blocks, table headers */
+  --k-bg-2: #11161d;          /* nested / hover */
+  --k-bg-3: #171d26;          /* active / selected row */
+
+  --k-line: #1b2027;          /* hairline — the default separator */
+  --k-line-strong: #2a323c;   /* emphasis rule, focused input */
+
+  /* ═══ INK ═════════════════════════════════════════════════════════════════
+     Four steps. --k-ink-3 is BELOW the 4.5:1 text threshold on --k-bg-0 by
+     design; it is for borders, disabled glyphs, and decorative rules. Never
+     set body copy in it. The other three clear 4.5:1 on bg-0 and bg-1.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ink-0: #e8edf2;         /* primary text        ~16:1 on bg-0 */
+  --k-ink-1: #b6c0cb;         /* secondary text      ~10:1 */
+  --k-ink-2: #8b97a5;         /* tertiary / meta      ~6:1 */
+  --k-ink-3: #5b6774;         /* NON-TEXT ONLY        ~2.6:1 */
+
+  /* ═══ KEEL'S OWN VOICE ════════════════════════════════════════════════════
+     One accent, used surgically: links, the emphasized clause in a headline,
+     Keel's own annotations. It is a HUE RESERVED FOR THE NARRATOR — it never
+     encodes a verdict, and no verdict color is ever used for chrome. Mixing
+     the two is how a tool starts congratulating itself in green.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-accent: #7dd3fc;
+  --k-accent-hover: #b6e6ff;
+  --k-accent-line: rgba(125, 211, 252, 0.30);   /* link underline at rest */
+  --k-accent-wash: rgba(125, 211, 252, 0.10);   /* callout fill */
+
+  /* ═══ VERDICTS ════════════════════════════════════════════════════════════
+     Exactly four, matching `GroundingClass` in schemas/keel.ts. The schema is
+     frozen; so is this list. Adding a fifth swatch here without a schema
+     change means someone is inventing a class in CSS.
+
+       anchored          the producer is outside the write boundary
+       self_referential  it is inside
+       unknown           the fork point could not be traced — FAILS CLOSED
+       not_a_check       asserts nothing; excluded from the denominator
+
+     `not_a_check` is deliberately the least attractive swatch in the file. It
+     is the one shoppable class — misfiling a real check there shrinks the
+     denominator and inflates the score — so it gets inert slate and, per
+     `.k-verdict`, a dashed border rather than a solid one. It should never
+     look like a place you want your nodes to land.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-anchored: #4ade80;
+  --k-self-referential: #f87171;
+  --k-unknown: #fbbf24;
+  --k-not-a-check: #94a3b8;
+
+  /* Tints for chip fills and graph marks. Kept as explicit rgba rather than
+     color-mix() so the report renders identically in older embedded viewers
+     (email clients, IDE previews) that never see a modern engine. */
+  --k-anchored-wash: rgba(74, 222, 128, 0.10);
+  --k-self-referential-wash: rgba(248, 113, 113, 0.10);
+  --k-unknown-wash: rgba(251, 191, 36, 0.10);
+  --k-not-a-check-wash: rgba(148, 163, 184, 0.08);
+
+  /* Confidence smell — an `anchored` verdict asserted with confidence < 0.5.
+     Aliased to --k-unknown on purpose: the visual claim is "this is closer to
+     unknown than its color suggests". A separate hue would imply a fifth
+     class, and there is no fifth class. */
+  --k-smell: var(--k-unknown);
+
+  /* ═══ TYPE ════════════════════════════════════════════════════════════════
+     NO WEBFONTS. Not a preference — an invariant. The report must open from
+     file://, survive being emailed, and issue zero external requests, which
+     rules out every hosted face. System stacks are the honest answer; a
+     bundled base64 face would add ~80KB to an artifact whose whole argument
+     is that it depends on nothing.
+
+     The two families carry a PROVENANCE distinction, and this is the rule
+     most worth keeping: MONO IS QUOTED FROM THE WORLD, SANS IS KEEL TALKING.
+     Node names, file paths, commands, exit codes, class names, hashes — mono,
+     because Keel did not write them. Prose, headings, arguments, and
+     annotations — sans, because Keel did. A reader can tell claim from
+     evidence at a glance without reading a word.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 Inter, system-ui, sans-serif;
+  --k-font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo,
+                 "Cascadia Mono", Consolas, monospace;
+
+  --k-fs-ratio: clamp(64px, 13vw, 128px);   /* the grounding ratio, and only it */
+  --k-fs-display: clamp(30px, 5.2vw, 46px); /* page hero */
+  --k-fs-h1: 24px;
+  --k-fs-h2: 19px;
+  --k-fs-h3: 16px;
+  --k-fs-lede: 19px;
+  --k-fs-body: 16px;
+  --k-fs-ui: 15px;                          /* dense report UI */
+  --k-fs-sm: 14px;
+  --k-fs-xs: 12.5px;
+  --k-fs-micro: 11px;                       /* eyebrows, table headers */
+
+  --k-lh-ratio: 0.9;
+  --k-lh-tight: 1.18;
+  --k-lh-snug: 1.35;
+  --k-lh-body: 1.65;
+
+  /* Three weights. There is no 700: on a near-black canvas heavy strokes
+     bloom, and the halation costs more legibility than the emphasis buys. */
+  --k-fw-regular: 400;
+  --k-fw-medium: 500;
+  --k-fw-semibold: 600;
+
+  --k-track-ratio: -0.045em;
+  --k-track-display: -0.022em;
+  --k-track-tight: -0.01em;
+  --k-track-normal: 0;
+  --k-track-eyebrow: 0.18em;   /* uppercase section labels */
+  --k-track-brand: 0.22em;     /* the wordmark only */
+
+  /* ═══ SPACE ═══════════════════════════════════════════════════════════════
+     4px grid. Measures are capped tight: a verdict list read at 1400px wide
+     loses the row it started on, and this artifact is read row by row.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-space-0: 0;
+  --k-space-1: 4px;
+  --k-space-2: 8px;
+  --k-space-3: 12px;
+  --k-space-4: 16px;
+  --k-space-5: 20px;
+  --k-space-6: 24px;
+  --k-space-8: 32px;
+  --k-space-10: 40px;
+  --k-space-12: 48px;
+  --k-space-16: 64px;
+  --k-space-20: 80px;
+  --k-space-24: 96px;
+
+  --k-measure-read: 760px;     /* prose column — site, docs */
+  --k-measure-report: 1080px;  /* report shell: graph + verdict table */
+  --k-measure-prose: 62ch;     /* lede / paragraph wrap */
+
+  /* ═══ RADIUS ══════════════════════════════════════════════════════════════
+     Small. Keel's surfaces are cells, rows, and records — the vocabulary of a
+     ledger. Generous rounding reads as consumer-soft and undersells that the
+     numbers on screen are accounting, not a dashboard.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-r-xs: 3px;
+  --k-r-sm: 4px;
+  --k-r-md: 6px;
+  --k-r-lg: 8px;
+  --k-r-xl: 12px;
+  --k-r-pill: 999px;           /* tags and class chips only */
+
+  /* ═══ MOTION ══════════════════════════════════════════════════════════════
+     Fast and flat. Instruments settle; they do not perform. No overshoot, no
+     bounce, nothing above 200ms. Motion here exists to preserve object
+     continuity across a state change, never to draw attention to one.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-ease: cubic-bezier(0.2, 0, 0.38, 1);
+  --k-dur-fast: 90ms;
+  --k-dur-base: 160ms;
+
+  /* ═══ GRAPH MARKS ═════════════════════════════════════════════════════════
+     The node graph is one mark per node. SQUARES, not circles: a circle in a
+     verification UI reads as a status dot, and a status dot is exactly the
+     unaccountable green light Keel exists to criticize. A square reads as a
+     cell in a ledger. Sized to stay legible at 200 nodes.
+     ─────────────────────────────────────────────────────────────────────── */
+  --k-mark: 10px;
+  --k-mark-gap: 3px;
+  --k-mark-r: 2px;
+  --k-mark-stroke: 1.5px;      /* smell ring on an anchored mark */
+
+  /* ═══ FOCUS ═══════════════════════════════════════════════════════════════
+     Two-stop ring: a bg-colored inset so the accent never touches the element
+     edge, then the accent. Visible on every surface step without a per-context
+     override. */
+  --k-focus-ring: 0 0 0 2px var(--k-bg-0), 0 0 0 4px var(--k-accent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Keel — element defaults and component classes. Requires tokens.css.
+   ═══════════════════════════════════════════════════════════════════════════
+
+   WHY CSS CLASSES AND NOT COMPONENTS. Keel's surfaces are static HTML emitted
+   as strings by `render.ts`, plus two hand-written pages. There is no runtime,
+   no build step, and no framework to hang a component API on — so the
+   component contract is a class name plus a documented markup shape. See
+   `README.md` in this directory for the per-component usage brief.
+
+   Every value below is a var(). A literal hex, px, or ms in this file is a
+   bug, and `make design-audit` fails on one. The two exceptions are marked
+   inline with `audit-ok:` and carry a reason.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Reset, kept to what actually bites ─────────────────────────────────── */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--k-bg-0);
+  color: var(--k-ink-0);
+  font-family: var(--k-font-sans);
+  font-size: var(--k-fs-body);
+  line-height: var(--k-lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: var(--k-fw-semibold);
+  line-height: var(--k-lh-snug);
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+
+p { margin: 0 0 var(--k-space-4); max-width: var(--k-measure-prose); }
+
+a {
+  color: var(--k-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--k-accent-line);
+  transition: color var(--k-dur-fast) var(--k-ease),
+              border-color var(--k-dur-fast) var(--k-ease);
+}
+a:hover { color: var(--k-accent-hover); border-bottom-color: var(--k-accent); }
+
+code, kbd, samp, pre { font-family: var(--k-font-mono); }
+
+::selection { background: var(--k-accent-wash); color: var(--k-ink-0); }
+
+:focus-visible { outline: none; box-shadow: var(--k-focus-ring); border-radius: var(--k-r-sm); }
+
+/* Motion is never load-bearing here, so honouring the preference costs
+   nothing and removes every transition and the one animated element. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+
+.k-page   { max-width: var(--k-measure-read);   margin: 0 auto; padding: var(--k-space-20) var(--k-space-6) var(--k-space-24); }
+.k-report { max-width: var(--k-measure-report); margin: 0 auto; padding: var(--k-space-12) var(--k-space-6) var(--k-space-20); }
+
+.k-rule { border: 0; border-top: 1px solid var(--k-line); margin: var(--k-space-16) 0; }
+
+/* ── Type ───────────────────────────────────────────────────────────────── */
+
+/* Uppercase section label. Sentence-case everywhere else — these are the only
+   shouted words in the system, and they are structural, not emphatic. */
+.k-eyebrow {
+  margin: 0 0 var(--k-space-5);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-wordmark {
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-brand);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+}
+
+.k-display {
+  font-size: var(--k-fs-display);
+  line-height: var(--k-lh-tight);
+  letter-spacing: var(--k-track-display);
+  font-weight: var(--k-fw-semibold);
+}
+/* The one emphasized clause in a headline. Accent = Keel's own voice. */
+.k-display em { font-style: normal; color: var(--k-accent); }
+
+.k-lede {
+  font-size: var(--k-fs-lede);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+
+.k-meta { font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+/* Anything quoted from the target: paths, node names, commands, hashes. */
+.k-mono { font-family: var(--k-font-mono); font-size: 0.92em; } /* audit-ok: relative to inherited size, not a fixed step */
+
+/* ── Surfaces ───────────────────────────────────────────────────────────── */
+
+.k-card {
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-5);
+}
+
+.k-code {
+  display: block;
+  background: var(--k-bg-1);
+  border: 1px solid var(--k-line);
+  border-radius: var(--k-r-lg);
+  padding: var(--k-space-4) var(--k-space-5);
+  font-size: var(--k-fs-ui);
+  overflow-x: auto;
+}
+.k-code--cmd::before { content: "$ "; color: var(--k-ink-2); }
+
+.k-callout {
+  margin: 0 0 var(--k-space-6);
+  padding: var(--k-space-4) var(--k-space-5);
+  background: var(--k-bg-1);
+  border-left: 2px solid var(--k-accent);
+  font-size: var(--k-fs-lede);
+  line-height: var(--k-lh-snug);
+}
+
+/* ── Verdict classes ────────────────────────────────────────────────────────
+   `.k-class` renders a GroundingClass name. The name is ALWAYS the schema
+   spelling in mono — `self_referential`, never "Self-Referential". The class
+   is an identifier from the data model, not a label we get to prettify, and
+   re-spelling it in prose breaks the reader's ability to grep the JSON.
+
+   Drive the variant with data-class so invalid values render unstyled and
+   loudly wrong rather than silently defaulting to something plausible.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-class {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-1);
+  padding: var(--k-space-1) var(--k-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--k-r-sm);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  line-height: var(--k-lh-snug);
+  white-space: nowrap;
+}
+
+.k-class[data-class="anchored"]         { color: var(--k-anchored);         background: var(--k-anchored-wash); }
+.k-class[data-class="self_referential"] { color: var(--k-self-referential); background: var(--k-self-referential-wash); }
+.k-class[data-class="unknown"]          { color: var(--k-unknown);          background: var(--k-unknown-wash); }
+
+/* Dashed, because this class is EXCLUDED FROM THE DENOMINATOR. The border
+   style is the reader's cue that the node left the accounting entirely — the
+   one place a verdict changes what the ratio is computed over, so it is the
+   one place the chip stops looking like the others. */
+.k-class[data-class="not_a_check"] {
+  color: var(--k-not-a-check);
+  background: var(--k-not-a-check-wash);
+  border-color: var(--k-ink-3);
+  border-style: dashed;
+}
+
+/* Confidence smell: `anchored` asserted below 0.5. High confidence with thin
+   evidence is the pattern worth catching, so it gets a ring rather than a
+   footnote. */
+.k-class[data-smell] { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+/* ── Verdict row ────────────────────────────────────────────────────────────
+   A verdict without its argument is the unaccountable green check Keel exists
+   to criticize, so the markup contract is: every `.k-verdict` contains a
+   `.k-argument`. The rule below makes a violation visible in the artifact
+   itself during development, and `make design-audit` fails the build on one.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-verdict {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) auto;
+  gap: var(--k-space-2) var(--k-space-4);
+  padding: var(--k-space-4) 0;
+  border-bottom: 1px solid var(--k-line);
+}
+
+.k-verdict__name   { font-family: var(--k-font-mono); font-size: var(--k-fs-ui); color: var(--k-ink-0); word-break: break-word; }
+.k-verdict__source { grid-column: 1; font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-verdict__class  { grid-column: 2; grid-row: 1; justify-self: end; }
+
+/* The evidence. Sans, because this is Keel reasoning — not quoted material. */
+.k-argument {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+
+.k-verdict:not(:has(.k-argument))::after {
+  content: "missing write-boundary argument — a class without its causal path is not a verdict";
+  grid-column: 1 / -1;
+  padding: var(--k-space-2) var(--k-space-3);
+  border-radius: var(--k-r-sm);
+  background: var(--k-self-referential-wash);
+  color: var(--k-self-referential);
+  font-size: var(--k-fs-xs);
+}
+
+/* ── Grounding ratio ────────────────────────────────────────────────────────
+   NEVER render `.k-ratio__value` without `.k-ratio__counts`. A ratio with a
+   hidden denominator is the exact move this tool was built to expose, and it
+   is trivially inflated by shopping nodes into `not_a_check`. The counts row
+   prints `not_a_check` BESIDE the ratio, visibly outside the fraction.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-ratio { margin: 0 0 var(--k-space-8); }
+
+.k-ratio__value {
+  display: block;
+  font-size: var(--k-fs-ratio);
+  line-height: var(--k-lh-ratio);
+  letter-spacing: var(--k-track-ratio);
+  font-weight: var(--k-fw-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-0);
+}
+
+.k-ratio__formula { margin: var(--k-space-3) 0 var(--k-space-4); font-family: var(--k-font-mono); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+
+.k-ratio__counts { display: flex; flex-wrap: wrap; gap: var(--k-space-2) var(--k-space-5); align-items: center; font-size: var(--k-fs-sm); }
+.k-ratio__count { display: inline-flex; align-items: baseline; gap: var(--k-space-2); font-variant-numeric: tabular-nums; color: var(--k-ink-1); }
+
+/* Set off with a leading rule: everything after it is outside the fraction. */
+.k-ratio__count--excluded {
+  padding-left: var(--k-space-5);
+  border-left: 1px solid var(--k-line);
+  color: var(--k-ink-2);
+}
+
+/* Composition bar. Segment widths are set inline by the renderer from the
+   real counts — no minimum width, because a class with two nodes must look
+   like a class with two nodes. */
+.k-meter { display: flex; height: var(--k-space-2); border-radius: var(--k-r-pill); overflow: hidden; background: var(--k-bg-2); margin: var(--k-space-4) 0; }
+.k-meter__seg[data-class="anchored"]         { background: var(--k-anchored); }
+.k-meter__seg[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-meter__seg[data-class="unknown"]          { background: var(--k-unknown); }
+.k-meter__seg[data-class="not_a_check"]      { background: var(--k-not-a-check); opacity: 0.45; }
+
+/* ── Node graph ─────────────────────────────────────────────────────────────
+   One mark per node, squares on a wrapping grid. Squares, not circles: a
+   circle reads as a status dot, and a status dot is the thing being audited.
+   The grid wraps rather than scaling, so 15 nodes and 200 nodes use the same
+   mark size and neither clips.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-graph { display: flex; flex-wrap: wrap; gap: var(--k-mark-gap); margin: 0 0 var(--k-space-6); }
+
+.k-mark {
+  width: var(--k-mark);
+  height: var(--k-mark);
+  border-radius: var(--k-mark-r);
+  background: var(--k-ink-3);
+}
+.k-mark[data-class="anchored"]         { background: var(--k-anchored); }
+.k-mark[data-class="self_referential"] { background: var(--k-self-referential); }
+.k-mark[data-class="unknown"]          { background: var(--k-unknown); }
+.k-mark[data-class="not_a_check"]      { background: transparent; box-shadow: inset 0 0 0 1px var(--k-not-a-check); } /* audit-ok: 1px hairline is the smallest renderable inset, not a scale step */
+.k-mark[data-smell]                    { box-shadow: inset 0 0 0 var(--k-mark-stroke) var(--k-smell); }
+
+.k-legend { display: flex; flex-wrap: wrap; gap: var(--k-space-4); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-legend__item { display: inline-flex; align-items: center; gap: var(--k-space-2); }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+
+.k-table { width: 100%; border-collapse: collapse; font-size: var(--k-fs-ui); }
+.k-table th {
+  padding: var(--k-space-2) var(--k-space-3) var(--k-space-2) 0;
+  border-bottom: 1px solid var(--k-line-strong);
+  font-size: var(--k-fs-micro);
+  font-weight: var(--k-fw-medium);
+  letter-spacing: var(--k-track-eyebrow);
+  text-transform: uppercase;
+  color: var(--k-ink-2);
+  text-align: left;
+}
+.k-table td { padding: var(--k-space-3) var(--k-space-3) var(--k-space-3) 0; border-bottom: 1px solid var(--k-line); vertical-align: top; color: var(--k-ink-1); }
+.k-table td:first-child { color: var(--k-ink-0); }
+.k-table--num td { font-variant-numeric: tabular-nums; }
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.k-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--k-space-2);
+  padding: var(--k-space-2) var(--k-space-4);
+  border: 1px solid var(--k-line-strong);
+  border-radius: var(--k-r-md);
+  background: var(--k-bg-1);
+  color: var(--k-ink-0);
+  font-family: inherit;
+  font-size: var(--k-fs-sm);
+  font-weight: var(--k-fw-medium);
+  cursor: pointer;
+  transition: background var(--k-dur-fast) var(--k-ease), border-color var(--k-dur-fast) var(--k-ease);
+}
+.k-btn:hover { background: var(--k-bg-2); border-color: var(--k-ink-3); }
+.k-btn--accent { border-color: var(--k-accent-line); color: var(--k-accent); }
+
+.k-tag {
+  display: inline-flex;
+  padding: var(--k-space-1) var(--k-space-3);
+  border-radius: var(--k-r-pill);
+  background: var(--k-bg-2);
+  color: var(--k-ink-2);
+  font-size: var(--k-fs-micro);
+  letter-spacing: var(--k-track-normal);
+}
+
+/* ── Scope note ─────────────────────────────────────────────────────────────
+   MANDATORY on every artifact that prints a grounding ratio. A high ratio
+   reported without it will be read as "well tested", which is a claim Keel
+   does not make and cannot support. It is a component, not a paragraph, so
+   that it cannot be quietly reworded per artifact.
+   ─────────────────────────────────────────────────────────────────────── */
+
+.k-scope {
+  margin: var(--k-space-10) 0 0;
+  padding: var(--k-space-4) var(--k-space-5);
+  border: 1px dashed var(--k-line-strong);
+  border-radius: var(--k-r-lg);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-2);
+  max-width: var(--k-measure-prose);
+}
+.k-scope strong { color: var(--k-ink-1); font-weight: var(--k-fw-medium); }
+
+/* ── Economics footer ───────────────────────────────────────────────────── */
+
+.k-econ { display: flex; flex-wrap: wrap; gap: var(--k-space-8); margin-top: var(--k-space-8); padding-top: var(--k-space-5); border-top: 1px solid var(--k-line); font-size: var(--k-fs-xs); color: var(--k-ink-2); }
+.k-econ__stat { display: flex; flex-direction: column; gap: var(--k-space-1); }
+.k-econ__value { font-size: var(--k-fs-h3); font-variant-numeric: tabular-nums; color: var(--k-ink-0); }
+
+/* ── Print ──────────────────────────────────────────────────────────────────
+   The report is expected to be emailed, and an emailed artifact gets printed
+   and pasted into decks. Dark-on-paper is unreadable and wastes toner, so the
+   canvas and ink tokens invert while the four verdict hues are DARKENED
+   rather than swapped — the classification must survive the medium, otherwise
+   a printed report and a screen report disagree about what they show.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@media print {
+  :root {
+    --k-bg-0: #ffffff;
+    --k-bg-1: #f7f7f5;
+    --k-bg-2: #eeeeec;
+    --k-bg-3: #e6e6e3;
+    --k-line: #dcdcd7;
+    --k-line-strong: #b9b9b2;
+    --k-ink-0: #14161a;
+    --k-ink-1: #3a4048;
+    --k-ink-2: #626a74;
+    --k-ink-3: #9aa1aa;
+    --k-accent: #0b6ea8;
+    --k-accent-line: rgba(11, 110, 168, 0.35);
+    --k-anchored: #157f3e;
+    --k-self-referential: #b3261e;
+    --k-unknown: #8a5a00;
+    --k-not-a-check: #5f6b78;
+  }
+  body { background: #ffffff; } /* audit-ok: print canvas must be paper-white regardless of theme tokens */
+  .k-verdict, .k-card, .k-scope { break-inside: avoid; }
+  a { border-bottom: none; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
+}
+
+
+/* ── renderer-local layout (kr-*), tokens only ── */
+.kr-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: var(--k-space-12);
+  align-items: start;
+  margin: var(--k-space-12) 0 0;
+}
+@media (max-width: 760px) {
+  .kr-split { grid-template-columns: minmax(0, 1fr); gap: var(--k-space-8); }
+}
+.kr-section { margin: var(--k-space-16) 0 0; }
+.kr-line {
+  grid-column: 1 / -1;
+  margin: 0;
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+}
+.kr-ev {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: var(--k-measure-prose);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+  line-height: var(--k-lh-snug);
+}
+.kr-ev li { margin-top: var(--k-space-1); word-break: break-word; }
+.kr-ev li::before { content: "· "; color: var(--k-ink-3); }
+.kr-missing { color: var(--k-self-referential); }
+.kr-smell { color: var(--k-smell); }
+/* `.kr-line` is authored for the verdict grid, where `margin: 0` is right and
+   the row spacing comes from the grid. Inside the ε-audit card there is no
+   grid, so the coverage line would butt straight into the note beneath it. */
+.k-card .kr-line { margin: var(--k-space-3) 0 0; }
+.kr-audit__note {
+  margin: var(--k-space-5) 0 0;
+  max-width: var(--k-measure-prose);
+  line-height: var(--k-lh-snug);
+}
+.kr-audit__figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--k-space-3);
+  margin: var(--k-space-2) 0 var(--k-space-1);
+}
+.kr-audit__count {
+  font-size: var(--k-fs-h2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+.kr-audit__rate {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-2);
+}
+.kr-audit__formula {
+  margin: 0 0 var(--k-space-3);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+}
+.kr-audit-alert {
+  margin: var(--k-space-3) 0;
+  padding: var(--k-space-3) var(--k-space-4);
+  border-left: var(--k-space-1) solid var(--k-self-referential);
+  border-radius: 0 var(--k-r-md) var(--k-r-md) 0;
+  background: var(--k-self-referential-wash);
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+.kr-audit-alert strong {
+  color: var(--k-self-referential);
+  font-weight: var(--k-fw-semibold);
+}
+.kr-curve { overflow-x: auto; }
+.kr-curve svg { max-width: 100%; height: auto; }
+
+</style>
+</head>
+<body>
+<main class="k-report">
+<header>
+  <p class="k-wordmark">Keel</p>
+  <h1 class="k-display">Grounding report<em>.</em></h1>
+  <p class="k-lede">Every verification edge in <span class="k-mono">keel</span>,
+     classified by who produces the signal and whether the actor being verified
+     can write to that producer.</p>
+  <table class="k-table">
+    <tr><th>target</th><td class="k-mono">keel</td></tr>
+    <tr><th>revision</th><td class="k-mono">ec00242c384a1ecd0439baf47adb3bea97da22c1</td></tr>
+    <tr><th>generated</th><td class="k-mono">2026-07-25T22:21:07.165663Z</td></tr>
+  </table>
+</header>
+
+<div class="kr-split"><div class="k-ratio">
+  <span class="k-ratio__value">0.67</span>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 14 / 21</p>
+  <div class="k-meter">
+    <div class="k-meter__seg" data-class="anchored" style="width:66.6667%"></div>
+    <div class="k-meter__seg" data-class="self_referential" style="width:33.3333%"></div>
+    <div class="k-meter__seg" data-class="unknown" style="width:0.0000%"></div>
+
+  </div>
+  <div class="k-ratio__counts">
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 14</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 7</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 0</span>
+    <span class="k-ratio__count k-ratio__count--excluded">
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 23
+      <span class="k-meta">excluded from the denominator</span>
+    </span>
+
+  </div>
+</div>
+<div>
+  <p class="k-eyebrow">Coverage (judged)</p>
+  <table class="k-table k-table--num">
+    <thead><tr><th>node kind</th><th>judged</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">ci_step</td><td>27</td></tr>
+      <tr><td class="k-mono">script</td><td>17</td></tr>
+
+    </tbody>
+  </table>
+  <p class="k-meta">Nodes by kind, over the 44 node(s) carried in this
+     report. Surfaces the gatherer cannot read are absent here rather than
+     counted as <span class="k-mono">unknown</span>, which makes non-coverage
+     Keel's own shoppable class — so it is stated, not implied.</p>
+</div>
+</div>
+<div class="k-card kr-section">
+  <p class="k-eyebrow">ε-audit — not run</p>
+  <p>No verdict in this report carries a readable <span class="k-mono">audit</span>
+     block, so nothing was re-decided and there is no agreement rate to report.
+     This is not agreement, and it is not full agreement either: a rate over
+     zero comparisons would state a measurement that was never taken.
+     (&ldquo;Readable&rdquo; is load-bearing: a block can be present and state no
+     comparison, and this state covers that too — see below if so.)</p>
+  <p class="k-meta">This run carries <span class="k-mono">0</span>
+     probe-decided verdict(s), none of them contributing a readable comparison.
+     (&ldquo;Readable&rdquo; rather than &ldquo;audited&rdquo;, because a block
+     can arrive and state nothing — if any did, they are counted below.) Audit
+     coverage is itself shoppable — audit none of the library and no
+     disagreement can ever be found — so the absence is printed here rather
+     than left to be inferred from a missing section.</p>
+
+</div>
+
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
+verification, not its quality. A repo can be 100% anchored with terrible
+tests. Anchoring says the signal comes from outside; it does not say the
+signal is sufficient.</p>
+
+<section class="kr-section">
+  <p class="k-eyebrow">Node graph — 44 node(s), in gather order</p>
+  <div class="k-graph">
+    <span class="k-mark" data-class="not_a_check" title="studio — video/package.json — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="render — video/package.json — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="render:pitch — video/package.json — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="still — video/package.json — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="help — Makefile:40 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="doctor — Makefile:44 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="bstack-check — Makefile:48 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="portability-check — Makefile:52 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="design-audit — Makefile:55 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="design-sync — Makefile:58 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="janitor — Makefile:61 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="janitor-apply — Makefile:64 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="bstack-primitive-lint — Makefile:67 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="bstack-rule-of-three — Makefile:70 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="bstack-l3-trust — Makefile:94 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="test — package.json — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="typecheck — package.json — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Checkout PR head — .github/workflows/l3-stability.yml:31 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Set up Python 3.11 — .github/workflows/l3-stability.yml:36 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Install bstack (skill snapshot) — .github/workflows/l3-stability.yml:41 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Compute lambda (RCS stability budget) — .github/workflows/l3-stability.yml:52 — not_a_check (confidence 0.7)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Run L3 rate gate — .github/workflows/l3-stability.yml:68 — not_a_check (confidence 0.7)"></span>
+    <span class="k-mark" data-class="self_referential" title="Comment on PR — .github/workflows/l3-stability.yml:83 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="Set final status — .github/workflows/l3-stability.yml:125 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v4 — .github/workflows/pages.yml:27 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/configure-pages@v5 — .github/workflows/pages.yml:28 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/upload-pages-artifact@v3 — .github/workflows/pages.yml:29 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/deploy-pages@v4 — .github/workflows/pages.yml:32 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v4 — .github/workflows/test.yml:63 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="oven-sh/setup-bun@v2 — .github/workflows/test.yml:65 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Install toolchain baseline — .github/workflows/test.yml:69 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="bun test — .github/workflows/test.yml:82 — anchored (confidence 0.9)"></span>
+    <span class="k-mark" data-class="anchored" title="tsc --noEmit — .github/workflows/test.yml:85 — anchored (confidence 0.9)"></span>
+    <span class="k-mark" data-class="anchored" title="design adherence gate — .github/workflows/test.yml:93 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="fixture recomputes — .github/workflows/test.yml:100 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="self-measurement is current — .github/workflows/test.yml:140 — anchored (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v4 — .github/workflows/portability.yml:23 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Scan committed files for absolute home paths — .github/workflows/portability.yml:25 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v4 — .github/workflows/portability.yml:32 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Run each hook with an empty payload — .github/workflows/portability.yml:37 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Control gate blocks and allows correctly — .github/workflows/portability.yml:57 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v4 — .github/workflows/portability.yml:74 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="self_referential" title="L3 trust gate — .github/workflows/portability.yml:78 — self_referential (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Pre-commit hook degrades without bstack — .github/workflows/portability.yml:81 — anchored (confidence 0.85)"></span>
+
+  </div>
+  <div class="k-legend">
+    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 14</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="self_referential"></span> self_referential 7</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 23</span>
+
+  </div>
+  <p class="k-meta">No mark is ringed: no drawn verdict is anchored below confidence 0.6. Hover a mark for its node.</p>
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">anchored — 14</p>
+  <p class="k-meta">The producer sits outside the write boundary of the actor being verified.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">portability-check</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">Makefile:52 · script</div>
+    <p class="k-argument">The signal is grep matching committed bytes, so a contributor who commits a machine-specific path cannot make the scan report clean without editing scripts/portability-check.sh itself. The same script runs in portability.yml on a fresh ubuntu-latest checkout with none of the author&#39;s tooling present, and that job is now a REQUIRED status check, so a non-zero exit blocks the merge. Documented limit: the oracle (which paths count, and the 80-file exemption list) is authored in-repo.</p>
+    <p class="kr-line">producer <span class="k-mono">bash + grep -nE scanning the actual bytes of every file in `git ls-files`, with the script&#39;s fail flag driving exit 1</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: portability-check -&gt; scripts/portability-check.sh</li>
+      <li>.github/workflows/portability.yml:25 runs the same script</li>
+      <li>ruleset 19744979 requires &quot;no machine-specific paths&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">design-audit</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">Makefile:55 · script</div>
+    <p class="k-argument">The exit code comes from the interpreter reading files on disk, so someone adding a raw literal cannot make the scan report clean without editing scripts/design-audit.py. test.yml:93 invokes THIS target, and test (ubuntu-latest) is a required check, so this is the edge that blocks the merge rather than a target that could have. Documented limits: the rules are authored in-repo and checks 1-2 carry an `audit-ok:` per-line escape hatch.</p>
+    <p class="kr-line">producer <span class="k-mono">python3 executing design-audit.py — regex scans and byte comparisons over the real governed files, returning 1 when the failures list is non-empty</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:93 &quot;run: make design-audit&quot;</li>
+      <li>ruleset 19744979 requires &quot;test (ubuntu-latest)&quot;</li>
+      <li>observed: 15 governed file(s) clean</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">test</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">package.json · script</div>
+    <p class="k-argument">Routed since ec00242. test.yml:82 now runs `bun run test` rather than a second copy of `bun test`, so this declaration IS the command the required check executes: the runtime decides the exit code and a red blocks the merge. Before the route the same two commands lived in two places and only the workflow copy gated anything, which made this node a statement of intent — the corpus classified it self_referential at 44f7e8d6 for exactly that reason. THE DOCUMENTED LIMIT is unchanged and is the honest one: only the EXECUTION axis is anchored. The oracle is authored in-repo beside the implementation, so a green run proves the code does what these tests say, not that they say the right thing.</p>
+    <p class="kr-line">producer <span class="k-mono">the Bun test-runner process executing 297 tests on a runner the PR author does not control — reached THROUGH this declaration</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>package.json: &quot;test&quot;: &quot;bun test&quot;</li>
+      <li>.github/workflows/test.yml:82-83 — run: bun run test</li>
+      <li>ruleset 19744979 requires test (ubuntu-latest) and test (macos-latest)</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">typecheck</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">package.json · script</div>
+    <p class="k-argument">Routed since ec00242: test.yml:85 runs `bun run typecheck`, so the declared script is the edge the required check executes. A type error is decided by tsc reading the source and cannot be argued into a zero exit. Limit: it checks type consistency, not behaviour, and the annotations are authored in-repo — an internally consistent wrong type still passes.</p>
+    <p class="kr-line">producer <span class="k-mono">the TypeScript compiler analysing the tree — reached THROUGH this declaration</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>package.json: &quot;typecheck&quot;: &quot;tsc --noEmit&quot;</li>
+      <li>.github/workflows/test.yml:85-86 — run: bun run typecheck</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Install toolchain baseline</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:69 · ci_step</div>
+    <p class="k-argument">`--frozen-lockfile` is what separates this from a plain install: the resolver will not refresh a stale lock, it exits non-zero, so the step is a falsifiable assertion that two committed files agree. An author who edits a dependency and forgets to regenerate the lock cannot make this pass without changing the tree. It runs in a required check, so the red blocks the merge. Documented limit: what is anchored is manifest/lock agreement and registry reachability — nothing about whether the code works.</p>
+    <p class="kr-line">producer <span class="k-mono">Bun&#39;s resolver comparing bun.lock against package.json and refusing to proceed on a mismatch</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:69-70 — run: bun install --frozen-lockfile</li>
+      <li>ruleset 19744979 requires test (ubuntu-latest) and test (macos-latest)</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">bun test</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:82 · ci_step</div>
+    <p class="k-argument">The runtime decides pass or fail by executing 297 tests, and no prose in the repo talks a failed assertion into a zero exit. This is now the edge that blocks the merge: it runs on a fresh ubuntu and macOS runner and both legs are REQUIRED status checks under ruleset 19744979, so a non-zero exit cannot be merged past. THE DOCUMENTED LIMIT, and it is the honest one: only the EXECUTION axis is anchored. The oracle is authored in-repo alongside the implementation, so a green run proves the code does what these tests say — not that the tests say the right thing.</p>
+    <p class="kr-line">producer <span class="k-mono">the Bun test-runner process — a failed expect() sets the process exit code, on a runner the PR author does not control</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:82-83 — run: bun run test</li>
+      <li>ruleset 19744979 required_status_checks: test (ubuntu-latest), test (macos-latest)</li>
+      <li>observed: 297 tests, 296 pass / 1 skip / 0 fail</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">tsc --noEmit</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:85 · ci_step</div>
+    <p class="k-argument">A type error is decided by tsc reading the source; it cannot be argued out of a non-zero exit. Runs in both required legs, so it gates the merge. Documented limit: it checks type consistency, not behaviour — and the types are authored in-repo, so a wrong annotation that is internally consistent still passes.</p>
+    <p class="kr-line">producer <span class="k-mono">the TypeScript compiler performing deterministic analysis of the tree</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:85-86 — run: bun run typecheck</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">design adherence gate</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:93 · ci_step</div>
+    <p class="k-argument">Executed analysis of bytes on disk on a fresh runner, inside a required check. Mutation-proven in this repo&#39;s history: injecting a raw hex literal into a &lt;style&gt; block flipped the target red and reverting restored green. Documented limit: the rules and the `audit-ok:` escape hatch are authored in-repo, so the SCOPE oracle sits inside the write boundary even though the measurement does not.</p>
+    <p class="kr-line">producer <span class="k-mono">python3 executing design-audit.py over the real governed files, exit 1 on any failure</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:93-95 — if ubuntu, run: make design-audit</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">fixture recomputes</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:100 · ci_step</div>
+    <p class="k-argument">The step recomputes the ratio from the stored verdicts and throws if the stored `grounding` block disagrees, and separately throws if any verdict carries no `writeBoundary.argument`. Both are executed comparisons whose exit code the runtime decides — a fixture edited into disagreeing with itself turns this red. It runs in a required check. Limit: it verifies internal consistency of the fixture, not that any verdict in it is correct.</p>
+    <p class="kr-line">producer <span class="k-mono">a Bun one-liner recomputing groundingRatio() from the fixture&#39;s own verdicts and throwing on disagreement</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:100-113</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">self-measurement is current</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:140 · ci_step</div>
+    <p class="k-argument">gather is deterministic and the runtime decides the exit code, so a PR that adds or removes a verification edge cannot leave reports/keel-current.json describing a tree that no longer exists — which is exactly what happened to the published 0.357, stale by 21 commits while asserting a defect that had been fixed. The oracle is a committed file the PR may change, and that is the property rather than a hole: it can be moved, but not silently. Runs inside a required check. THE LIMIT, and it must be stated: this proves COVERAGE is current, never that any VERDICT is. Classification is agentic and CI has no agent; a probe-only run emitting a ratio over whatever the cache decided would be the shoppable move under another name, so this edge deliberately emits no ratio at all.</p>
+    <p class="kr-line">producer <span class="k-mono">bun re-running gather.ts at HEAD and comparing the edge set against the committed report, throwing on any difference</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml:140-171</li>
+      <li>keyed on (file, kind, name), not Node.id — ids embed line numbers and would churn</li>
+      <li>ruleset 19744979 requires &quot;test (ubuntu-latest)&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Scan committed files for absolute home paths</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:25 · ci_step</div>
+    <p class="k-argument">grep matching real file contents on a clean checkout that has none of the maintainer&#39;s tooling — the runner is outside the write boundary of anything in this repo, so a pass here is an observation rather than a local assertion. &quot;no machine-specific paths&quot; is a REQUIRED status check, so a hit blocks the merge. Limit: the exemption list (80 files) is authored in-repo, so the scope is co-authored even though the scan is not.</p>
+    <p class="kr-line">producer <span class="k-mono">bash + grep scanning committed bytes, with the script driving exit 1</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml:25-26</li>
+      <li>ruleset 19744979 requires &quot;no machine-specific paths&quot;</li>
+      <li>observed: scanned 278 tracked files, 80 exempt</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Run each hook with an empty payload</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:37 · ci_step</div>
+    <p class="k-argument">Six hooks are actually EXECUTED on a bare clone with no skills and no bstack installed, and the shell&#39;s exit status decides. A hook that breaks on a machine without the maintainer&#39;s environment cannot be talked into passing. Required check, so it blocks the merge.</p>
+    <p class="kr-line">producer <span class="k-mono">bash executing each committed hook with an empty JSON payload; a non-zero exit fails the step under set -euo pipefail</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml:37-55</li>
+      <li>ruleset 19744979 requires &quot;hooks resolve on a bare clone&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Control gate blocks and allows correctly</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:57 · ci_step</div>
+    <p class="k-argument">The strongest edge in this repo, because it asserts BOTH directions: a force-push must exit 2 and an ordinary push must exit 0. Asserting only the block would pass against a hook that denies everything, and the step says so in its own comment. Two executed invocations, two compared exit codes, on a fresh runner, inside a required check.</p>
+    <p class="kr-line">producer <span class="k-mono">bash running control-gate-hook.sh twice and comparing both exit codes</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml:57-72</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Pre-commit hook degrades without bstack</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:81 · ci_step</div>
+    <p class="k-argument">The hook is really executed in an environment missing its optional dependency, and the shell&#39;s exit status decides whether it degraded gracefully. A hook that hard-fails without bstack turns this red, and it is a required check.</p>
+    <p class="kr-line">producer <span class="k-mono">bash executing .githooks/pre-commit on a clone with no bstack present</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml:81-82</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">self_referential — 7</p>
+  <p class="k-meta">The producer sits inside the write boundary of the actor being verified.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">bstack-check</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">Makefile:48 · script</div>
+    <p class="k-argument">The oracle is paperwork against paperwork: the checks are of the form &quot;a `### P-N` section exists in AGENTS.md&quot; and &quot;a matching `| P-N |` row exists in CLAUDE.md&quot;. Both files are in the tree of the PR being verified, so the way to make the gate green is to type the row. The runtime honestly produces the exit code, but the actor authored both sides of the comparison.</p>
+    <p class="kr-line">producer <span class="k-mono">bstack doctor.sh --strict comparing AGENTS.md against CLAUDE.md</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: bstack-check runs doctor.sh --strict</li>
+      <li>CLAUDE.md and AGENTS.md are both author-written</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">bstack-primitive-lint</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">Makefile:67 · script</div>
+    <p class="k-argument">The script opens only AGENTS.md and CLAUDE.md and compares them to each other: every `### P-N` must carry the literal strings **What**/**How**/**Why**/**Invariant**, and each must have a `| P-N |` row. Both documents sit in the tree the gate is verifying, so the fix for a red is always &quot;write the missing prose&quot;. Doc validated against doc.</p>
+    <p class="kr-line">producer <span class="k-mono">python3 bstack-primitive-lint.py comparing AGENTS.md section structure against CLAUDE.md table rows</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>scripts/bstack-primitive-lint.py reads AGENTS.md and CLAUDE.md only</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">bstack-rule-of-three</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">Makefile:70 · script</div>
+    <p class="k-argument">&quot;This pattern recurred 3+ times&quot; is established by matching a string a human typed into a ledger markdown file. The evidence and the claim are the same write. Additionally inert here: the Makefile documents that Keel promotes no primitives, so the ledger does not exist and the script fails on a missing file rather than on a real violation — which is why bstack-l3-trust deliberately does not wire it.</p>
+    <p class="kr-line">producer <span class="k-mono">python3 bstack-rule-of-three.py regexing a ledger table in research/entities/</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>Makefile comment block: &quot;G-L3-2 rule-of-three not run: no primitives are promoted in this repo&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">bstack-l3-trust</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">Makefile:94 · script</div>
+    <p class="k-argument">A green aggregate: do not classify the wrapper, descend. Its only real child is bstack-primitive-lint, whose signal is AGENTS.md compared against CLAUDE.md — the same two files a governance PR edits. The three `@echo` lines cannot fail. So the aggregate is exactly as grounded as its one self-referential child.</p>
+    <p class="kr-line">producer <span class="k-mono">an aggregate of one child, bstack-primitive-lint, plus three echo lines</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: bstack-l3-trust: bstack-primitive-lint, then three @echo lines</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Comment on PR</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:83 · ci_step</div>
+    <p class="k-argument">The step posts an authoritative-looking merge recommendation (&quot;composite system unstable; do not merge&quot; / &quot;All gates pass&quot;) that a human reviewer may act on. Both the claim and its evidence are authored by this one job from constants in .control/rcs-parameters.toml — a file inside the PR&#39;s own tree, and itself one of the paths that triggers this workflow. The claim and the check are the same write.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/github-script rendering a verdict string built from this job&#39;s own step outputs</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml:83-123</li>
+      <li>.control/rcs-parameters.toml is in-tree and is a trigger path</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Set final status</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:125 · ci_step</div>
+    <p class="k-argument">This is the only edge in the job that can turn red, so it is the gate — but descending it lands on the same actor-authored constants: exit 1 fires iff lambda_i &lt;= 0 for numbers the PR author may edit in the same commit. Additionally it gates nothing today: this workflow is not among the required status checks, and it triggers only on governance paths.</p>
+    <p class="kr-line">producer <span class="k-mono">the shell comparing steps.compute.outputs.status against &quot;0&quot;</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml:125-133</li>
+      <li>ruleset 19744979 does not list any l3-stability check</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">L3 trust gate</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="self_referential">self_referential</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:78 · ci_step</div>
+    <p class="k-argument">It runs on a fresh runner inside a required check, so the EXECUTION is independent — but descend the aggregate and the oracle is doc-against-doc: AGENTS.md sections matched to CLAUDE.md table rows, both authored by whoever opened the PR. Independence of the runner does not rescue an oracle the actor writes; the way to make this green is to type the missing prose.</p>
+    <p class="kr-line">producer <span class="k-mono">make bstack-l3-trust, which descends to bstack-primitive-lint comparing AGENTS.md against CLAUDE.md</span> — actor can write to it: <span class="k-mono">yes</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml:78-79 — run: make BSTACK= bstack-l3-trust</li>
+      <li>Makefile: bstack-l3-trust depends only on bstack-primitive-lint</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">not_a_check — 23</p>
+  <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">studio</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">video/package.json · script</div>
+    <p class="k-argument">A long-running interactive development server. It has no terminal state, so it cannot report pass or fail about anything. Same shape as the framework-dev-server-script probe.</p>
+    <p class="kr-line">producer <span class="k-mono">the Remotion dev server process, which runs until interrupted</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>video/package.json: &quot;studio&quot;: &quot;remotion studio&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">render</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">video/package.json · script</div>
+    <p class="k-argument">The command exists to produce keel-explainer.mp4. Its exit status is consumed by nothing — no workflow invokes it and no other target depends on it — and success means &quot;it rendered&quot;, never that any property of the repository holds. Closest shape in the library is artifact-publish-upload (not_a_check), not packaging-build-invocation, which is anchored only where a build acts AS A GATE. Named vacuousness: a broken composition would be caught by a human watching the video, not by this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">the Remotion/esbuild toolchain writing an output file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>video/package.json</li>
+      <li>no workflow references video/ (grep over .github/workflows)</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">render:pitch</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">video/package.json · script</div>
+    <p class="k-argument">The command exists to produce keel-pitch-60.mp4. Its exit status is consumed by nothing — no workflow invokes it and no other target depends on it — and success means &quot;it rendered&quot;, never that any property of the repository holds. Closest shape in the library is artifact-publish-upload (not_a_check), not packaging-build-invocation, which is anchored only where a build acts AS A GATE. Named vacuousness: a broken composition would be caught by a human watching the video, not by this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">the Remotion/esbuild toolchain writing an output file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>video/package.json</li>
+      <li>no workflow references video/ (grep over .github/workflows)</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">still</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">video/package.json · script</div>
+    <p class="k-argument">The command exists to produce still.png. Its exit status is consumed by nothing — no workflow invokes it and no other target depends on it — and success means &quot;it rendered&quot;, never that any property of the repository holds. Closest shape in the library is artifact-publish-upload (not_a_check), not packaging-build-invocation, which is anchored only where a build acts AS A GATE. Named vacuousness: a broken composition would be caught by a human watching the video, not by this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">the Remotion/esbuild toolchain writing an output file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>video/package.json</li>
+      <li>no workflow references video/ (grep over .github/workflows)</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">help</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">Makefile:40 · script</div>
+    <p class="k-argument">The output is the Makefile&#39;s own `## ` comments re-printed. Nothing about the repository is compared against anything, and the exit status is awk&#39;s formatting status, so no state of the world can flip it.</p>
+    <p class="kr-line">producer <span class="k-mono">grep -hE over $(MAKEFILE_LIST) piped to awk, reformatting the ## doc-comments</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: help target body is a grep|awk pipeline over MAKEFILE_LIST</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">doctor</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">Makefile:44 · script</div>
+    <p class="k-argument">The target&#39;s own doc-comment reads &quot;always exits 0&quot;. A signal that cannot vary carries no information, so this is not_a_check by falsifiability rather than by content — the report it prints may be useful to a human, but no state of the world turns this red.</p>
+    <p class="kr-line">producer <span class="k-mono">bstack doctor.sh, which the target documents as always exiting 0</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: &quot;doctor: ## bstack primitive-contract compliance report (needs bstack; always exits 0)&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">design-sync</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">Makefile:58 · script</div>
+    <p class="k-argument">A rewriter, not an assertion — it makes the files agree rather than reporting whether they did. Same shape as a formatter that only rewrites. The checking counterpart is `make design-audit`, classified separately.</p>
+    <p class="kr-line">producer <span class="k-mono">design-audit.py --fix-sync, which rewrites site/ token copies in place</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>Makefile: design-sync -&gt; design-audit.py --fix-sync</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">janitor</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">Makefile:61 · script</div>
+    <p class="k-argument">The target answers a housekeeping question (dry-run) — which local branches already landed and which worktrees are orphaned — and prints the list. Control reaches an unconditional exit 0 at branch-janitor.sh:214, so no finding can turn it red. Nothing here asserts the repository is correct.</p>
+    <p class="kr-line">producer <span class="k-mono">git plumbing (merge-base --is-ancestor, commit-tree + cherry) over origin/main</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>scripts/branch-janitor.sh:214 unconditional exit 0</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">janitor-apply</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">Makefile:64 · script</div>
+    <p class="k-argument">The target answers a housekeeping question (--apply) — which local branches already landed and which worktrees are orphaned — and prints the list. Control reaches an unconditional exit 0 at branch-janitor.sh:214, so no finding can turn it red. Nothing here asserts the repository is correct.</p>
+    <p class="kr-line">producer <span class="k-mono">git plumbing (merge-base --is-ancestor, commit-tree + cherry) over origin/main</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>scripts/branch-janitor.sh:214 unconditional exit 0</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Checkout PR head</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:31 · ci_step</div>
+    <p class="k-argument">Provisioning: it places code or a toolchain on the runner. It can fail on infrastructure, but it asserts nothing about whether the repository is correct.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action provisioning the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml — actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Set up Python 3.11</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:36 · ci_step</div>
+    <p class="k-argument">Provisioning: it places code or a toolchain on the runner. It can fail on infrastructure, but it asserts nothing about whether the repository is correct.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/setup-python@v5 action provisioning the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml — actions/setup-python@v5</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Install bstack (skill snapshot)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:41 · ci_step</div>
+    <p class="k-argument">Provisioning — it fetches a dependency and exports BSTACK. It asserts nothing about this repository. Worth recording though it does not change the class: the clone is pinned to a mutable third-party HEAD and the enclosing job holds pull-requests: write, so a compromise upstream executes here. That is a supply-chain finding, not a grounding one.</p>
+    <p class="kr-line">producer <span class="k-mono">git clone of https://github.com/broomva/bstack.git at whatever main points to</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml:44-48 — git clone --depth 1, no ref or SHA</li>
+      <li>.github/workflows/l3-stability.yml:27-29 — permissions: pull-requests: write</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Compute lambda (RCS stability budget)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:52 · ci_step</div>
+    <p class="k-argument">The Compute lambda step ends in a literal unconditional `exit 0` — `set +e` captures the real status into $GITHUB_OUTPUT and the step then always succeeds. A step that cannot vary asserts nothing, so it is not_a_check by falsifiability even though its captured value is meaningful downstream. The edge that CAN fail is &quot;Set final status&quot;, classified separately. NOTE: the corpus judged this self_referential at 44f7e8d6, reasoning from the author-written constants; the `exit 0` is the more decisive structural fact and it moves the node OUT of the denominator, which is the shoppable direction — recorded here explicitly rather than silently.</p>
+    <p class="kr-line">producer <span class="k-mono">a bstack shell script whose status is captured into a step output, followed by an unconditional `exit 0`</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml — Compute lambda step body ends &quot;exit 0&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Run L3 rate gate</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/l3-stability.yml:68 · ci_step</div>
+    <p class="k-argument">The Run L3 rate gate step ends in a literal unconditional `exit 0` — `set +e` captures the real status into $GITHUB_OUTPUT and the step then always succeeds. A step that cannot vary asserts nothing, so it is not_a_check by falsifiability even though its captured value is meaningful downstream. The edge that CAN fail is &quot;Set final status&quot;, classified separately. NOTE: the corpus judged this self_referential at 44f7e8d6, reasoning from the author-written constants; the `exit 0` is the more decisive structural fact and it moves the node OUT of the denominator, which is the shoppable direction — recorded here explicitly rather than silently.</p>
+    <p class="kr-line">producer <span class="k-mono">a bstack shell script whose status is captured into a step output, followed by an unconditional `exit 0`</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/l3-stability.yml — Run L3 rate gate step body ends &quot;exit 0&quot;</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/pages.yml:27 · ci_step</div>
+    <p class="k-argument">Provisioning for a deployment job. Asserts nothing about correctness.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action provisioning the deploy job</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/pages.yml — actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/configure-pages@v5</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/pages.yml:28 · ci_step</div>
+    <p class="k-argument">Provisioning for a deployment job. Asserts nothing about correctness.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/configure-pages@v5 action provisioning the deploy job</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/pages.yml — actions/configure-pages@v5</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/upload-pages-artifact@v3</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/pages.yml:29 · ci_step</div>
+    <p class="k-argument">It ships an already-built directory. Same shape as artifact-publish-upload: transport, not assertion. Nothing about site/ is verified by uploading it.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/upload-pages-artifact packaging site/ into a Pages artifact</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/pages.yml:29-31 — path: site</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/deploy-pages@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/pages.yml:32 · ci_step</div>
+    <p class="k-argument">A deployment. It runs on push to main — after the merge — so it gates nothing, and success means &quot;the bytes were published&quot;, not that they are right. The honest check on the deployed site is fetching its content, which this repo has done by hand but does not wire here.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/deploy-pages publishing the artifact to GitHub Pages</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/pages.yml — on: push branches [main]</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:63 · ci_step</div>
+    <p class="k-argument">Provisioning. It places the source or the toolchain on a fresh runner; it makes no claim about the code.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action provisioning the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml — actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">oven-sh/setup-bun@v2</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/test.yml:65 · ci_step</div>
+    <p class="k-argument">Provisioning. It places the source or the toolchain on a fresh runner; it makes no claim about the code.</p>
+    <p class="kr-line">producer <span class="k-mono">the oven-sh/setup-bun@v2 action provisioning the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/test.yml — oven-sh/setup-bun@v2</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:23 · ci_step</div>
+    <p class="k-argument">Provisioning. It asserts nothing about the code it checks out.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action placing the source on the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml — uses: actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:32 · ci_step</div>
+    <p class="k-argument">Provisioning. It asserts nothing about the code it checks out.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action placing the source on the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml — uses: actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v4</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/portability.yml:74 · ci_step</div>
+    <p class="k-argument">Provisioning. It asserts nothing about the code it checks out.</p>
+    <p class="kr-line">producer <span class="k-mono">the actions/checkout@v4 action placing the source on the runner</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/portability.yml — uses: actions/checkout@v4</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <!-- KEEL:CURVE -->
+  <p class="k-eyebrow">Crystallization curve</p>
+  <div class="kr-curve">
+<svg class="keel-curve" xmlns="http://www.w3.org/2000/svg" width="1080" height="1510" viewBox="0 0 1080 1510" role="img" aria-labelledby="keel-curve-title keel-curve-desc" style="max-width:100%;height:auto">
+<title id="keel-curve-title">Keel crystallization curve</title>
+<desc id="keel-curve-desc">Crystallization curve over 15 runs from /Users/broomva/keel/reports. falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less than half the variance — read the raw squares)</desc>
+<style>.keel-curve { font-family: var(--k-font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif); }
+.keel-curve text { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
+.keel-curve .kc-bg { fill: var(--k-bg-0, #07090c); }
+.keel-curve .kc-panel { fill: var(--k-bg-1, #0c1015); stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-eyebrow { fill: var(--k-ink-2, #8b97a5); font-size: 11px; letter-spacing: 0.18em; }
+.keel-curve .kc-h1 { fill: var(--k-ink-0, #e8edf2); font-size: 19px; letter-spacing: -0.01em; }
+.keel-curve .kc-h2 { fill: var(--k-ink-0, #e8edf2); font-size: 15px; letter-spacing: -0.01em; }
+.keel-curve .kc-panel-title { fill: var(--k-ink-0, #e8edf2); font-size: 14px; }
+.keel-curve .kc-axis { fill: var(--k-ink-2, #8b97a5); font-size: 11px; }
+.keel-curve .kc-note { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
+.keel-curve .kc-scope { fill: var(--k-ink-2, #8b97a5); font-size: 12.5px; }
+/* Keel's own caveats are CHROME, not verdicts. tokens.css reserves the accent
+   for the narrator and forbids a verdict hue on chrome — amber here would put
+   "a node could not be traced" and "do not trust this chart" in one colour, in
+   one document. Weight carries the emphasis instead. */
+.keel-curve .kc-warn { fill: var(--k-ink-0, #e8edf2); font-size: 12.5px; font-weight: 600; }
+.keel-curve .kc-fitnote { fill: var(--k-ink-2, #8b97a5); font-size: 10.5px; text-anchor: end; }
+.keel-curve .kc-mono { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; font-family: var(--k-font-mono, ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Cascadia Mono", Consolas, monospace); }
+.keel-curve .kc-tick { fill: var(--k-ink-2, #8b97a5); font-size: 11px; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.keel-curve .kc-tick--y { text-anchor: end; }
+.keel-curve .kc-gap { fill: var(--k-ink-2, #8b97a5); font-size: 11px; text-anchor: middle; }
+.keel-curve .kc-gapline { stroke: var(--k-ink-3, #5b6774); stroke-width: 1; stroke-dasharray: 2 4; }
+.keel-curve .kc-grid { stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-rule { stroke: var(--k-line, #1b2027); stroke-width: 1; }
+.keel-curve .kc-line { fill: none; stroke-width: 1.5; }
+.keel-curve .kc-fit { stroke-width: 1.5; stroke-dasharray: 5 4; opacity: 0.7; }
+.keel-curve .kc-pt { stroke: none; }
+.keel-curve .kc-accent { stroke: var(--k-accent, #7dd3fc); fill: var(--k-accent, #7dd3fc); }
+.keel-curve .kc-accent.kc-line, .keel-curve .kc-accent.kc-fit { fill: none; }
+.keel-curve .kc-series { stroke: var(--k-ink-1, #b6c0cb); fill: var(--k-ink-1, #b6c0cb); }
+.keel-curve .kc-series.kc-line, .keel-curve .kc-series.kc-fit { fill: none; }</style>
+<rect class="kc-bg" x="0" y="0" width="1080" height="1510"/>
+<text class="kc-eyebrow" x="32" y="44">CRYSTALLIZATION CURVE</text>
+<text class="kc-h1" x="32" y="66">15 sequential runs · 345 nodes judged of 1838 gathered · 124 anchored</text>
+<text class="kc-warn" x="32" y="88">Keel corpus — 15 repositories, 2026-07-24 — measured corpus (declared on the command line)</text>
+<rect class="kc-panel" x="32" y="114" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="46" y="136">estimated tokens per node</text>
+<text class="kc-axis" x="46" y="151">estimated tokens / judged node</text>
+<line class="kc-grid" x1="96" y1="292.0" x2="508" y2="292.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="295.5">0</text>
+<line class="kc-grid" x1="96" y1="226.0" x2="508" y2="226.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="229.5">300</text>
+<line class="kc-grid" x1="96" y1="160.0" x2="508" y2="160.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="163.5">600</text>
+<line class="kc-fit kc-accent" x1="96.0" y1="195.8" x2="508.0" y2="243.8"/>
+<polyline class="kc-line kc-accent" points="96.0,182.5 125.4,210.8 154.9,204.4 184.3,201.9 213.7,247.1 243.1,208.9 272.6,161.7 302.0,250.4 331.4,239.2 360.9,228.2 390.3,202.1 419.7,233.6 449.1,222.5 478.6,223.7 508.0,280.3"/>
+<rect class="kc-pt kc-accent" x="92.5" y="179.0" width="7" height="7" rx="2"><title>run 0 · keel · estimated tokens per node = 498 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="121.9" y="207.3" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · estimated tokens per node = 369 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="151.4" y="200.9" width="7" height="7" rx="2"><title>run 2 · openai-python · estimated tokens per node = 398 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="180.8" y="198.4" width="7" height="7" rx="2"><title>run 3 · vercel-ai · estimated tokens per node = 410 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="210.2" y="243.6" width="7" height="7" rx="2"><title>run 4 · aider · estimated tokens per node = 204 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="239.6" y="205.4" width="7" height="7" rx="2"><title>run 5 · browser-use · estimated tokens per node = 378 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="269.1" y="158.2" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · estimated tokens per node = 592 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="298.5" y="246.9" width="7" height="7" rx="2"><title>run 7 · simonw-llm · estimated tokens per node = 189 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="327.9" y="235.7" width="7" height="7" rx="2"><title>run 8 · tiktoken · estimated tokens per node = 240</title></rect>
+<rect class="kc-pt kc-accent" x="357.4" y="224.7" width="7" height="7" rx="2"><title>run 9 · requests · estimated tokens per node = 290 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="386.8" y="198.6" width="7" height="7" rx="2"><title>run 10 · flask · estimated tokens per node = 408 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="416.2" y="230.1" width="7" height="7" rx="2"><title>run 11 · sinatra · estimated tokens per node = 265 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="445.6" y="219.0" width="7" height="7" rx="2"><title>run 12 · commander-js · estimated tokens per node = 316</title></rect>
+<rect class="kc-pt kc-accent" x="475.1" y="220.2" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · estimated tokens per node = 310 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-accent" x="504.5" y="276.8" width="7" height="7" rx="2"><title>run 14 · tiktoken · estimated tokens per node = 53</title></rect>
+<text class="kc-tick" x="96.0" y="308">0*</text>
+<text class="kc-tick" x="125.4" y="308">1*</text>
+<text class="kc-tick" x="154.9" y="308">2*</text>
+<text class="kc-tick" x="184.3" y="308">3*</text>
+<text class="kc-tick" x="213.7" y="308">4*</text>
+<text class="kc-tick" x="243.1" y="308">5*</text>
+<text class="kc-tick" x="272.6" y="308">6*</text>
+<text class="kc-tick" x="302.0" y="308">7*</text>
+<text class="kc-tick" x="331.4" y="308">8</text>
+<text class="kc-tick" x="360.9" y="308">9*</text>
+<text class="kc-tick" x="390.3" y="308">10*</text>
+<text class="kc-tick" x="419.7" y="308">11*</text>
+<text class="kc-tick" x="449.1" y="308">12</text>
+<text class="kc-tick" x="478.6" y="308">13*</text>
+<text class="kc-tick" x="508.0" y="308">14</text>
+<rect class="kc-panel" x="556" y="114" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="570" y="136">seconds per node</text>
+<text class="kc-axis" x="570" y="151">measured s / judged node</text>
+<line class="kc-grid" x1="620" y1="292.0" x2="1032" y2="292.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="295.5">0.0</text>
+<line class="kc-grid" x1="620" y1="226.0" x2="1032" y2="226.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="229.5">60.0</text>
+<line class="kc-grid" x1="620" y1="160.0" x2="1032" y2="160.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="163.5">120.0</text>
+<line class="kc-fit kc-series" x1="620.0" y1="259.1" x2="1032.0" y2="276.7"/>
+<polyline class="kc-line kc-series" points="620.0,291.9 649.4,274.6 678.9,275.0 708.3,175.6 737.7,268.6 767.1,268.1 796.6,269.8 826.0,279.1 855.4,265.9 884.9,273.6 914.3,269.4 943.7,273.4 973.1,271.4 1002.6,269.5 1032.0,291.9"/>
+<rect class="kc-pt kc-series" x="616.5" y="288.4" width="7" height="7" rx="2"><title>run 0 · keel · seconds per node = 0.1 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="645.9" y="271.1" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · seconds per node = 15.8 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="675.4" y="271.5" width="7" height="7" rx="2"><title>run 2 · openai-python · seconds per node = 15.4 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="704.8" y="172.1" width="7" height="7" rx="2"><title>run 3 · vercel-ai · seconds per node = 105.9 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="734.2" y="265.1" width="7" height="7" rx="2"><title>run 4 · aider · seconds per node = 21.3 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="763.6" y="264.6" width="7" height="7" rx="2"><title>run 5 · browser-use · seconds per node = 21.7 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="793.1" y="266.3" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · seconds per node = 20.1 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="822.5" y="275.6" width="7" height="7" rx="2"><title>run 7 · simonw-llm · seconds per node = 11.8 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="851.9" y="262.4" width="7" height="7" rx="2"><title>run 8 · tiktoken · seconds per node = 23.7</title></rect>
+<rect class="kc-pt kc-series" x="881.4" y="270.1" width="7" height="7" rx="2"><title>run 9 · requests · seconds per node = 16.8 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="910.8" y="265.9" width="7" height="7" rx="2"><title>run 10 · flask · seconds per node = 20.5 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="940.2" y="269.9" width="7" height="7" rx="2"><title>run 11 · sinatra · seconds per node = 16.9 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="969.6" y="267.9" width="7" height="7" rx="2"><title>run 12 · commander-js · seconds per node = 18.7</title></rect>
+<rect class="kc-pt kc-series" x="999.1" y="266.0" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · seconds per node = 20.4 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="1028.5" y="288.4" width="7" height="7" rx="2"><title>run 14 · tiktoken · seconds per node = 0.1</title></rect>
+<text class="kc-tick" x="620.0" y="308">0*</text>
+<text class="kc-tick" x="649.4" y="308">1*</text>
+<text class="kc-tick" x="678.9" y="308">2*</text>
+<text class="kc-tick" x="708.3" y="308">3*</text>
+<text class="kc-tick" x="737.7" y="308">4*</text>
+<text class="kc-tick" x="767.1" y="308">5*</text>
+<text class="kc-tick" x="796.6" y="308">6*</text>
+<text class="kc-tick" x="826.0" y="308">7*</text>
+<text class="kc-tick" x="855.4" y="308">8</text>
+<text class="kc-tick" x="884.9" y="308">9*</text>
+<text class="kc-tick" x="914.3" y="308">10*</text>
+<text class="kc-tick" x="943.7" y="308">11*</text>
+<text class="kc-tick" x="973.1" y="308">12</text>
+<text class="kc-tick" x="1002.6" y="308">13*</text>
+<text class="kc-tick" x="1032.0" y="308">14</text>
+<rect class="kc-panel" x="32" y="342" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="46" y="364">probe-decided share</text>
+<text class="kc-axis" x="46" y="379">measured share of decided nodes</text>
+<line class="kc-grid" x1="96" y1="520.0" x2="508" y2="520.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="523.5">0.00</text>
+<line class="kc-grid" x1="96" y1="454.0" x2="508" y2="454.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="457.5">0.50</text>
+<line class="kc-grid" x1="96" y1="388.0" x2="508" y2="388.0"/>
+<text class="kc-tick kc-tick--y" x="88" y="391.5">1.00</text>
+<line class="kc-fit kc-series" x1="96.0" y1="509.7" x2="508.0" y2="455.5"/>
+<polyline class="kc-line kc-series" points="96.0,520.0 125.4,520.0 154.9,498.9 184.3,509.4 213.7,446.1 243.1,477.8 272.6,520.0 302.0,446.1 331.4,443.0 360.9,483.0 390.3,520.0 419.7,483.0 449.1,494.9 478.6,488.3 508.0,388.0"/>
+<rect class="kc-pt kc-series" x="92.5" y="516.5" width="7" height="7" rx="2"><title>run 0 · keel · probe-decided share = 0.00 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="121.9" y="516.5" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · probe-decided share = 0.00 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="151.4" y="495.4" width="7" height="7" rx="2"><title>run 2 · openai-python · probe-decided share = 0.16 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="180.8" y="505.9" width="7" height="7" rx="2"><title>run 3 · vercel-ai · probe-decided share = 0.08 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="210.2" y="442.6" width="7" height="7" rx="2"><title>run 4 · aider · probe-decided share = 0.56 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="239.6" y="474.3" width="7" height="7" rx="2"><title>run 5 · browser-use · probe-decided share = 0.32 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="269.1" y="516.5" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · probe-decided share = 0.00 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="298.5" y="442.6" width="7" height="7" rx="2"><title>run 7 · simonw-llm · probe-decided share = 0.56 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="327.9" y="439.5" width="7" height="7" rx="2"><title>run 8 · tiktoken · probe-decided share = 0.58</title></rect>
+<rect class="kc-pt kc-series" x="357.4" y="479.5" width="7" height="7" rx="2"><title>run 9 · requests · probe-decided share = 0.28 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="386.8" y="516.5" width="7" height="7" rx="2"><title>run 10 · flask · probe-decided share = 0.00 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="416.2" y="479.5" width="7" height="7" rx="2"><title>run 11 · sinatra · probe-decided share = 0.28 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="445.6" y="491.4" width="7" height="7" rx="2"><title>run 12 · commander-js · probe-decided share = 0.19</title></rect>
+<rect class="kc-pt kc-series" x="475.1" y="484.8" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · probe-decided share = 0.24 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="504.5" y="384.5" width="7" height="7" rx="2"><title>run 14 · tiktoken · probe-decided share = 1.00</title></rect>
+<text class="kc-tick" x="96.0" y="536">0*</text>
+<text class="kc-tick" x="125.4" y="536">1*</text>
+<text class="kc-tick" x="154.9" y="536">2*</text>
+<text class="kc-tick" x="184.3" y="536">3*</text>
+<text class="kc-tick" x="213.7" y="536">4*</text>
+<text class="kc-tick" x="243.1" y="536">5*</text>
+<text class="kc-tick" x="272.6" y="536">6*</text>
+<text class="kc-tick" x="302.0" y="536">7*</text>
+<text class="kc-tick" x="331.4" y="536">8</text>
+<text class="kc-tick" x="360.9" y="536">9*</text>
+<text class="kc-tick" x="390.3" y="536">10*</text>
+<text class="kc-tick" x="419.7" y="536">11*</text>
+<text class="kc-tick" x="449.1" y="536">12</text>
+<text class="kc-tick" x="478.6" y="536">13*</text>
+<text class="kc-tick" x="508.0" y="536">14</text>
+<rect class="kc-panel" x="556" y="342" width="492" height="208" rx="6"/>
+<text class="kc-panel-title" x="570" y="364">probe library size</text>
+<text class="kc-axis" x="570" y="379">measured probes in library</text>
+<line class="kc-grid" x1="620" y1="520.0" x2="1032" y2="520.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="523.5">0</text>
+<line class="kc-grid" x1="620" y1="454.0" x2="1032" y2="454.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="457.5">15</text>
+<line class="kc-grid" x1="620" y1="388.0" x2="1032" y2="388.0"/>
+<text class="kc-tick kc-tick--y" x="612" y="391.5">30</text>
+<line class="kc-fit kc-series" x1="620.0" y1="515.8" x2="1032.0" y2="388.7"/>
+<polyline class="kc-line kc-series" points="620.0,520.0 649.4,506.8 678.9,498.0 708.3,484.8 737.7,476.0 767.1,467.2 796.6,462.8 826.0,454.0 855.4,445.2 884.9,436.4 914.3,423.2 943.7,418.8 973.1,405.6 1002.6,392.4 1032.0,392.4"/>
+<rect class="kc-pt kc-series" x="616.5" y="516.5" width="7" height="7" rx="2"><title>run 0 · keel · probe library size = 0 · judged 25 of 32 gathered</title></rect>
+<rect class="kc-pt kc-series" x="645.9" y="503.3" width="7" height="7" rx="2"><title>run 1 · anthropic-sdk-python · probe library size = 3 · judged 25 of 41 gathered</title></rect>
+<rect class="kc-pt kc-series" x="675.4" y="494.5" width="7" height="7" rx="2"><title>run 2 · openai-python · probe library size = 5 · judged 25 of 95 gathered</title></rect>
+<rect class="kc-pt kc-series" x="704.8" y="481.3" width="7" height="7" rx="2"><title>run 3 · vercel-ai · probe library size = 8 · judged 25 of 1014 gathered</title></rect>
+<rect class="kc-pt kc-series" x="734.2" y="472.5" width="7" height="7" rx="2"><title>run 4 · aider · probe library size = 10 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="763.6" y="463.7" width="7" height="7" rx="2"><title>run 5 · browser-use · probe library size = 12 · judged 25 of 104 gathered</title></rect>
+<rect class="kc-pt kc-series" x="793.1" y="459.3" width="7" height="7" rx="2"><title>run 6 · mcp-python-sdk · probe library size = 13 · judged 25 of 121 gathered</title></rect>
+<rect class="kc-pt kc-series" x="822.5" y="450.5" width="7" height="7" rx="2"><title>run 7 · simonw-llm · probe library size = 15 · judged 25 of 38 gathered</title></rect>
+<rect class="kc-pt kc-series" x="851.9" y="441.7" width="7" height="7" rx="2"><title>run 8 · tiktoken · probe library size = 17</title></rect>
+<rect class="kc-pt kc-series" x="881.4" y="432.9" width="7" height="7" rx="2"><title>run 9 · requests · probe library size = 19 · judged 25 of 106 gathered</title></rect>
+<rect class="kc-pt kc-series" x="910.8" y="419.7" width="7" height="7" rx="2"><title>run 10 · flask · probe library size = 22 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="940.2" y="415.3" width="7" height="7" rx="2"><title>run 11 · sinatra · probe library size = 23 · judged 25 of 59 gathered</title></rect>
+<rect class="kc-pt kc-series" x="969.6" y="402.1" width="7" height="7" rx="2"><title>run 12 · commander-js · probe library size = 26</title></rect>
+<rect class="kc-pt kc-series" x="999.1" y="388.9" width="7" height="7" rx="2"><title>run 13 · anthropic-quickstarts · probe library size = 29 · judged 25 of 62 gathered</title></rect>
+<rect class="kc-pt kc-series" x="1028.5" y="388.9" width="7" height="7" rx="2"><title>run 14 · tiktoken · probe library size = 29</title></rect>
+<text class="kc-tick" x="620.0" y="536">0*</text>
+<text class="kc-tick" x="649.4" y="536">1*</text>
+<text class="kc-tick" x="678.9" y="536">2*</text>
+<text class="kc-tick" x="708.3" y="536">3*</text>
+<text class="kc-tick" x="737.7" y="536">4*</text>
+<text class="kc-tick" x="767.1" y="536">5*</text>
+<text class="kc-tick" x="796.6" y="536">6*</text>
+<text class="kc-tick" x="826.0" y="536">7*</text>
+<text class="kc-tick" x="855.4" y="536">8</text>
+<text class="kc-tick" x="884.9" y="536">9*</text>
+<text class="kc-tick" x="914.3" y="536">10*</text>
+<text class="kc-tick" x="943.7" y="536">11*</text>
+<text class="kc-tick" x="973.1" y="536">12</text>
+<text class="kc-tick" x="1002.6" y="536">13*</text>
+<text class="kc-tick" x="1032.0" y="536">14</text>
+<text class="kc-axis" x="32" y="576">x axis: run index in the recorded corpus order (listed below). Squares are the raw per-run values; the dashed line is an</text>
+<text class="kc-axis" x="32" y="591">ordinary-least-squares fit and is never shown without them. The fit is clipped to the panel, and withheld entirely (with the</text>
+<text class="kc-axis" x="32" y="606">panel saying so) where a straight line would predict values the points cannot take — R^2 for every fit is in the trend notes</text>
+<text class="kc-axis" x="32" y="621">below. * on run 0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 13 = judged fewer nodes than gathered; per-node values are per JUDGED node.</text>
+<text class="kc-h2" x="32" y="648">Coverage (judged)</text>
+<text class="kc-mono" x="32" y="668">ci_step 224 · script 64 · test_target 46 · review_gate 10 · deploy_gate 1</text>
+<text class="kc-h2" x="32" y="696">Trend</text>
+<text class="kc-note" x="32" y="716">estimated tokens per node: falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less</text>
+<text class="kc-note" x="32" y="732">than half the variance — read the raw squares). raw first 498 -&gt; last 53.</text>
+<text class="kc-note" x="32" y="748">seconds per node: falls — total fitted change -72.9% of the mean across 15 runs (R^2 0.04, so the line explains less than half</text>
+<text class="kc-note" x="32" y="764">the variance — read the raw squares). raw first 0.1 -&gt; last 0.1.</text>
+<text class="kc-note" x="32" y="780">probe-decided share: rises — total fitted change 144.9% of the mean across 15 runs (R^2 0.21, so the line explains less than</text>
+<text class="kc-note" x="32" y="796">half the variance — read the raw squares). raw first 0.00 -&gt; last 1.00.</text>
+<text class="kc-note" x="32" y="812">probe library size: rises — total fitted change 187.7% of the mean across 15 runs (R^2 0.99). raw first 0 -&gt; last 29.</text>
+<text class="kc-h2" x="32" y="840">Run order</text>
+<text class="kc-note" x="32" y="860">run order derived from Report.generatedAt (ascending, filename as tiebreak) — no order.json manifest present</text>
+<text class="kc-mono" x="32" y="876">0 keel -&gt; 1 anthropic-sdk-python -&gt; 2 openai-python -&gt; 3 vercel-ai -&gt; 4 aider -&gt; 5 browser-use -&gt; 6</text>
+<text class="kc-mono" x="32" y="892">mcp-python-sdk -&gt; 7 simonw-llm -&gt; 8 tiktoken -&gt; 9 requests -&gt; 10 flask -&gt; 11 sinatra -&gt; 12 commander-js -&gt; 13</text>
+<text class="kc-mono" x="32" y="908">anthropic-quickstarts -&gt; 14 tiktoken</text>
+<text class="kc-h2" x="32" y="936">Shuffle check</text>
+<text class="kc-note" x="32" y="956">shuffle check INCOMPLETE — the curve direction ran, the ratio direction did not</text>
+<text class="kc-note" x="32" y="972">Permutation (400 draws, seed 20260724): median |delta normalized slope| 0.633, 92% of draws move it by &gt;= 0.15. A permutation</text>
+<text class="kc-note" x="32" y="988">reorders ALREADY-RECORDED runs; it cannot reproduce what a genuine re-run in a different order would have cost, because the</text>
+<text class="kc-note" x="32" y="1004">probe library would have accumulated differently. It is a sanity signal on order-dependence, never a substitute for the</text>
+<text class="kc-note" x="32" y="1020">empirical re-run.</text>
+<text class="kc-warn" x="32" y="1036">Ratio stability under shuffle was NOT checked: no re-run supplied (--shuffled) and none declared in corpus.meta.json. Permuting</text>
+<text class="kc-warn" x="32" y="1052">recorded runs cannot move a per-target ratio, so the permutation result below says nothing about it. Supply a re-run with</text>
+<text class="kc-warn" x="32" y="1068">--shuffled &lt;dir&gt;.</text>
+<text class="kc-h2" x="32" y="1096">Disclosures</text>
+<text class="kc-note" x="32" y="1116">- Skipped 3 file(s) that are not usable run reports: corpus-summary.json (no string &quot;target&quot;); curve.json (no string &quot;target&quot;);</text>
+<text class="kc-note" x="32" y="1132">keel.bindings.json (no &quot;nodes&quot; array).</text>
+<text class="kc-note" x="32" y="1148">- Run 0 (keel) judged 25 of 32 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1164">- Run 1 (anthropic-sdk-python) judged 25 of 41 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1180">- Run 2 (openai-python) judged 25 of 95 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1196">- Run 3 (vercel-ai) judged 25 of 1014 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1212">- Run 4 (aider) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1228">- Run 5 (browser-use) judged 25 of 104 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1244">- Run 6 (mcp-python-sdk) judged 25 of 121 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1260">- Run 7 (simonw-llm) judged 25 of 38 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1276">- Run 9 (requests) judged 25 of 106 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1292">- Run 10 (flask) judged 25 of 59 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1308">- Run 11 (sinatra) judged 25 of 59 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1324">- Run 13 (anthropic-quickstarts) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
+<text class="kc-note" x="32" y="1340">- Run 14 (tiktoken): decidedByProbe + decidedByAgent = 10 but nodesSampled = 12. Probe-decided share uses the decided total</text>
+<text class="kc-note" x="32" y="1356">(10).</text>
+<text class="kc-note" x="32" y="1372">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in /Users/broomva/keel/reports/corpus.meta.json.</text>
+<text class="kc-note" x="32" y="1388">The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.</text>
+<text class="kc-note" x="32" y="1404">- Token counts are ESTIMATES in 15 of 15 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill,</text>
+<text class="kc-note" x="32" y="1420">so the token axis reads &quot;estimated tokens&quot; and nothing here claims a measured token count.</text>
+<line class="kc-rule" x1="32" y1="1448" x2="1048" y2="1448"/>
+<text class="kc-scope" x="32" y="1466">Scope. Keel measures the shape of verification, not its quality. A repo can be 100% anchored with terrible tests. Anchoring says</text>
+<text class="kc-scope" x="32" y="1482">the signal comes from outside; it does not say the signal is sufficient.</text>
+</svg>
+
+  </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">Run economics</p>
+  <div class="k-econ">
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>decided by probe</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">44</span>
+      <span>decided by agent</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0%</span>
+      <span>probe-decided share</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">44 / 44</span>
+      <span>nodes judged / gathered</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>estimated tokens in</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>estimated tokens out</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0 ms</span>
+      <span>wall clock</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">0</span>
+      <span>probes minted</span>
+    </div>
+    <div class="k-econ__stat">
+      <span class="k-econ__value">1</span>
+      <span>probe library size</span>
+    </div>
+
+  </div>
+  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly.</p>
+</section>
+
+</main>
+</body>
+</html>

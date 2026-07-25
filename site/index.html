@@ -122,9 +122,16 @@
     its anchored count and coverage, and the crystallization curve with its R² beside it.
   </p>
   <p class="k-meta">
-    Keel scores <strong>0.357</strong> there — the lowest number in its own corpus. It
+    Keel scored <strong>0.357</strong> there — the lowest number in its own corpus. It
     found that by measuring itself: its test suite was wired into no CI at all, so it
-    gated nothing.
+    gated nothing. It has since wired the suite into CI, made both legs required
+    checks, and routed its declared <code>test</code> and <code>typecheck</code> scripts
+    so the declarations are the edges that gate. Re-measured at HEAD, uncapped, it now
+    scores <a href="reports/keel-current.html"><strong>0.667</strong></a> — 14 anchored
+    of 21 in the denominator, over 44 gathered edges. <strong>The gap between those two
+    numbers is the fix</strong>, and the seven that remain are ungrounded because their
+    oracle is prose this repository writes about itself — which needs a decision, not a
+    rewiring, so Keel declines to route them.
   </p>
 
   <hr class="k-rule" />

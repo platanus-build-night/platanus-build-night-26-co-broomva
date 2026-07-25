@@ -73,11 +73,17 @@ jobs:
       # PR author does not control. Documented limit, and it is the honest one: the
       # oracle is authored in-repo alongside the implementation, so a green run proves
       # the code does what the tests say — not that the tests say the right thing.
+      # `bun run test`, not `bun test` — and the indirection is the point. Keel
+      # measured itself and classified `package.json#test` self_referential
+      # because the declared script gated nothing: CI ran the same command from
+      # a second place, so the declaration asserted nothing and its exit code
+      # was read only by whoever happened to run it locally. Routing the
+      # required check THROUGH the declaration makes it one edge instead of two.
       - name: bun test
-        run: bun test
+        run: bun run test
 
       - name: tsc --noEmit
-        run: bunx tsc --noEmit
+        run: bun run typecheck
 
       # The design system encodes the report's invariants in CSS: not_a_check outside
       # the denominator, the confidence-smell ring, and a visible defect state when a
@@ -106,4 +112,56 @@ jobs:
               throw new Error(naked.length + " verdict(s) carry no argument — a class without its causal path is an unaccountable green check");
             }
             console.log("fixture OK — ratio", g.ratio.toFixed(4), "over", r.verdicts.length, "verdicts");
+          '
+
+      # Keel published a self-measurement that described a tree 21 commits in the
+      # past, and nothing noticed — the number said `bun test` gated nothing long
+      # after that had been fixed. This is the check that notices.
+      #
+      # It proves COVERAGE is current, not that any verdict is: it re-gathers at
+      # HEAD and compares the set of verification edges against the ones the
+      # committed report was measured over. It cannot prove the classifications
+      # are still right, because classification is agentic and CI has no agent —
+      # and a probe-only run that emitted a ratio over whatever the cache
+      # happened to decide would be the shoppable move under another name.
+      #
+      # Anchored by this repo's own rubric: `gather` is deterministic, the
+      # runtime decides the exit code, and the oracle is a committed file the PR
+      # may change — but not silently, which is the whole property.
+      #
+      # Keyed on (file, kind, name) rather than `Node.id`, because ids embed line
+      # numbers: keying on the id would turn every inserted line into a failure
+      # and the gate would be muted within a week.
+      #
+      # COUNTED, not a set. portability.yml carries three steps that are all
+      # `actions/checkout@v4` in the same file, so a plain set collapses them to
+      # one key and deleting two of the three would pass unnoticed. Comparing
+      # counts per key keeps the line-number independence and closes that hole.
+      - name: self-measurement is current
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          bun skills/keel/scripts/gather.ts . --json > /tmp/keel-nodes-now.json
+          bun -e '
+            const tally = (ns) => ns.reduce((m, n) => {
+              const k = `${n.source.split(":")[0]}|${n.kind}|${n.name}`;
+              return m.set(k, (m.get(k) ?? 0) + 1);
+            }, new Map());
+            const now = tally(await Bun.file("/tmp/keel-nodes-now.json").json());
+            const report = await Bun.file("reports/keel-current.json").json();
+            const then = tally(report.nodes);
+            const drift = [];
+            for (const k of new Set([...now.keys(), ...then.keys()])) {
+              const a = now.get(k) ?? 0, b = then.get(k) ?? 0;
+              if (a !== b) drift.push(`  ${a > b ? "+" : "-"} ${k}  (measured ${b}, now ${a})`);
+            }
+            if (drift.length) {
+              for (const d of drift.sort()) console.error(d);
+              throw new Error(
+                `the verification surface changed since reports/keel-current.json was measured ` +
+                  `at ${report.revision.slice(0, 7)} — ${drift.length} edge(s) differ. Re-measure ` +
+                  `with keel and commit the report, or move the baseline deliberately.`,
+              );
+            }
+            const total = [...then.values()].reduce((a, b) => a + b, 0);
+            console.log(`self-measurement current — ${total} edges, unchanged since ${report.revision.slice(0, 7)}`);
           '
