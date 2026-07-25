@@ -5,7 +5,7 @@
 [`2026-07-24-keel-mvp-build.md`](2026-07-24-keel-mvp-build.md) (the build, the
 orchestrator rulings, the first P20 findings).
 
-**Written:** 2026-07-25, 23:05 COT.
+**Written:** 2026-07-25, 23:05 COT · **updated 00:40** with the constructive layer and the beat-2/beat-3 verifications.
 
 ---
 
@@ -27,7 +27,7 @@ not by a green check.
 
 | Thing | State |
 |---|---|
-| `main` | all engine work merged (PR #3), corpus in PR #8 |
+| `main` | everything merged — PRs #3, #8, #10, #11, #12. Zero open. |
 | Live site | `broomva.github.io/keel/reports/` — content-verified |
 | `bun test` | 153 pass |
 | `tsc --noEmit` | clean |
@@ -159,8 +159,12 @@ the dash sits at column 0 while siblings align at 2, so `uses:` read as a child 
 - throwing probe → skipped and named, non-fatal
 - probe returning `unknown` → rejected at assess-time **inside the child**
 - zero-probe path → `decided=0, pending=32, exit 0`
-- clean-room `npx skills@1.5.18 add` → **runnable** skill (`--list` would not
-  have proven this)
+- clean-room `npx skills@1.5.18 add` → **runnable** skill, re-verified against the
+  FINAL build: all four surfaces execute from the installed copy — `gather` (42
+  nodes), `classify` (exit 0, spawns the sandbox child, 42 pending on an empty
+  library), `render`, `route`. The packaging boundary holds: 9 scripts ship, and
+  none of `reports/`, `site/`, `tests/`, `corpus.json`, `.github/` leaks into the
+  skill store. `--list` alone would have proven none of this.
 - deployed site → verified by fetching content
 - design-audit exemption, portability exemption, and the gather regression are
   each **mutation-proven**: reintroduce the defect, confirm the check FAILS
@@ -177,6 +181,51 @@ the dash sits at column 0 while siblings align at 2, so `uses:` read as a child 
 - **Our machine paths scrubbed at publish; quoted evidence preserved.**
   openai-python's real `/home/codex` stays, because redacting it would falsify
   what a reader checks the verdict against.
+
+---
+
+## 6a · The constructive layer is live (P1-a, pulled forward)
+
+`docs/plans/constructive-grounding-layer.md` is a post-event roadmap, but its
+Phase 1 names itself *"the cheapest real step, and the only one that could ever be
+pulled forward"* — and W1·R had already built the engine. So it ran, over six
+measured repositories.
+
+| target | routable | unroutable | ratio → projected |
+|---|---|---|---|
+| keel | 1 | 8 | 0.357 → 0.429 |
+| openai-python | 1 | 2 | 0.769 → 0.846 |
+| anthropic-sdk-python | 0 | 4 | 0.667 → 0.667 |
+| vercel-ai | 0 | 2 | 0.800 → 0.800 |
+| requests | 0 | 1 | 0.917 → 0.917 |
+| sinatra | 0 | 1 | 0.875 → 0.875 |
+
+**2 of 20 ungrounded checks can be re-grounded by rewiring.** The restraint is the
+result and it is a stronger claim than a high number: most ungrounded verification
+needs a *decision*, not a wire, and eighteen more routes would have raised ratios
+while grounding nothing.
+
+The best route, on openai-python: the `action_required` flag gating the issue job
+is the model self-labelling its own finding; route it to the step in the same job
+that already fetched peps.python.org under `curl --fail` and already proved with
+`jq --exit-status` that every entry carries `end_of_life`. *"No prompt, permission
+profile, or model output can move an end-of-life date the CPython release managers
+publish."*
+
+On keel it independently proposed wiring `bun test` into the portability job — the
+same fix already made by hand in `test.yml`, rediscovered from the measured data.
+
+Two traps were declined explicitly: routing a spec-derived oracle onto the config
+of the suite whose oracle is in question (a circle), and grounding a release gate
+by its own downstream consequence.
+
+Safety held throughout: every anchor is a node already `anchored` in that same
+report (route.ts refused nothing, because none was invented), every binding is
+`status: proposed`, and the dispatch payload provably carries no ratio — enforced
+by `tests/separation.test.ts`, verified by injecting a leak and confirming it fails.
+
+Published at `/reports/<name>.bindings.html`, linked from the index's **routes**
+column.
 
 ---
 
