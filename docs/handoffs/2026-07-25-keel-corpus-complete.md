@@ -266,6 +266,58 @@ W1·C, W1·D, W1·E, W1·G, W1·I, W1·R, W2·H.
 
 ---
 
+## 7b · The product finding — what the corpus says to build next
+
+This is the most useful thing the night produced, and it is not in any plan.
+
+**The metric saturates.** Seven of fourteen measured targets scored exactly
+1.000; eight scored ≥ 0.9; pooled 0.853. The median denominator is 12 edges, 57%
+of judged nodes are `not_a_check`, and only 18% of the gathered surface was
+judged at all. A metric that tells most repositories "you are fine" does not
+sell, and is probably not true. The landing page promises *"your agents are
+grading their own homework"* and the number mostly reports that they are not.
+
+**Why it saturates, and the fix is already in our own data.** Keel classifies the
+EXECUTION axis: `pytest` in CI is `anchored` because the runtime decides the exit
+code. True, and shallow. **41 of the 122 anchored verdicts — 34% — already carry a
+written admission that the ORACLE was authored inside the write boundary.**
+anthropic-sdk-python is the clearest: the test fixtures point every client at a
+mock booted from the OpenAPI spec that *generates the source under test*, and the
+snapshot fixtures record the client's own traffic as the expected payloads. We
+wrote that finding down forty-one times and counted it zero times.
+
+**So the next unit is oracle-axis scoring** — execution independence and oracle
+independence as two separate verdicts, yielding a second ratio that does not
+saturate and that actually speaks to agent-maintained code. It is an unlock
+rather than research: the arguments already exist in the verdicts, and the work
+is a schema addition plus a judging-prompt change.
+
+**It needs a schema change, so it must go through the freeze protocol.** The
+schema is frozen and this handoff is not permission to edit it. Re-freeze
+deliberately, then re-dispatch.
+
+Ranked behind it:
+
+1. **An answer key.** Everything here is self-graded — Keel has no external check
+   that its verdicts are *right*, which is a verifier-independence problem in Keel
+   itself and awkward given the pitch. The roadmap's Luckin backtest (Phase 4) has
+   real ground truth. Cheaper version: measure repos with a known public
+   verification failure and check the ratio was low beforehand.
+2. **Point it at agent-maintained code.** The corpus was human-maintained OSS with
+   mature CI — the thesis's easy case. No repository where agents write the code,
+   the tests, AND the review was ever measured. That is the market, and if the
+   ratio is not bad there we need to know.
+3. **Weight by what gates the merge.** The gatherer surfaces mostly provisioning,
+   so denominators are thin. Per-node reasoning about "does this block a merge"
+   already happens; it is not yet in the arithmetic.
+
+**What NOT to build next: more constructive phases.** 2 routable / 18 unroutable
+says routing is bounded — most fixes need a human decision. Anchor discovery over
+an integration surface would be a remediation engine for a diagnosis nobody
+disputes yet.
+
+---
+
 ## 8 · Next
 
 1. Merge PR #8, then **sync the mirror** (§1) or Pages will not redeploy.
