@@ -557,6 +557,17 @@ const UNREAD_DIRS: Array<[RegExp, string]> = [
   [/^\.harness$/, 'Harness'],
   [/^\.azure-pipelines$/, 'Azure Pipelines'],
   [/^\.jenkins$/, 'Jenkins'],
+  // Local gates. These are verification edges by anyone's definition — a
+  // pre-commit hook refuses a commit, and a policy file declares which
+  // operations are blocked — and this gatherer reads neither. Naming them is
+  // not an admission of a missing feature so much as the difference between
+  // "we do not gather local gates" and silence, and silence is the shape this
+  // whole list exists to prevent. Keel is its own worst case here: it refuses
+  // `.control/` and `.githooks/` while measuring itself, so its own report was
+  // clean about surfaces it had never opened.
+  [/^\.githooks$/, 'git hooks'],
+  [/^\.husky$/, 'Husky'],
+  [/^\.control$/, 'policy gates'],
 ];
 
 /** Readers whose silence means the gatherer failed, not that the file is empty. */

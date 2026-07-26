@@ -221,6 +221,54 @@ describe('gather · does not claim blindness it does not have', () => {
   });
 });
 
+describe('gather · local gates are recognised, not silently refused', () => {
+  // The walk refuses every dot-directory outside DOT_DIRS_ALLOWED. Refusing is
+  // right — there is no parser for these — but a refusal that produces no
+  // record is the silent non-coverage this whole surface exists to end, and
+  // Keel was its own worst case: measuring itself, it reported a clean sweep
+  // over a tree containing `.githooks/pre-commit` (which refuses commits) and
+  // `.control/policy.yaml` (which declares which operations are blocked).
+  const dir = tree({
+    '.githooks/pre-commit': '#!/usr/bin/env bash\nexit 1\n',
+    '.control/policy.yaml': 'gates:\n  g1: block-force-push\n',
+    '.husky/pre-push': '#!/usr/bin/env sh\nnpm test\n',
+    '.github/workflows/ci.yml': 'on: [push]\njobs:\n  t:\n    steps:\n      - run: bun test\n',
+  });
+  const { nodes, coverage } = gatherWithCoverage(dir);
+
+  test('a refused gate directory is reported, with the tool named', () => {
+    const byPath = new Map(coverage.unread.map((u) => [u.path, u]));
+    for (const [path, tool] of [
+      ['.githooks', 'git hooks'],
+      ['.control', 'policy gates'],
+      ['.husky', 'Husky'],
+    ] as const) {
+      expect(byPath.get(path)?.tool).toBe(tool);
+      expect(byPath.get(path)?.kind).toBe('dir');
+    }
+  });
+
+  test('recognising them does not turn them into nodes', () => {
+    // They are UNREAD. If a gate directory ever starts contributing nodes it is
+    // because someone taught the gatherer to parse it, and at that point it must
+    // leave this list — an entry that is both read and reported as unread is the
+    // over-report the sibling describe() guards against.
+    const sources = new Set(nodes.map((n) => n.source.split(':')[0]));
+    for (const u of coverage.unread) expect(sources.has(u.path)).toBe(false);
+    expect([...sources]).toContain('.github/workflows/ci.yml');
+  });
+
+  test('the target that prompted this reports both of its own gates', () => {
+    // Executed against the real repository rather than a fixture: this is the
+    // case that was wrong in production, so the fixture alone would not prove
+    // the fix reached it.
+    const self = gatherWithCoverage(join(import.meta.dir, '..'));
+    const tools = self.coverage.unread.map((u) => `${u.tool} ${u.path}`).sort();
+    expect(tools).toContain('git hooks .githooks');
+    expect(tools).toContain('policy gates .control');
+  });
+});
+
 describe('gather · read, and silent about it', () => {
   const dir = tree({ '.gitlab-ci.yml': GITLAB });
   const { nodes, coverage } = gatherWithCoverage(dir);
