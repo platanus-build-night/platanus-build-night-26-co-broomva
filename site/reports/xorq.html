@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keel — grounding report — mcp-python-sdk</title>
+<title>Keel — grounding report — xorq</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    Keel — design tokens. THE canonical source. There is no second copy.
@@ -694,19 +694,19 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 <header>
   <p class="k-wordmark">Keel</p>
   <h1 class="k-display">Grounding report<em>.</em></h1>
-  <p class="k-lede">Every verification edge in <span class="k-mono">mcp-python-sdk</span>,
+  <p class="k-lede">Every verification edge in <span class="k-mono">xorq</span>,
      classified by who produces the signal and whether the actor being verified
      can write to that producer.</p>
   <table class="k-table">
-    <tr><th>target</th><td class="k-mono">mcp-python-sdk</td></tr>
-    <tr><th>revision</th><td class="k-mono">00a70148bcd39b40ee0b0745e0b468eac0a44efb</td></tr>
-    <tr><th>generated</th><td class="k-mono">2026-07-25T02:55:11.583Z</td></tr>
+    <tr><th>target</th><td class="k-mono">xorq</td></tr>
+    <tr><th>revision</th><td class="k-mono">22f03a65e67805bd1521784384656a79a4148123</td></tr>
+    <tr><th>generated</th><td class="k-mono">2026-07-26T20:09:09.236Z</td></tr>
   </table>
 </header>
 
 <div class="kr-split"><div class="k-ratio">
   <span class="k-ratio__value">1.00</span>
-  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 15 / 15</p>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 17 / 17</p>
   <div class="k-meter">
     <div class="k-meter__seg" data-class="anchored" style="width:100.0000%"></div>
     <div class="k-meter__seg" data-class="self_referential" style="width:0.0000%"></div>
@@ -714,11 +714,11 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 
   </div>
   <div class="k-ratio__counts">
-    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 15</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 17</span>
     <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 0</span>
     <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 0</span>
     <span class="k-ratio__count k-ratio__count--excluded">
-      <span class="k-class" data-class="not_a_check">not_a_check</span> 10
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 8
       <span class="k-meta">excluded from the denominator</span>
     </span>
 
@@ -729,8 +729,8 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   <table class="k-table k-table--num">
     <thead><tr><th>node kind</th><th>judged</th></tr></thead>
     <tbody>
-      <tr><td class="k-mono">ci_step</td><td>16</td></tr>
-      <tr><td class="k-mono">test_target</td><td>8</td></tr>
+      <tr><td class="k-mono">ci_step</td><td>12</td></tr>
+      <tr><td class="k-mono">test_target</td><td>12</td></tr>
       <tr><td class="k-mono">review_gate</td><td>1</td></tr>
 
     </tbody>
@@ -759,7 +759,7 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 
 </div>
 
-<p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">121</span> gathered edges. Every number on this page describes that sample, not the whole surface — 96 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
+<p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">240</span> gathered edges. Every number on this page describes that sample, not the whole surface — 215 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
 
 <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
 verification, not its quality. A repo can be 100% anchored with terrible
@@ -769,422 +769,442 @@ signal is sufficient.</p>
 <section class="kr-section">
   <p class="k-eyebrow">Node graph — 25 node(s), in gather order</p>
   <div class="k-graph">
-    <span class="k-mark" data-class="anchored" title="pre-commit hooks (.pre-commit-config.yaml) — .pre-commit-config.yaml — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.pyright]) — pyproject.toml:150 — anchored (confidence 0.8)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff]) — pyproject.toml:191 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint]) — pyproject.toml:195 — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api]) — pyproject.toml:209 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.mccabe]) — pyproject.toml:213 — anchored (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.per-file-ignores]) — pyproject.toml:216 — not_a_check (confidence 0.7)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.pylint]) — pyproject.toml:223 — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config ([tool.pytest.ini_options]) — pyproject.toml:239 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.run]) — pyproject.toml:279 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.report]) — pyproject.toml:292 — anchored (confidence 0.85)"></span>
-    <span class="k-mark" data-class="not_a_check" title="coverage config ([tool.coverage.paths]) — pyproject.toml:305 — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/transports/stdio/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/server/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/shared/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — tests/examples/conftest.py — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/client/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — tests/interaction/conftest.py — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/sse-polling-client/pyproject.toml:22 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/sse-polling-client/pyproject.toml:27 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/sse-polling-client/pyproject.toml:31 — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/simple-chatbot/pyproject.toml:33 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/simple-chatbot/pyproject.toml:38 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/simple-chatbot/pyproject.toml:42 — anchored (confidence 0.5)"></span>
+    <span class="k-mark" data-class="anchored" title="coverage gate (codecov.yml) — codecov.yml — anchored (confidence 0.72)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/conftest.py — anchored (confidence 0.7)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/conftest.py — anchored (confidence 0.75)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/xorq_datafusion/tests/conftest.py — anchored (confidence 0.78)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/gizmosql/tests/conftest.py — anchored (confidence 0.8)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — python/xorq/backends/databricks/tests/conftest.py — anchored (confidence 0.45)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/datafusion/tests/conftest.py — anchored (confidence 0.75)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — python/xorq/backends/bigquery/tests/conftest.py — anchored (confidence 0.45)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — python/xorq/backends/snowflake/tests/conftest.py — anchored (confidence 0.5)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/sqlite/tests/conftest.py — anchored (confidence 0.8)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/postgres/tests/conftest.py — anchored (confidence 0.7)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/pyiceberg/tests/conftest.py — anchored (confidence 0.75)"></span>
+    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — python/xorq/backends/duckdb/tests/conftest.py — anchored (confidence 0.78)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="pre-commit hooks (.pre-commit-config.yaml) — .pre-commit-config.yaml — anchored (confidence 0.5)"></span>
+    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint]) — pyproject.toml:249 — anchored (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.per-file-ignores]) — pyproject.toml:271 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.isort]) — pyproject.toml:279 — anchored (confidence 0.75)"></span>
+    <span class="k-mark" data-class="not_a_check" title="coverage config ([tool.coverage.run]) — pyproject.toml:332 — not_a_check (confidence 0.7)"></span>
+    <span class="k-mark" data-class="not_a_check" title="coverage config ([tool.coverage.report]) — pyproject.toml:342 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="dependency automation (renovate.json) — .github/renovate.json — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v6 — .github/workflows/ci-docs-lint.yml:23 — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/setup-python@v6 — .github/workflows/ci-docs-lint.yml:25 — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Install uv — .github/workflows/ci-docs-lint.yml:29 — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Install Python doc dependencies — .github/workflows/ci-docs-lint.yml:34 — not_a_check (confidence 0.8)"></span>
+    <span class="k-mark" data-class="anchored" title="CLI contract (docs reference real commands) — .github/workflows/ci-docs-lint.yml:40 — anchored (confidence 0.8)"></span>
 
   </div>
   <div class="k-legend">
-    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 15</span>
-    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 10</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 17</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 8</span>
 
   </div>
-  <p class="k-meta">5 marks are ringed in the unknown hue: an anchored verdict asserted below confidence 0.6. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.</p>
+  <p class="k-meta">4 marks are ringed in the unknown hue: an anchored verdict asserted below confidence 0.6. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.</p>
 </section>
 
 <section class="kr-section">
-  <p class="k-eyebrow">anchored — 15</p>
+  <p class="k-eyebrow">anchored — 17</p>
   <p class="k-meta">The producer sits outside the write boundary of the actor being verified.</p>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pre-commit hooks (.pre-commit-config.yaml)</div>
+    <div class="k-verdict__name k-mono">coverage gate (codecov.yml)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">.pre-commit-config.yaml · review_gate</div>
-    <p class="k-argument">This manifest is not merely a client-side git hook here: shared.yml&#39;s `pre-commit` job runs `pre-commit/action` with `--all-files`, and that job feeds `checks` -&gt; `all-green` (main.yml:16-23), so its exit code is on the merge path and cannot be skipped with `git commit --no-verify`. The substantive local hooks execute pinned tools over the committed tree — `uv run --frozen pyright` returns non-zero when its own analysis of the source finds a type error, and `uv run --frozen ruff check --fix --exit-non-zero-on-fix` returns non-zero when the linter both rewrites and reports; `uv lock --check` recomputes the resolution from pyproject.toml and fails when uv.lock does not match it. None of those verdicts can be flipped by an author writing a status anywhere; only by changing the source or the pinned config. Two documented limits: (a) the `readme-snippets` hook runs `scripts/update_readme_snippets.py --check`, which only diffs README code blocks against `docs_src/*.py` — two artefacts the same authors write, so that sub-edge is self-referential paperwork-against-paperwork and would stay green if both drifted together; (b) the remote hooks (`pre-commit-hooks`, `mirrors-prettier`, `markdownlint-cli`) are pinned by mutable tag `rev:`, not by digest, so their implementations live outside this repo.</p>
-    <p class="kr-line">producer <span class="k-mono">the exit codes of the hook binaries pre-commit shells out to (ruff, pyright, uv), plus pre-commit&#39;s own detection that a hook modified a tracked file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">codecov.yml · ci_step</div>
+    <p class="k-argument">The measurement is produced by execution — no author can make a line report as covered without the interpreter running it — and the pass/fail comparison happens on a third party&#39;s servers, so the deciding step is outside the write boundary. Three limits must travel with this verdict: (1) coverage measures REACH, not correctness, and must never be read as evidence that anything works; (2) `target: auto` sets the bar to the parent commit&#39;s own number with a 1% slack, so it is a drift alarm calibrated on the repo&#39;s own history, not an absolute floor; (3) `flag_management.default_rules.carryforward: true` plus per-flag `carryforward` means the `databricks`, `snowflake`, `gcs` and `s3` flags — whose jobs are workflow_dispatch- or label-gated and therefore essentially never run on a PR — reassert a stale measurement taken against an older tree, and the uploads are deliberately non-fatal (`fail_ci_if_error: false`, `continue-on-error: true`), so a missing upload degrades to carryforward instead of turning the check red.</p>
+    <p class="kr-line">producer <span class="k-mono">Codecov&#39;s server-side project/patch status, computed on Codecov&#39;s infrastructure from coverage.xml files that coverage.py/pytest-cov emitted while CPython actually executed the suite</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>.pre-commit-config.yaml:31-64</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-      <li>.github/workflows/main.yml:13-23</li>
-      <li>scripts/update_readme_snippets.py:1-10</li>
+      <li>codecov.yml:1-12</li>
+      <li>codecov.yml:14-16</li>
+      <li>codecov.yml:26-34</li>
+      <li>.github/workflows/ci-test.yml:160-165</li>
+      <li>.github/workflows/ci-test-snowflake.yml:53-58</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.72</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/conftest.py · test_target</div>
+    <p class="k-argument">This is the package-level conftest for everything under python/xorq, and ci-test.yml runs it on every pull request across ten backend legs, so it is on the merge path rather than aspirational. Most of the file is provisioning, but it authors one falsifiable claim of its own: `remove_unexpected_tables` raises ValueError when the live database&#39;s table set diverges from `expected_tables`, and it reaches that verdict by calling xorq&#39;s own `list_tables`/`drop_table`/`drop_view` against a real PostgreSQL server the test process cannot fake. Counterparty classification: a real engine in a project-pinned container (postgis/postgis:15-3.3-alpine), not a cloud vendor and not an emulator. Two limits: the oracle for every test downstream of these fixtures is co-authored with the implementation, so a green run proves the code does what these tests say; and the fixture corpus is `git clone https://github.com/ibis-project/testing-data` at unpinned `master --depth 1`, which is outside the authors&#39; write boundary but free to drift under them between runs.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest/CPython process running the suite these fixtures feed — with the `pg` fixture handing tests a live PostgreSQL 15 + PostGIS server in a container, and the data fixtures pointing at parquet/csv cloned from ibis-project/testing-data</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/conftest.py:119-148</li>
+      <li>python/xorq/conftest.py:156-176</li>
+      <li>.github/workflows/ci-test.yml:9</li>
+      <li>.github/workflows/ci-test.yml:141-159</li>
+      <li>justfile:21-33</li>
+      <li>docker/postgres/Dockerfile:1</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/conftest.py · test_target</div>
+    <p class="k-argument">This file decides which tests exist in which leg and, more importantly, what an absent credential MEANS. `pytest_collection_modifyitems` assigns the `core` marker that ci-test.yml&#39;s largest job selects, so it defines the membership of the merge-blocking suite; `pytest_ignore_collect` is what keeps optional-backend tests from erroring at import. The verification-relevant decision is `pytest_runtest_setup`: missing SNOWFLAKE_PRIVATE_KEY/SNOWFLAKE_USER SKIPS every snowflake test — the classic skip-is-not-a-pass hazard, since a revoked secret yields a green run containing zero snowflake tests — but a credential that is present and undecryptable is escalated to `pytest.fail`, which is the right side of that fork and is executed against the real decryption library, not asserted. The file itself makes no claim about xorq&#39;s query behaviour; those verdicts come from the test bodies against whichever engine the per-backend conftest wires up.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest runtime under the collection and setup policy this file installs — and, for the snowflake leg, the real key-decryption path whose failure this file converts into `pytest.fail`</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/backends/conftest.py:144-150</li>
+      <li>python/xorq/backends/conftest.py:101-120</li>
+      <li>python/xorq/backends/conftest.py:58-98</li>
+      <li>.github/workflows/ci-test.yml:61-70</li>
+      <li>.github/workflows/ci-test.yml:141-148</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:150 · ci_step</div>
-    <p class="k-argument">This is the root-project pyright config, and pyright is actually executed on the merge path: the `pyright` local hook in .pre-commit-config.yaml runs `uv run --frozen pyright` with `pass_filenames: false`, and pre-commit runs `--all-files` inside the CI `pre-commit` job. `typeCheckingMode = &quot;strict&quot;` plus `include = [src, tests, docs_src, examples/...]` is what turns an inference failure in those trees into a non-zero exit, and that verdict is computed by the pinned pyright binary from the source text — an author cannot make an ill-typed file report clean by asserting anything. Documented limit: this table emits no signal itself, and the scope it declares is author-controlled (the `executionEnvironments` entries switch off reportUnusedFunction and reportPrivateUsage for tests/examples), so the execution axis is anchored while what gets enforced sits inside the write boundary.</p>
-    <p class="kr-line">producer <span class="k-mono">the pyright process exit code — a type checker parsing the checked-out source under this table&#39;s settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">python/xorq/backends/xorq_datafusion/tests/conftest.py · test_target</div>
+    <p class="k-argument">The suite runs on every PR in two legs (python 3.12 and 3.10) via `-m xorq_datafusion`, and the fixtures load real parquet from ci/ibis-testing-data and execute the DDL in db/datafusion.sql through `conn._safe_raw_sql`, so a malformed statement or a query-planner regression is decided by a Rust query engine, not by a claim. Counterparty classification: an IN-PROCESS engine that the project pins exactly — and one published by the same organisation, so it is nearer to &#39;the project&#39;s own engine&#39; than to a third party; it is anchored because execution genuinely decides the answer, not because the counterparty is independent. Two limits: `remove_unexpected_tables` here raises on a dirty catalog (a harness-integrity guard, not a correctness claim), and the two `snapshot_check` tests in this directory compare against committed golden files under tests/snapshots/test_cache that the repo regenerates with `--snapshot-update` — the snapshot shape, where the oracle was authored by the thing under test — though both of those are additionally `@pytest.mark.xfail` and so cannot fail the run at all.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest process executing queries through `xo.connect()` — xorq&#39;s embedded DataFusion engine, a compiled Rust extension shipped as the pinned PyPI package `xorq-datafusion==0.2.10` and imported as `xorq.internal`</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:150-189</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>.github/workflows/shared.yml:40-42</li>
+      <li>python/xorq/backends/xorq_datafusion/tests/conftest.py:60-80</li>
+      <li>python/xorq/backends/xorq_datafusion/tests/conftest.py:29-43</li>
+      <li>.github/workflows/ci-test.yml:40-45</li>
+      <li>pyproject.toml:44</li>
+      <li>python/xorq/backends/xorq_datafusion/tests/test_cache.py:392-393</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.78</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/gizmosql/tests/conftest.py · test_target</div>
+    <p class="k-argument">`gizmosql_server` starts an actual server binary on a free port with a freshly minted self-signed cert and `--tls`, and `con` connects xorq&#39;s gizmosql backend to it, so every assertion downstream is decided by a separate process speaking a real wire protocol — the test cannot talk a failed query into succeeding. The leg runs on every PR (`-m gizmosql`, matrix entry at ci-test.yml:76). Counterparty classification: a LOCAL server, not a vendor cloud; the binary is downloaded and cached by a package the project pins (`gizmosql&gt;=1.26.0,&lt;2`, resolved exactly through `uv sync --locked`), so the counterparty is software the project chose. Two limits worth naming: `pytest.importorskip(&quot;gizmosql&quot;)` and the attribute probe at lines 117-122 both SKIP rather than fail, so a packaging or API drift makes the whole backend&#39;s coverage silently vanish from a green run; and cert-chain verification is disabled on the client side, so the TLS path is exercised but not validated.</p>
+    <p class="kr-line">producer <span class="k-mono">a real GizmoSQL server subprocess (DuckDB behind Arrow Flight SQL) launched by the pinned `gizmosql` PyPI package, answering the suite&#39;s queries over a TLS Flight SQL connection</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/backends/gizmosql/tests/conftest.py:95-123</li>
+      <li>python/xorq/backends/gizmosql/tests/conftest.py:126-148</li>
+      <li>.github/workflows/ci-test.yml:76-80</li>
+      <li>.github/workflows/ci-test.yml:119</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:191 · ci_step</div>
-    <p class="k-argument">`line-length = 120` is the threshold ruff&#39;s pycodestyle E501 rule compares against, and `E` is in the selected rule set (pyproject.toml:195-207); `target-version = &quot;py310&quot;` is what the selected `UP` (pyupgrade) rules rewrite/report against. Ruff runs on the merge path via the `ruff` pre-commit hook (`ruff check --fix --exit-non-zero-on-fix`) inside the CI pre-commit job, so a 121-character line makes that job exit non-zero. The producer is the linter binary reading the committed file, not a claim the repo makes about itself. Documented limit: the number itself is author-editable, and the table on its own emits nothing — it parameterizes a check that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code, computed from the source text under this table&#39;s line-length and target-version settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/databricks/tests/conftest.py · test_target</div>
+    <p class="k-argument">When this suite runs it is one of the strongest anchors in the repository: parquet files are physically staged into a Databricks volume and every fixture table is a `SELECT ... FROM read_files(...)` answered by Databricks, which the xorq authors cannot write to. Credential handling is on the correct side of the skip/fail fork — `env[&quot;DATABRICKS_SERVER_HOSTNAME&quot;]` is a bare subscript, so absent secrets raise KeyError and the run errors rather than passing green. THE ENFORCEMENT LIMIT IS THE WHOLE STORY HERE: ci-test-databricks.yml is `on: workflow_dispatch` and nothing else — no pull_request trigger, no push trigger, no label — so this edge blocks no merge and fires only when a human clicks it. It is anchored on the execution axis and inert on the gating axis; the low confidence records exactly that.</p>
+    <p class="kr-line">producer <span class="k-mono">a real Databricks SQL warehouse reached over the network via `databricks.sql.connect` with a workspace token — the vendor&#39;s engine executes the `CREATE VOLUME`, `PUT ... INTO` and `read_files(...)` statements and decides the results</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:191-193</li>
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
+      <li>python/xorq/backends/databricks/tests/conftest.py:32-62</li>
+      <li>python/xorq/backends/databricks/tests/conftest.py:66-68</li>
+      <li>.github/workflows/ci-test-databricks.yml:3-4</li>
+      <li>.github/workflows/ci-test-databricks.yml:41-52</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.45</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:195 · ci_step</div>
-    <p class="k-argument">`select = [C4, C90, D212, E, F, I, PERF, UP, TID251]` is precisely the list of analyses that can fail the CI `pre-commit` job, which runs `uv run --frozen ruff check --fix --exit-non-zero-on-fix` over all files. An unused import (F401) or an unsorted import block (I001) is detected by ruff parsing the committed source, so an author cannot make a violating file report clean without editing the file or editing this list. Documented limit: editing this list is exactly the escape hatch — the rule set is inside the write boundary even though each verdict is produced outside it; and `ignore = [&quot;PERF203&quot;]` is a suppression this table also carries.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this table is the enabled rule set whose violations produce that non-zero exit</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">python/xorq/backends/datafusion/tests/conftest.py · test_target</div>
+    <p class="k-argument">The `-m datafusion` leg runs on every pull request and installs the upstream Apache DataFusion package, so `xo.datafusion.connect()` hands the assertions to a query engine maintained outside this repository; `ddb_con` does the same with DuckDB. Nothing in this file asserts anything itself — it is fixture provisioning — but it determines the counterparty, and that counterparty is a real engine rather than a mock or a recording. Counterparty classification: LOCAL/in-process third-party engines the project version-pins. Two limits: the oracle is co-authored (the assertions live in the same repo as the compiler under test), and `quotes_df` builds its data with `np.random.choice`/`np.random.uniform` with no seed established in that fixture — only `trades_df` calls `np.random.seed(42)` — so the input corpus for quote-side tests varies between runs, which trades reproducibility for a weak form of fuzzing.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest process executing queries against upstream Apache DataFusion (the third-party `datafusion` wheel, constrained `&gt;=47.0.0,&lt;49`) and DuckDB, plus xorq&#39;s embedded engine via `xo.connect()`</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>.github/workflows/shared.yml:40-42</li>
+      <li>python/xorq/backends/datafusion/tests/conftest.py:43-59</li>
+      <li>python/xorq/backends/datafusion/tests/conftest.py:8-21</li>
+      <li>.github/workflows/ci-test.yml:32-35</li>
+      <li>pyproject.toml:102-104</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:209 · ci_step</div>
-    <p class="k-argument">`TID251` appears in `[tool.ruff.lint].select`, so this banned-api entry is live: ruff parses the import graph of the committed source and exits non-zero on any `pydantic.RootModel` reference outside the per-file exemption for generated validators. The producer is the linter executing over the file, and the check runs on the merge path through the pre-commit CI job. Documented limit: the ban list is author-editable and one directory is already exempted via per-file-ignores, so the scope of enforcement lives inside the boundary while each individual verdict does not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule TID251, which is in the selected rule set</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/bigquery/tests/conftest.py · test_target</div>
+    <p class="k-argument">This is a genuine third-party anchor when it fires: real datasets are created and dropped in a real GCP project and Google&#39;s engine decides every result, which no xorq author can write to. Two limits weigh it down heavily and both must be stated. (1) TRIGGER: ci-test-bigquery.yml runs only on `workflow_dispatch` or when a maintainer applies the `ci-test-bigquery` label to a PR, so on the ordinary merge path this edge does not exist. (2) A SKIP IS NOT A PASS, and this file skips on every credential fork: `DefaultCredentialsError` skips, a missing project id skips, and the `con` fixture wraps its access smoke-test so that ANY `GoogleAPICallError` or `GoogleAuthError` — expired secret, revoked SA, quota, outage — skips the entire suite. So even in the labeled run, an expired `GCP_SA_KEY` produces a green job containing zero executed BigQuery tests, and nothing in the workflow asserts that any test actually ran.</p>
+    <p class="kr-line">producer <span class="k-mono">Google BigQuery — `xo.bigquery.connect(...)` with service-account credentials, executing `SELECT 1`, `create_database`, `create_table` and every test query server-side, with the query cache explicitly disabled</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:209-211</li>
-      <li>pyproject.toml:195-207</li>
-      <li>pyproject.toml:216-221</li>
+      <li>python/xorq/backends/bigquery/tests/conftest.py:36-51</li>
+      <li>python/xorq/backends/bigquery/tests/conftest.py:66-84</li>
+      <li>.github/workflows/ci-test-bigquery.yml:3-7</li>
+      <li>.github/workflows/ci-test-bigquery.yml:16</li>
+      <li>.github/workflows/ci-test-bigquery.yml:46-55</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.45</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/snowflake/tests/conftest.py · test_target</div>
+    <p class="k-argument">The oracle here is unusually good: `temp_catalog` and `temp_db` do not merely provision, they assert that the object appears in Snowflake&#39;s own catalog listing after creation and is gone after the drop, so the verdict is read back out of the vendor&#39;s metadata rather than from anything the repo wrote. The session connects to `SNOWFLAKE_SAMPLE_DATA.TPCH_SF1`, a Snowflake-provided dataset the project cannot edit. Two limits: (1) TRIGGER — ci-test-snowflake.yml is `workflow_dispatch` or a `ci-test-snowflake` PR label only, so this gates no ordinary merge; (2) the parent conftest skips all snowflake-marked tests when the credential env vars are empty, so an unlabeled or unsecreted run reports green with the suite absent — though, to the repo&#39;s credit, a present-but-undecryptable key is escalated to `pytest.fail` instead of skipping.</p>
+    <p class="kr-line">producer <span class="k-mono">a real Snowflake account — `xo.snowflake.connect_env_keypair` authenticates with a private key and Snowflake&#39;s engine executes the CREATE/DROP CATALOG and DATABASE statements whose effects the fixtures then assert against `list_catalogs()`/`list_databases()`</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/backends/snowflake/tests/conftest.py:14-21</li>
+      <li>python/xorq/backends/snowflake/tests/conftest.py:24-47</li>
+      <li>python/xorq/backends/conftest.py:144-150</li>
+      <li>.github/workflows/ci-test-snowflake.yml:3-7</li>
+      <li>.github/workflows/ci-test-snowflake.yml:42-52</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/sqlite/tests/conftest.py · test_target</div>
+    <p class="k-argument">The `-m sqlite` leg runs on every pull request, and these fixtures hand the tests a genuine SQL engine: xorq&#39;s compiler output is parsed and executed by SQLite, so a malformed dialect emission surfaces as an error the test cannot argue with. Counterparty classification: a real third-party engine, in-process, vendored by CPython. The file itself contains no assertion — it provisions connections and a small DataFrame. The limit that matters is in a sibling module rather than here: `test_udf.py::test_hash_pinned_values` compares against the committed golden file `snapshots/test_udf/ibis_hash_32.json`, regenerated by the repo with `--snapshot-update`, so that particular oracle was authored by the thing under test — the snapshot shape. The surrounding hash tests (`test_hash_distinguishes_types`) do assert real invariants rather than recorded bytes.</p>
+    <p class="kr-line">producer <span class="k-mono">the SQLite C library executing the compiled SQL in-process — `xo.sqlite.connect()` for the session fixture and a real on-disk database file for `persistent_sqlite_con`</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/backends/sqlite/tests/conftest.py:7-9</li>
+      <li>python/xorq/backends/sqlite/tests/conftest.py:22-25</li>
+      <li>.github/workflows/ci-test.yml:71-75</li>
+      <li>python/xorq/backends/sqlite/tests/test_udf.py:24-39</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">python/xorq/backends/postgres/tests/conftest.py · test_target</div>
+    <p class="k-argument">The postgres leg runs on every pull request and docker-compose brings up a real PostgreSQL server whose responses decide the tests; the `pg` connection itself comes from the package conftest, while this file provides the embedded-engine `con` and the data paths. It asserts nothing on its own — it is provisioning — and its class follows the engine the provisioned tests actually talk to. One limit deserves naming because it is the one fixture source inside the write boundary: `iris_path` calls `xo.options.pins.get_path(&quot;iris&quot;)`, which anonymously downloads a pin from the project&#39;s own public GCS board `letsql-pins`, so unlike the ibis-project parquet corpus that particular input is authored and mutable by the same organisation being verified, and it is fetched at test time with no version or hash argument.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest process running the `-m postgres` leg against a live PostgreSQL 15 + PostGIS container started by `just up-ci postgres`, with this file supplying xorq&#39;s embedded engine (`xo.connect()`) as the local counterparty and fixture paths</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>python/xorq/backends/postgres/tests/conftest.py:7-16</li>
+      <li>python/xorq/config.py:136-141</li>
+      <li>python/xorq/config.py:169</li>
+      <li>.github/workflows/ci-test.yml:51-57</li>
+      <li>.github/workflows/ci-test.yml:137-139</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.mccabe])</div>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:213 · ci_step</div>
-    <p class="k-argument">`C90` is in `select`, so this table&#39;s `max-complexity = 24` is the threshold ruff compares a computed cyclomatic-complexity number against; a function above it fails the CI pre-commit job. The complexity number is derived by the linter from the code&#39;s branch structure, not declared by the author. Documented limit, and it is a large one: the threshold was raised from the default 10 to 24, so the enforced bar is set inside the write boundary even though the measurement is not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule C901 (mccabe), computed by walking the AST of the committed source</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">python/xorq/backends/pyiceberg/tests/conftest.py · test_target</div>
+    <p class="k-argument">The `-m pyiceberg` leg runs on every pull request, and these fixtures materialise genuine Iceberg metadata and data files through a third-party library the project pins; a broken schema or manifest surfaces as a real failure at write or scan time. Counterparty classification: LOCAL — an on-disk warehouse with a local catalog, no remote object store, no REST catalog, no vendor service, so this exercises the format and the library but nothing about cloud-catalog behaviour. The file authors no assertions itself, and `quotes_df` generates its rows with unseeded `np.random`, so the data under test varies run to run.</p>
+    <p class="kr-line">producer <span class="k-mono">the pyiceberg library writing and reading a real Iceberg warehouse on local disk — `xo.pyiceberg.connect(warehouse_path=...)` under a pytest tmp dir, with table creation and scans executed by pyiceberg, not simulated</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:213-214</li>
-      <li>pyproject.toml:195-207</li>
+      <li>python/xorq/backends/pyiceberg/tests/conftest.py:56-72</li>
+      <li>python/xorq/backends/pyiceberg/tests/conftest.py:16-32</li>
+      <li>.github/workflows/ci-test.yml:47-50</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
+    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:239 · test_target</div>
-    <p class="k-argument">This table is what makes the CI test run strict rather than advisory: `filterwarnings = [&quot;error&quot;]` promotes any warning emitted at runtime into a raised exception that fails the test, and `xfail_strict = true` fails the run when a test marked xfail unexpectedly passes. Both conditions are decided by the interpreter while the code actually executes in `coverage run -m pytest -n auto` (shared.yml:104), across the 3.10-3.14 x {ubuntu, windows} x {locked, lowest-direct} matrix, and that job gates the merge through `all-green`. An author cannot suppress a real DeprecationWarning by declaring anything; only by fixing the code or adding an explicit ignore entry here. Two documented limits: the four `ignore:` entries are exactly such author-authored suppressions, and the deeper oracle limit applies to the suite this configures — execution is anchored, but the assertions were written by the same people as the implementation.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest process exit code, produced by the CPython runtime executing the suite under these settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">python/xorq/backends/duckdb/tests/conftest.py · test_target</div>
+    <p class="k-argument">The `-m duckdb` leg runs on every pull request, and both fixtures load actual files from ci/ibis-testing-data into actual engines, so the tests&#39; results are computed by DuckDB&#39;s execution rather than asserted. The `duckdb_con` fixture even imports and catches DuckDB&#39;s own `CatalogException` to distinguish views from tables during cleanup, which only works because a real catalog is answering. Counterparty classification: LOCAL/in-process third-party engine the project pins (`duckdb&gt;=1.5`), not a vendor service. The file makes no assertion of its own; the limit is the usual one — the assertions these fixtures feed were written by the same people who wrote the DuckDB compiler under test.</p>
+    <p class="kr-line">producer <span class="k-mono">the DuckDB engine executing in-process — `xo.duckdb.connect()` reading real CSV, plus xorq&#39;s embedded DataFusion engine reading real parquet through `xo.connect()`</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:239-277</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-      <li>.github/workflows/main.yml:16-23</li>
+      <li>python/xorq/backends/duckdb/tests/conftest.py:7-22</li>
+      <li>python/xorq/backends/duckdb/tests/conftest.py:25-34</li>
+      <li>.github/workflows/ci-test.yml:36-39</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.78</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.run])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:279 · ci_step</div>
-    <p class="k-argument">This table decides what the enforced 100% gate is measured over: `branch = true` adds branch arcs to the denominator, and `source = [src, src/mcp-types/mcp_types, tests]` puts the whole library and the test tree in scope, so an unexecuted line or an untaken branch arc anywhere in those trees drops the number below `fail_under = 100` and fails `coverage report` in shared.yml. The coverage figure is produced by the interpreter&#39;s trace callback while the code runs — an author cannot mark a line covered without executing it. Documented limits: the four-entry `omit` list is a suppression that shrinks the measured surface, and coverage measures REACH, not correctness; a fully-covered line can still be wrong.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s tracer, recording which lines and branch arcs the CPython interpreter actually executed during the CI pytest run</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">pre-commit hooks (.pre-commit-config.yaml)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">.pre-commit-config.yaml · review_gate</div>
+    <p class="k-argument">I descended into all four hooks rather than classifying the wrapper: each shells out to an external tool that computes its verdict from the committed tree, so an author cannot make an invalid workflow file, a misspelling, a lint violation or a stale uv.lock report clean without changing the file or the pin. The enforcement fork is the part I could not fully establish and it is stated rather than hidden: NO GitHub workflow in this repo runs pre-commit, CONTRIBUTING.md installs it as a local git hook (bypassable with `--no-verify`), and the `ci:` block at the top of the file is pre-commit.ci configuration for an off-repo service whose installation on this repository is not inspectable from the clone. What partly rescues the edge is redundancy: ci-lint.yml independently runs codespell and `ruff check` on every PR with the same pinned versions, so those two verdicts exist on the merge path regardless — while `actionlint` and `uv-lock` exist only here. Confidence is held at 0.5 for the unestablished enforcement, not for the producer.</p>
+    <p class="kr-line">producer <span class="k-mono">the exit codes of hook binaries fetched from third-party repositories at pinned tags — actionlint v1.7.12, codespell v2.4.2, ruff v0.15.12, uv 0.11.8 — plus pre-commit&#39;s own detection that a rewriting hook modified a tracked file</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:279-290</li>
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-106</li>
+      <li>.pre-commit-config.yaml:1-8</li>
+      <li>.pre-commit-config.yaml:9-35</li>
+      <li>.github/workflows/ci-lint.yml:33-36</li>
+      <li>.github/workflows/ci-lint.yml:53-56</li>
+      <li>CONTRIBUTING.md:25</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.report])</div>
+    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:292 · ci_step</div>
-    <p class="k-argument">`fail_under = 100` is the gate condition itself: `uv run coverage report` in the CI test job exits non-zero whenever the combined trace shows any measured line or branch arc that the interpreter did not execute, and that job reaches the merge through `checks` -&gt; `all-green`. The number is not a field anyone writes — it is derived by coverage.py from what actually ran, so the only way to raise it is to execute the code. Documented limits: (a) coverage measures REACH, not correctness — 100% says every line ran, never that any assertion about it was right; (b) `exclude_also` (and the `omit` list in [tool.coverage.run]) are author-controlled exclusions that shrink the denominator, which is why the repo pairs this with a `strict-no-cover` step that fails when a `# pragma: no cover` line IS executed.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s process exit code, computed from the line/branch execution trace collected by the interpreter during the test run</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">pyproject.toml:249 · ci_step</div>
+    <p class="k-argument">This table is the live rule set of a gate that runs on every pull request: ci-lint.yml executes `uv run --no-sync ruff check --output-format=github python examples docs` after `uv sync --locked --only-group dev`, which pins ruff to the exact version in uv.lock. `extend-select` is precisely the list of analyses that can turn that job red — an unsorted import (I001), a mutable default argument (B006), an import inside a function (PLC0415) — and each verdict is computed by the linter from the source text, so no author-written status can substitute for fixing the code. Documented limit: the enforced SURFACE is inside the write boundary even though each verdict is not. The `ignore` list suppresses six DTZ rules explicitly because existing violations remain (the comment counts them: 22, 1, 10, 3, 4), so timezone-naive datetime construction is currently outside what this gate can fail on.</p>
+    <p class="kr-line">producer <span class="k-mono">the ruff binary&#39;s exit code — ruff 0.15.12, installed from the locked dev group, parsing the committed source under python/, examples/ and docs/</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-110</li>
-      <li>.github/workflows/main.yml:16-23</li>
-      <li>AGENTS.md: &quot;CI requires 100% (fail_under = 100, branch = true)&quot;</li>
+      <li>pyproject.toml:249-269</li>
+      <li>.github/workflows/ci-lint.yml:53-56</li>
+      <li>.github/workflows/ci-lint.yml:50-51</li>
+      <li>pyproject.toml:177</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/examples/conftest.py · test_target</div>
-    <p class="k-argument">Unlike the other conftests in this sample, this one authors a failing condition of its own: `pytest.mark.xfail(strict=True, ...)` at line 102 makes an unexpectedly-PASSING leg fail the run, so a story listed as broken in `manifest.toml` that starts working red-lines CI until the manifest is updated. It also imports each story&#39;s server/client module for real (`importlib.import_module`) across the (variant x transport x era) expansion, so a signature break surfaces as a collection error decided by the interpreter, not by any claim in the repo. The whole expansion executes inside `coverage run -m pytest -n auto` in shared.yml, which gates the merge. Documented limits: the matrix itself (`manifest.toml` defaults, the `xfail` list) is authored inside the write boundary, and the oracle limit applies — execution is anchored, the assertions in the story bodies were written by the same authors as the SDK.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime executing the expanded story matrix — including the strict-xfail arcs this file attaches</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>tests/examples/conftest.py:95-105</li>
-      <li>tests/examples/conftest.py:60-93</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.isort])</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/interaction/conftest.py · test_target</div>
-    <p class="k-argument">This conftest does verify: `_assert_never_stamped` (line 88) asserts that a handshake-era result carries no `SERVER_INFO_META_KEY`, and the modern branch routes through `tests._stamp.unstamped`, whose contract is that the stamp MUST be present. Every interaction test that compares a full result runs one of those two assertions, and the failure is raised by the interpreter while the real client/server pair is exercised over the parametrized (transport, spec_version) cells that `pytest_generate_tests` computes from `REQUIREMENTS`. The run happens in `coverage run -m pytest` in shared.yml and gates the merge. Documented limits: the requirement manifest that drives the cells — including its declared xfails — is authored in-repo, and the oracle limit stands (execution decides, but the SDK authors wrote the expectation).</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime raising AssertionError from the era-aware stamp assertions this module installs into every interaction test</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">pyproject.toml:279 · ci_step</div>
+    <p class="k-argument">`I` is in the selected rule set, so these three settings — `known-first-party = [&quot;xorq&quot;]`, the five-section order, and `lines-after-imports = 2` — are the exact specification ruff compares each committed import block against, and a file that violates them fails the ci-lint job on every PR. The verdict is computed by the linter parsing the file, not declared by anyone: an author cannot assert their imports are ordered. Documented limit: this table emits nothing on its own, it parameterizes a check that executes elsewhere, and the parameters themselves are author-editable, so the shape being enforced sits inside the write boundary even though each individual verdict does not.</p>
+    <p class="kr-line">producer <span class="k-mono">the ruff binary&#39;s exit code via rule I001, which is enabled in `[tool.ruff.lint].extend-select`</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>tests/interaction/conftest.py:80-91</li>
-      <li>tests/interaction/conftest.py:63-70</li>
-      <li>.github/workflows/shared.yml:96-106</li>
+      <li>pyproject.toml:279-282</li>
+      <li>pyproject.toml:250</li>
+      <li>.github/workflows/ci-lint.yml:53-56</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:27 · ci_step</div>
-    <p class="k-argument">The CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` over the whole tree with `pass_filenames: false`, and ruff resolves settings hierarchically — for files under this directory the nearest pyproject.toml with a `[tool.ruff]` section wins. `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` therefore means an undefined name (F821) or an unsorted import block in this example fails the merge-gating job, with the verdict computed by the linter from the source text. Documented limits: the enforced set here is NARROWER than the root&#39;s (no C90/UP/TID251/PERF), so this table&#39;s net effect on this subtree is relaxation as much as enforcement; and confidence is moderate because it depends on ruff&#39;s hierarchical resolution rather than on an explicit per-example CI step.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — ruff resolves the closest config to each file, so this table is the live rule set for this example&#39;s sources during the repo-wide run</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">CLI contract (docs reference real commands)</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-docs-lint.yml:40 · ci_step</div>
+    <p class="k-argument">This is not paperwork-against-paperwork: one side is prose, but the oracle is the real click objects introspected at runtime from the installed package, so a renamed or removed subcommand makes the assertion at cli_contract.py:142 fire and the interpreter — not a claim — decides the job&#39;s exit status. Three limits. (1) It checks NAME RESOLUTION only: a documented invocation that resolves but does the wrong thing passes, and no command is executed. (2) The placeholder guard silently stops validating any invocation whose command-position token does not match `^[a-z][a-z0-9-]+$`, so `$VAR`, `&lt;command&gt;` and `COMMAND` forms are unchecked rather than flagged. (3) GATING, and this is the sharpest one: ci-docs-lint.yml triggers on `pull_request` only under `paths: docs/**`, so a PR that renames a CLI subcommand WITHOUT touching docs/ never runs this step — the check fires on the doc side of a break whose usual cause is on the code side.</p>
+    <p class="kr-line">producer <span class="k-mono">the pytest exit code — Sybil parses every bash fence in docs/**.qmd and `validate_invocation` walks the LIVE click command tree imported from `xorq.cli`, raising AssertionError on an unknown subcommand or option</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207 (root select, superset)</li>
+      <li>.github/workflows/ci-docs-lint.yml:40-44</li>
+      <li>.github/workflows/ci-docs-lint.yml:3-12</li>
+      <li>docs/conftest.py:22-29</li>
+      <li>docs/cli_contract.py:108-151</li>
+      <li>docs/cli_contract.py:24</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:31 · ci_step</div>
-    <p class="k-argument">`E` is selected in the sibling `[tool.ruff.lint]` table, so `line-length = 120` is the number ruff compares each line of this example against during the repo-wide `ruff check` in the CI pre-commit job; `target-version = &quot;py310&quot;` sets the syntax level the parser accepts. The failing condition is produced by the linter reading the file. Documented limits: the values duplicate the root config, so the marginal enforcement this table adds is nil; and it emits no signal itself — it parameterizes a run that happens elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501, whose threshold is this table&#39;s line-length, applied to this subtree by ruff&#39;s nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:31-33</li>
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:38 · ci_step</div>
-    <p class="k-argument">Ruff picks the closest `[tool.ruff]`-bearing config for each file, so `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` governs this example&#39;s sources when the CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` across the tree. A pyflakes error or an unsorted import in this package fails that job, and the verdict is the linter&#39;s reading of the source, not a claim the repo makes. Documented limits: this set is narrower than the root&#39;s, so the table also relaxes what would otherwise apply; and confidence is moderate because it depends on ruff&#39;s hierarchical config resolution rather than on a dedicated CI step for this package.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this is the rule set ruff resolves for this example&#39;s files during the repo-wide check</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:42 · ci_step</div>
-    <p class="k-argument">With `E` selected in the sibling lint table, `line-length = 120` is the threshold ruff enforces on this example&#39;s files during the merge-gating `ruff check` run, and `target-version = &quot;py310&quot;` fixes the syntax level. The failing condition is computed by the linter from the file&#39;s bytes. Documented limits: the values are identical to the root config so the table adds no enforcement the root would not already provide, and the table itself produces no signal — it configures a tool that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501 under this table&#39;s line-length, applied to this subtree by nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:42-44</li>
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
 
   </div>
 
 </section>
 
 <section class="kr-section">
-  <p class="k-eyebrow">not_a_check — 10</p>
+  <p class="k-eyebrow">not_a_check — 8</p>
   <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.per-file-ignores])</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:216 · ci_step</div>
-    <p class="k-argument">Every entry here is a suppression: F401 for `__init__.py`, six codes for the generated mcp-types validators, E501 and PLW0603 for two test modules. It can only prevent ruff from reporting a violation; there is no configuration of this table that causes a run to fail that would otherwise pass, so it emits no pass/fail signal of any kind. It is filed here rather than as a check because it asserts nothing about correctness — not because it was hard to trace; the enforced side of ruff is captured by the `select` table, which is judged separately, and mis-filing this as a check would put a pure escape hatch in the numerator.</p>
+    <div class="k-verdict__source k-mono">pyproject.toml:271 · ci_step</div>
+    <p class="k-argument">Every entry is a suppression: I001 for the two `__init__`-style import-ordering files, B and PLC0415 for the whole vendored ibis tree, E402 and I001 for the extracted tutorial snippets. There is no value of this table that can make `ruff check` exit non-zero on a tree that would otherwise pass, so it emits no pass/fail signal of any kind. I am filing it here on that specific checkable ground, not because it was hard: the enforced side of ruff is captured by `[tool.ruff.lint]`, judged separately, and counting a pure escape hatch as a check would put an exemption list in the numerator. It is worth recording what it exempts, since `python/xorq/vendor/**` is a large fraction of the shipped source and is exempt from the bugbear rules entirely.</p>
     <p class="kr-line">producer <span class="k-mono">nothing — the table only removes rule codes from consideration for four path globs</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:216-221</li>
-      <li>pyproject.toml:195-207</li>
+      <li>pyproject.toml:271-277</li>
+      <li>pyproject.toml:249-256</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.run])</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">pyproject.toml:332 · ci_step</div>
+    <p class="k-argument">This configuration is genuinely live — every CI pytest step passes `--cov --cov-report=xml` and coverage.py reads these keys — but nothing in it is a falsifiable claim: I grepped the whole tree and there is no `fail_under` or `--cov-fail-under` anywhere in the repository, so no value of `source` or `omit` can turn a green run red. It changes a NUMBER, and the only edge that compares that number to anything is the Codecov status. Because not_a_check shrinks the denominator, the burden is met explicitly rather than assumed: this is filed here on the structural ground that the stanza cannot vary between a passing and a failing tree, not because it was hard to trace. What must not be laundered along with it is the direction of its influence: `omit = [&quot;*/tests/*&quot;, &quot;*/vendor/*&quot;]` removes the entire vendored ibis tree — a large fraction of the shipped source — from the denominator of the number the Codecov gate reads, and that exclusion is authored by the same actor the number is measuring.</p>
+    <p class="kr-line">producer <span class="k-mono">nothing that can pass or fail — the table declares the SCOPE coverage.py traces (`source`, `omit`, `parallel`, `concurrency`, `sigterm`); the threshold that could go red lives in codecov.yml, judged separately</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>pyproject.toml:332-340</li>
+      <li>.github/workflows/ci-test.yml:141-148</li>
+      <li>.github/workflows/ci-test-slow.yml:66</li>
+      <li>codecov.yml:1-12</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.pylint])</div>
+    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.report])</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:223 · ci_step</div>
-    <p class="k-argument">`select` at pyproject.toml:195-207 enables C4, C90, D212, E, F, I, PERF, UP and TID251. No `PL*` code is selected, so ruff never runs the pylint-family rules these values configure (`max-args`, `max-branches`, `max-returns`, `max-statements`, `allow-magic-value-types`). The table is inert on the CI path: no value in it can make `ruff check` exit non-zero, and raising or lowering any of these numbers changes no outcome. Recorded as not_a_check on that specific, checkable ground rather than as `unknown` — the fork point is fully traceable, and the honest statement is that there is no signal here at all.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — these settings parameterize ruff&#39;s `PL` rules, and `PL` is not in the selected rule set</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">pyproject.toml:342 · ci_step</div>
+    <p class="k-argument">`show_missing = true` and `skip_covered = false` control how `coverage report` formats human-readable output. Every CI invocation asks for `--cov-report=xml`, so these keys do not shape the artifact Codecov consumes, and critically the table carries no `fail_under` — there is no value of either setting that makes a run exit non-zero on a tree that would otherwise pass. Recorded as not_a_check on that traceable ground rather than as unknown: the fork point is fully established and the honest statement is that no signal exists here at all.</p>
+    <p class="kr-line">producer <span class="k-mono">nothing — two display switches for a terminal coverage report that CI does not even request</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:223-228</li>
-      <li>pyproject.toml:195-207</li>
+      <li>pyproject.toml:342-344</li>
+      <li>.github/workflows/ci-test.yml:141-148</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.paths])</div>
+    <div class="k-verdict__name k-mono">dependency automation (renovate.json)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:305 · ci_step</div>
-    <p class="k-argument">The three entries are the same tree seen from three machines (local `src/`, the Linux runner&#39;s `/home/runner/work/...`, the Windows runner&#39;s `D:\a\...`). It declares no threshold and enables no analysis; its only effect is that data files from different runners resolve to one set of files during `coverage combine`. There is no content for this table that fails a run on its own — the failing condition lives in `[tool.coverage.report].fail_under`, judged separately — so it asserts nothing about correctness.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the table maps runner-specific absolute paths onto the repo-relative `src/` prefix so `coverage combine` can merge data files</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/renovate.json · ci_step</div>
+    <p class="k-argument">Renovate&#39;s output here is a proposal, not a verdict: there is no exit code, no status check, and `automerge: false` (repeated for the github-actions/pre-commit rule) means nothing lands without a human and without the ordinary CI edges judging it. `rangeStrategy: pin` and `lockFileMaintenance` change what the bot writes, not what any gate accepts. Dependency freshness is a real property, but this file only schedules the suggestion of it; the checking happens downstream in ci-test.yml and ci-lint.yml. Excluding it from the ratio is correct because there is no assertion here that could ever be found wanting, not because the node was difficult.</p>
+    <p class="kr-line">producer <span class="k-mono">nothing that emits a pass/fail — the Renovate app opens pull requests on a monthly schedule for docker-compose, dockerfile, github-actions, pep621 and pre-commit manifests</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:305-310</li>
-      <li>.github/workflows/shared.yml:105</li>
+      <li>.github/renovate.json:17-33</li>
+      <li>.github/renovate.json:35-40</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">actions/checkout@v6</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/conftest.py · test_target</div>
-    <p class="k-argument">Read in full (68 lines, no `assert`, no `pytest.fail`, no `raise`), this file only supplies the suite&#39;s execution context: it pins the anyio backend to asyncio, holds a module-scoped runner lease to cap event-loop churn on Windows, and scopes the OTel tracer so span capture does not leak between tests. It emits no pass/fail verdict — the gating signal for this suite is the `coverage run -m pytest` step in shared.yml, which the gatherer surfaced as its own node (in the 121 gathered, outside this 25-node sample). Filing the fixture module as a check would double-count that same pytest exit code under a second node.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module sets one environment variable and defines three pytest fixtures (`anyio_backend`, `_module_runner_lease`, a `capfire` override)</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-docs-lint.yml:23 · ci_step</div>
+    <p class="k-argument">Provisioning: it materialises the tree the later steps evaluate and asserts nothing about what it fetched. Its only failure mode is infrastructure — network, token, or a missing ref — which is a statement about the runner rather than about the repository, so it carries no falsifiable claim about correctness. The verification in this job is the CLI-contract, llms.txt, Vale, quarto and lychee steps that follow.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/checkout@v6 performing a git clone onto the GitHub-hosted runner</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/conftest.py:1-68</li>
-      <li>grep &#39;assert|raise|pytest.fail&#39; tests/conftest.py -&gt; only prose in docstrings</li>
-      <li>.github/workflows/shared.yml:96-106</li>
+      <li>.github/workflows/ci-docs-lint.yml:23</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">actions/setup-python@v6</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/transports/stdio/conftest.py · test_target</div>
-    <p class="k-argument">Both fixtures monkeypatch a seam and then call straight through to the real `_create_platform_compatible_process` / `_terminate_process_tree`, recording the calls into a list for tests to inspect; the file contains no assertion of its own (77 lines, zero `assert`). The verdicts about stdio lifecycle are produced by the test bodies that read those lists, running under the CI pytest step. `_kill_spawn_groups` is a reaper, not an oracle: it prevents orphaned subprocesses from a crashed test and cannot itself fail a run.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines two recording fixtures (`spawned_processes`, `terminate_calls`) and a teardown that SIGKILLs leaked process groups</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-docs-lint.yml:25 · ci_step</div>
+    <p class="k-argument">Interpreter provisioning so the uv-managed doc build and the pytest CLI-contract step have something to run on. It evaluates no property of the repository; a non-zero exit means the requested interpreter could not be fetched, which is a fact about tool availability rather than about the docs or the code.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/setup-python@v6 installing CPython 3.12 on the runner</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/transports/stdio/conftest.py:1-77</li>
-      <li>tests/transports/stdio/conftest.py:61-77</li>
+      <li>.github/workflows/ci-docs-lint.yml:25-27</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Install uv</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/server/conftest.py · test_target</div>
-    <p class="k-argument">`finished()` filters exported spans down to the `mcp-python-sdk` instrumentation scope and hands the list to the test; the fixture clears the exporter before and after each test. 46 lines, no assertion. It makes span assertions POSSIBLE but performs none, so no configuration of this file can turn a passing run red on its own — the pass/fail comes from the server tests that call `spans.finished()` inside the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpanCapture` adapter over logfire&#39;s in-memory `TestExporter` and one `spans` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-docs-lint.yml:29 · ci_step</div>
+    <p class="k-argument">Toolchain provisioning. It puts uv on the PATH so the later `uv sync` and `uv run` steps work, and `enable-cache: true` only affects how fast that happens. Nothing about the repository&#39;s contents is read or judged here, and a failure reports on the action&#39;s CDN or the cache service.</p>
+    <p class="kr-line">producer <span class="k-mono">astral-sh/setup-uv@v7 installing the uv binary and restoring its cache on the runner</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/server/conftest.py:1-46</li>
+      <li>.github/workflows/ci-docs-lint.yml:29-32</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Install Python doc dependencies</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/shared/conftest.py · test_target</div>
-    <p class="k-argument">It determines WHAT runs — every contract test using `pair_factory` executes twice, once per implementation — but it verifies nothing itself: 61 lines, no assertion, no strict xfail. Widening a matrix is not a verdict; the verdicts are the assertions in the dispatcher contract tests, produced by the interpreter during the CI pytest run. Filing it as a check would credit the numerator for test scaffolding.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module builds two `Dispatcher` pairs (direct and JSONRPC-over-memory-streams) and exposes them as a parametrized `pair_factory` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-docs-lint.yml:34 · ci_step</div>
+    <p class="k-argument">`uv sync --no-default-groups --group docs --group test` carries neither `--locked` nor `--frozen`, so uv will silently re-resolve and refresh a stale uv.lock rather than erroring — the step therefore asserts nothing about lockfile consistency, and no later step in this workflow diffs the lockfile. Contrast ci-test.yml:119, which does use `--locked` and is a genuine falsifiable claim that pyproject.toml and uv.lock agree. What remains here is environment provisioning for the CLI-contract, quartodoc and Vale steps that follow; a failure means a package could not be resolved or built, not that the docs are wrong.</p>
+    <p class="kr-line">producer <span class="k-mono">uv&#39;s dependency resolver populating a virtualenv from pyproject.toml&#39;s docs and test groups</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/shared/conftest.py:1-61</li>
+      <li>.github/workflows/ci-docs-lint.yml:34-38</li>
+      <li>.github/workflows/ci-test.yml:118-120</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/client/conftest.py · test_target</div>
-    <p class="k-argument">The spy forwards every message to the original stream and records it so tests can inspect what was sent; the two `assert` statements at lines 131-132 are internal plumbing guards (`client_spy was not initialized`) that fire only when the fixture is used out of order, and the `assert len(requests) == 1` at line 92 is inside a docstring example, not executed. Nothing here asserts anything about the SDK&#39;s behaviour — the client tests that read `spies.get_client_requests(...)` do, under the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpyMemoryObjectSendStream` wrapper and a `stream_spy` fixture that patches `create_client_server_memory_streams`</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/client/conftest.py:1-135</li>
-      <li>tests/client/conftest.py:92</li>
-      <li>tests/client/conftest.py:131-132</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:22 · ci_step</div>
-    <p class="k-argument">Pyright reads its configuration from the project root it is executed in; it does not do per-directory config discovery the way ruff does. The only pyright invocation on the merge path is the pre-commit local hook `uv run --frozen pyright` with `pass_filenames: false`, which runs at the repo root and therefore uses the ROOT `[tool.pyright]` table (whose `include` already covers `examples/clients`). No workflow step changes directory into this example, and no per-example CI job exists (grep of .github/workflows for `examples` returns only a comment about a smoke-test env var). So `venvPath = &quot;.&quot;` / `venv = &quot;.venv&quot;` here describe a local editor/dev environment; no value in this table can make any CI job exit non-zero. Confidence is held down because this rests on pyright&#39;s config-resolution semantics rather than on a line I can point at in a workflow.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:22-26</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
-      <li>grep -rn &#39;examples&#39; .github/workflows/ -&gt; shared.yml:99 (comment only)</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:33 · ci_step</div>
-    <p class="k-argument">Same fork point as the sibling example package: the only merge-gating pyright run is the repo-root pre-commit hook `uv run --frozen pyright` (`pass_filenames: false`), which reads the ROOT `[tool.pyright]` table; pyright does not walk down into nested pyproject.toml files for configuration the way ruff does, and no workflow job cds into `examples/clients/*`. This table&#39;s `include`/`venvPath`/`venv` therefore describe a local per-example virtualenv for an editor or a manual run, and no value in it can change any CI outcome. Confidence held down because the claim rests on pyright&#39;s config-resolution behaviour rather than on an explicit workflow line.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:33-36</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
 
   </div>
 
@@ -1470,32 +1490,32 @@ signal is sufficient.</p>
       <span>probe-decided share</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">25 / 121</span>
+      <span class="k-econ__value">25 / 240</span>
       <span>nodes judged / gathered</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">7,501</span>
+      <span class="k-econ__value">9,394</span>
       <span>estimated tokens in</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">7,309</span>
+      <span class="k-econ__value">8,780</span>
       <span>estimated tokens out</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">8m 24s</span>
+      <span class="k-econ__value">24m 03s</span>
       <span>wall clock</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">1</span>
+      <span class="k-econ__value">0</span>
       <span>probes minted</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">13</span>
+      <span class="k-econ__value">2</span>
       <span>probe library size</span>
     </div>
 
   </div>
-  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 25 of 121 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently.</p>
+  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 25 of 240 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently.</p>
 </section>
 
 </main>

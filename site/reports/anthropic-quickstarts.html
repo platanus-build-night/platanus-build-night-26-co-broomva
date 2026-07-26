@@ -636,6 +636,54 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 .kr-ev li::before { content: "· "; color: var(--k-ink-3); }
 .kr-missing { color: var(--k-self-referential); }
 .kr-smell { color: var(--k-smell); }
+/* `.kr-line` is authored for the verdict grid, where `margin: 0` is right and
+   the row spacing comes from the grid. Inside the ε-audit card there is no
+   grid, so the coverage line would butt straight into the note beneath it. */
+.k-card .kr-line { margin: var(--k-space-3) 0 0; }
+.kr-audit__note {
+  margin: var(--k-space-5) 0 0;
+  max-width: var(--k-measure-prose);
+  line-height: var(--k-lh-snug);
+}
+.kr-audit__figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--k-space-3);
+  margin: var(--k-space-2) 0 var(--k-space-1);
+}
+.kr-audit__count {
+  font-size: var(--k-fs-h2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--k-track-tight);
+  color: var(--k-ink-0);
+}
+.kr-audit__rate {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-ink-2);
+}
+.kr-audit__formula {
+  margin: 0 0 var(--k-space-3);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-xs);
+  color: var(--k-ink-2);
+}
+.kr-audit-alert {
+  margin: var(--k-space-3) 0;
+  padding: var(--k-space-3) var(--k-space-4);
+  border-left: var(--k-space-1) solid var(--k-self-referential);
+  border-radius: 0 var(--k-r-md) var(--k-r-md) 0;
+  background: var(--k-self-referential-wash);
+  max-width: var(--k-measure-prose);
+  font-size: var(--k-fs-sm);
+  color: var(--k-ink-1);
+}
+.kr-audit-alert strong {
+  color: var(--k-self-referential);
+  font-weight: var(--k-fw-semibold);
+}
 .kr-curve { overflow-x: auto; }
 .kr-curve svg { max-width: 100%; height: auto; }
 
@@ -694,6 +742,24 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
      Keel's own shoppable class — so it is stated, not implied.</p>
 </div>
 </div>
+<div class="k-card kr-section">
+  <p class="k-eyebrow">ε-audit — not run</p>
+  <p>No verdict in this report carries a readable <span class="k-mono">audit</span>
+     block, so nothing was re-decided and there is no agreement rate to report.
+     This is not agreement, and it is not full agreement either: a rate over
+     zero comparisons would state a measurement that was never taken.
+     (&ldquo;Readable&rdquo; is load-bearing: a block can be present and state no
+     comparison, and this state covers that too — see below if so.)</p>
+  <p class="k-meta">This run carries <span class="k-mono">6</span>
+     probe-decided verdict(s), none of them contributing a readable comparison.
+     (&ldquo;Readable&rdquo; rather than &ldquo;audited&rdquo;, because a block
+     can arrive and state nothing — if any did, they are counted below.) Audit
+     coverage is itself shoppable — audit none of the library and no
+     disagreement can ever be found — so the absence is printed here rather
+     than left to be inferred from a missing section.</p>
+
+</div>
+
 <p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">62</span> gathered edges. Every number on this page describes that sample, not the whole surface — 37 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
 
 <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
@@ -757,6 +823,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">lint</div>
@@ -772,6 +839,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">build:full</div>
@@ -786,6 +854,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pre-commit hooks (.pre-commit-config.yaml)</div>
@@ -801,6 +870,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
@@ -817,6 +887,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
 </p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">astral-sh/ruff-action@v1</div>
@@ -832,6 +903,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">jakebailey/pyright-action@v1</div>
@@ -847,6 +919,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
@@ -863,6 +936,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
@@ -880,6 +954,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.45</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
 </p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pytest config (pytest.ini)</div>
@@ -897,6 +972,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.45</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
 </p>
+
   </div>
 
 </section>
@@ -916,6 +992,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">start</div>
@@ -928,6 +1005,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">dev:full</div>
@@ -941,6 +1019,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">dev:left</div>
@@ -953,6 +1032,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">dev:right</div>
@@ -965,6 +1045,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">dev:chat</div>
@@ -977,6 +1058,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">actions/checkout@v4</div>
@@ -990,6 +1072,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">ci-provisioning-action</span>)
  · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">actions/checkout@v4</div>
@@ -1003,6 +1086,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">ci-provisioning-action</span>)
  · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">actions/setup-python@v5</div>
@@ -1016,6 +1100,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">ci-provisioning-action</span>)
  · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">|</div>
@@ -1029,6 +1114,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">unfrozen-dependency-install</span>)
  · confidence <span class="k-mono">0.8</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">echo &quot;$PWD/.venv/bin&quot; &gt;&gt; $GITHUB_PATH</div>
@@ -1043,6 +1129,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">actions/checkout@v4</div>
@@ -1056,6 +1143,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">ci-provisioning-action</span>)
  · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">actions/setup-python@v5</div>
@@ -1069,6 +1157,7 @@ signal is sufficient.</p>
     </ul>
     <p class="kr-line">decided by <span class="k-mono">probe</span> (<span class="k-mono">ci-provisioning-action</span>)
  · confidence <span class="k-mono">0.9</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
@@ -1082,6 +1171,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
+
   </div>
   <div class="k-verdict">
     <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
@@ -1095,6 +1185,7 @@ signal is sufficient.</p>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+
   </div>
 
 </section>
@@ -1105,7 +1196,7 @@ signal is sufficient.</p>
   <div class="kr-curve">
 <svg class="keel-curve" xmlns="http://www.w3.org/2000/svg" width="1080" height="1510" viewBox="0 0 1080 1510" role="img" aria-labelledby="keel-curve-title keel-curve-desc" style="max-width:100%;height:auto">
 <title id="keel-curve-title">Keel crystallization curve</title>
-<desc id="keel-curve-desc">Crystallization curve over 15 runs from &lt;home&gt;/keel/reports. falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less than half the variance — read the raw squares)</desc>
+<desc id="keel-curve-desc">Crystallization curve over 15 runs from &lt;repo&gt;/reports. falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less than half the variance — read the raw squares)</desc>
 <style>.keel-curve { font-family: var(--k-font-sans, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif); }
 .keel-curve text { fill: var(--k-ink-1, #b6c0cb); font-size: 12.5px; }
 .keel-curve .kc-bg { fill: var(--k-bg-0, #07090c); }
@@ -1350,7 +1441,7 @@ signal is sufficient.</p>
 <text class="kc-note" x="32" y="1324">- Run 13 (anthropic-quickstarts) judged 25 of 62 gathered nodes — a cap. Per-node cost below is per JUDGED node.</text>
 <text class="kc-note" x="32" y="1340">- Run 14 (tiktoken): decidedByProbe + decidedByAgent = 10 but nodesSampled = 12. Probe-decided share uses the decided total</text>
 <text class="kc-note" x="32" y="1356">(10).</text>
-<text class="kc-note" x="32" y="1372">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in &lt;home&gt;/keel/reports/corpus.meta.json.</text>
+<text class="kc-note" x="32" y="1372">- Provenance &quot;measured&quot; was declared on the COMMAND LINE (--provenance), not in &lt;repo&gt;/reports/corpus.meta.json.</text>
 <text class="kc-note" x="32" y="1388">The declaration therefore lives in the invocation and is only as trustworthy as the run sheet that records it.</text>
 <text class="kc-note" x="32" y="1404">- Token counts are ESTIMATES in 15 of 15 run(s) (RunEconomics.tokensEstimated). No API exposes session token usage to a skill,</text>
 <text class="kc-note" x="32" y="1420">so the token axis reads &quot;estimated tokens&quot; and nothing here claims a measured token count.</text>

@@ -18,7 +18,7 @@
  *     shopping its own denominator
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { homedir } from 'node:os';
 
 const HOME = homedir();
@@ -26,10 +26,36 @@ const HOME = homedir();
 const REPO = new URL('..', import.meta.url).pathname.replace(/\/$/, '');
 const REPORTS = join(REPO, 'reports');
 const OUT = join(REPO, 'site', 'reports');
-const SUMMARY = join(REPORTS, 'corpus-summary.json');
+/**
+ * Which corpus to publish, and where its index lands.
+ *
+ * `corpus.ts` derives one summary per corpus file so two populations cannot be
+ * averaged into a pooled number describing neither. That derivation is only half
+ * the property if the publisher then writes both into one `index.html`, so the
+ * same rule applies here: the corpus stem picks the summary AND the index.
+ *
+ *   (default)                 reports/corpus-summary.json          -> index.html
+ *   --corpus corpus-agentic   reports/corpus-agentic-summary.json  -> agentic/index.html
+ *
+ * Per-target report pages are written flat into site/reports/ regardless, because
+ * a target belongs to exactly one corpus and the filenames cannot collide.
+ */
+const corpusArg = (() => {
+  const i = process.argv.indexOf('--corpus');
+  if (i < 0) return null;
+  const v = process.argv[i + 1];
+  if (!v || v.startsWith('-')) {
+    console.error('publish: --corpus needs a value, e.g. --corpus corpus-agentic.json');
+    process.exit(1);
+  }
+  return basename(v).replace(/\.json$/i, '');
+})();
+
+const SUMMARY = join(REPORTS, `${corpusArg ?? 'corpus'}-summary.json`);
+const INDEX_DIR = corpusArg ? join(OUT, corpusArg.replace(/^corpus-/, '')) : OUT;
 
 if (!existsSync(SUMMARY)) {
-  console.error(`publish: no ${SUMMARY} — run the corpus first`);
+  console.error(`publish: no ${SUMMARY} — run that corpus first`);
   process.exit(1);
 }
 
@@ -382,11 +408,12 @@ measure is shopping its own denominator.</p>
 </html>
 `;
 
-writeFileSync(join(OUT, 'index.html'), scrub(html), 'utf8');
+mkdirSync(INDEX_DIR, { recursive: true });
+writeFileSync(join(INDEX_DIR, 'index.html'), scrub(html), 'utf8');
 
 console.log(`publish: ${rendered.length} report(s) → ${OUT}`);
 if (failedRender.length) console.log(`publish: ${failedRender.length} render failure(s): ${failedRender.join(', ')}`);
-console.log(`publish: index → ${join(OUT, 'index.html')}`);
+console.log(`publish: index → ${join(INDEX_DIR, 'index.html')}`);
 console.log(
   `publish: pooled ${pooled === null ? 'nothing gathered' : pooled.toFixed(3)} (${totalAnchored}/${totalClassified}) over ${ok.length} target(s)`
 );

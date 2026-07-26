@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keel — grounding report — mcp-python-sdk</title>
+<title>Keel — grounding report — aspect-cli</title>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    Keel — design tokens. THE canonical source. There is no second copy.
@@ -694,19 +694,19 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 <header>
   <p class="k-wordmark">Keel</p>
   <h1 class="k-display">Grounding report<em>.</em></h1>
-  <p class="k-lede">Every verification edge in <span class="k-mono">mcp-python-sdk</span>,
+  <p class="k-lede">Every verification edge in <span class="k-mono">aspect-cli</span>,
      classified by who produces the signal and whether the actor being verified
      can write to that producer.</p>
   <table class="k-table">
-    <tr><th>target</th><td class="k-mono">mcp-python-sdk</td></tr>
-    <tr><th>revision</th><td class="k-mono">00a70148bcd39b40ee0b0745e0b468eac0a44efb</td></tr>
-    <tr><th>generated</th><td class="k-mono">2026-07-25T02:55:11.583Z</td></tr>
+    <tr><th>target</th><td class="k-mono">aspect-cli</td></tr>
+    <tr><th>revision</th><td class="k-mono">2cb4fec13701722e027ee49c32f6b3873a4ff74d</td></tr>
+    <tr><th>generated</th><td class="k-mono">2026-07-26T20:23:17.744Z</td></tr>
   </table>
 </header>
 
 <div class="kr-split"><div class="k-ratio">
   <span class="k-ratio__value">1.00</span>
-  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 15 / 15</p>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 10 / 10</p>
   <div class="k-meter">
     <div class="k-meter__seg" data-class="anchored" style="width:100.0000%"></div>
     <div class="k-meter__seg" data-class="self_referential" style="width:0.0000%"></div>
@@ -714,11 +714,11 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 
   </div>
   <div class="k-ratio__counts">
-    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 15</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 10</span>
     <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 0</span>
     <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 0</span>
     <span class="k-ratio__count k-ratio__count--excluded">
-      <span class="k-class" data-class="not_a_check">not_a_check</span> 10
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 15
       <span class="k-meta">excluded from the denominator</span>
     </span>
 
@@ -729,9 +729,7 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   <table class="k-table k-table--num">
     <thead><tr><th>node kind</th><th>judged</th></tr></thead>
     <tbody>
-      <tr><td class="k-mono">ci_step</td><td>16</td></tr>
-      <tr><td class="k-mono">test_target</td><td>8</td></tr>
-      <tr><td class="k-mono">review_gate</td><td>1</td></tr>
+      <tr><td class="k-mono">ci_step</td><td>25</td></tr>
 
     </tbody>
   </table>
@@ -759,7 +757,7 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
 
 </div>
 
-<p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">121</span> gathered edges. Every number on this page describes that sample, not the whole surface — 96 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
+<p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">187</span> gathered edges. Every number on this page describes that sample, not the whole surface — 162 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
 
 <p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
 verification, not its quality. A repo can be 100% anchored with terrible
@@ -769,422 +767,388 @@ signal is sufficient.</p>
 <section class="kr-section">
   <p class="k-eyebrow">Node graph — 25 node(s), in gather order</p>
   <div class="k-graph">
-    <span class="k-mark" data-class="anchored" title="pre-commit hooks (.pre-commit-config.yaml) — .pre-commit-config.yaml — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.pyright]) — pyproject.toml:150 — anchored (confidence 0.8)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff]) — pyproject.toml:191 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint]) — pyproject.toml:195 — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api]) — pyproject.toml:209 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.mccabe]) — pyproject.toml:213 — anchored (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.per-file-ignores]) — pyproject.toml:216 — not_a_check (confidence 0.7)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.pylint]) — pyproject.toml:223 — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config ([tool.pytest.ini_options]) — pyproject.toml:239 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.run]) — pyproject.toml:279 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.report]) — pyproject.toml:292 — anchored (confidence 0.85)"></span>
-    <span class="k-mark" data-class="not_a_check" title="coverage config ([tool.coverage.paths]) — pyproject.toml:305 — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/transports/stdio/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/server/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/shared/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — tests/examples/conftest.py — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/client/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — tests/interaction/conftest.py — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/sse-polling-client/pyproject.toml:22 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/sse-polling-client/pyproject.toml:27 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/sse-polling-client/pyproject.toml:31 — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/simple-chatbot/pyproject.toml:33 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/simple-chatbot/pyproject.toml:38 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/simple-chatbot/pyproject.toml:42 — anchored (confidence 0.5)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Checkout repository — .github/workflows/build_release_artifacts.yaml:33 — not_a_check (confidence 0.92)"></span>
+    <span class="k-mark" data-class="not_a_check" title="aspect-build/setup-aspect@2306377a61c45954ab2df7c7311698b109364352 # v2026.26.9 — .github/workflows/build_release_artifacts.yaml:38 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Build release artifacts — .github/workflows/build_release_artifacts.yaml:43 — anchored (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Attest build provenance — .github/workflows/build_release_artifacts.yaml:68 — not_a_check (confidence 0.62)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Upload release artifacts — .github/workflows/build_release_artifacts.yaml:72 — not_a_check (confidence 0.93)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v6 — .github/workflows/launcher-integration-tests.yaml:33 — not_a_check (confidence 0.93)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Cache cargo registry and build artifacts — .github/workflows/launcher-integration-tests.yaml:35 — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Install musl toolchain (Linux only) — .github/workflows/launcher-integration-tests.yaml:53 — not_a_check (confidence 0.9)"></span>
+    <span class="k-mark" data-class="anchored" title="Build launcher — .github/workflows/launcher-integration-tests.yaml:60 — anchored (confidence 0.9)"></span>
+    <span class="k-mark" data-class="anchored" title="Test 1: Unpinned first run queries releases API — .github/workflows/launcher-integration-tests.yaml:67 — anchored (confidence 0.75)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="Test 2: Warm cache skips API — .github/workflows/launcher-integration-tests.yaml:82 — anchored (confidence 0.58)"></span>
+    <span class="k-mark" data-class="anchored" title="Test 3: Stale hint triggers API re-query — .github/workflows/launcher-integration-tests.yaml:96 — anchored (confidence 0.72)"></span>
+    <span class="k-mark" data-class="anchored" title="Test 4: API failure falls back to stale cached binary — .github/workflows/launcher-integration-tests.yaml:118 — anchored (confidence 0.72)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="Test 5: Pinned version downloads directly without API call — .github/workflows/launcher-integration-tests.yaml:135 — anchored (confidence 0.58)"></span>
+    <span class="k-mark" data-class="anchored" data-smell title="Test 6: Pinned version cache hit — .github/workflows/launcher-integration-tests.yaml:152 — anchored (confidence 0.58)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Download artifacts — .github/workflows/prerelease_build.yaml:34 — not_a_check (confidence 0.93)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Calculate checksums — .github/workflows/prerelease_build.yaml:39 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="not_a_check" title="Create pre-release — .github/workflows/prerelease_build.yaml:44 — not_a_check (confidence 0.8)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v6 — .github/workflows/ci-workflows-delivery.yaml:55 — not_a_check (confidence 0.93)"></span>
+    <span class="k-mark" data-class="not_a_check" title="./.github/actions/install-prebuilt-aspect-cli — .github/workflows/ci-workflows-delivery.yaml:59 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Bootstrap — .github/workflows/ci-workflows-delivery.yaml:64 — anchored (confidence 0.6)"></span>
+    <span class="k-mark" data-class="not_a_check" title="aspect-build/setup-aspect@2306377a61c45954ab2df7c7311698b109364352 # v2026.26.9 — .github/workflows/ci-workflows-delivery.yaml:67 — not_a_check (confidence 0.85)"></span>
+    <span class="k-mark" data-class="anchored" title="Delivery Task — .github/workflows/ci-workflows-delivery.yaml:70 — anchored (confidence 0.65)"></span>
+    <span class="k-mark" data-class="not_a_check" title="actions/checkout@v6 — .github/workflows/ci-workflows-delivery.yaml:87 — not_a_check (confidence 0.93)"></span>
+    <span class="k-mark" data-class="not_a_check" title="./.github/actions/install-prebuilt-aspect-cli — .github/workflows/ci-workflows-delivery.yaml:88 — not_a_check (confidence 0.85)"></span>
 
   </div>
   <div class="k-legend">
-    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 15</span>
-    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 10</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 10</span>
+    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 15</span>
 
   </div>
-  <p class="k-meta">5 marks are ringed in the unknown hue: an anchored verdict asserted below confidence 0.6. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.</p>
+  <p class="k-meta">3 marks are ringed in the unknown hue: an anchored verdict asserted below confidence 0.6. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.</p>
 </section>
 
 <section class="kr-section">
-  <p class="k-eyebrow">anchored — 15</p>
+  <p class="k-eyebrow">anchored — 10</p>
   <p class="k-meta">The producer sits outside the write boundary of the actor being verified.</p>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pre-commit hooks (.pre-commit-config.yaml)</div>
+    <div class="k-verdict__name k-mono">Build release artifacts</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">.pre-commit-config.yaml · review_gate</div>
-    <p class="k-argument">This manifest is not merely a client-side git hook here: shared.yml&#39;s `pre-commit` job runs `pre-commit/action` with `--all-files`, and that job feeds `checks` -&gt; `all-green` (main.yml:16-23), so its exit code is on the merge path and cannot be skipped with `git commit --no-verify`. The substantive local hooks execute pinned tools over the committed tree — `uv run --frozen pyright` returns non-zero when its own analysis of the source finds a type error, and `uv run --frozen ruff check --fix --exit-non-zero-on-fix` returns non-zero when the linter both rewrites and reports; `uv lock --check` recomputes the resolution from pyproject.toml and fails when uv.lock does not match it. None of those verdicts can be flipped by an author writing a status anywhere; only by changing the source or the pinned config. Two documented limits: (a) the `readme-snippets` hook runs `scripts/update_readme_snippets.py --check`, which only diffs README code blocks against `docs_src/*.py` — two artefacts the same authors write, so that sub-edge is self-referential paperwork-against-paperwork and would stay green if both drifted together; (b) the remote hooks (`pre-commit-hooks`, `mirrors-prettier`, `markdownlint-cli`) are pinned by mutable tag `rev:`, not by digest, so their implementations live outside this repo.</p>
-    <p class="kr-line">producer <span class="k-mono">the exit codes of the hook binaries pre-commit shells out to (ruff, pyright, uv), plus pre-commit&#39;s own detection that a hook modified a tracked file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/build_release_artifacts.yaml:43 · ci_step</div>
+    <p class="k-argument">The signal is rustc&#39;s and Bazel&#39;s exit status over `//crates/aspect-launcher:bins`, `:brew`, `//crates/aspect-cli:bins` and `//crates/axl-docgen:bins`, which fan out to x86_64/aarch64 linux-musl and macOS builds at -c opt with LTO; no assertion in the repo can talk a linker out of an error. LIMIT: this is a compilability and packaging signal only — no test executes here, so a binary that builds and copies cleanly but misbehaves passes. Note also that `--config=ci` adds `--keep_going`, and a remote-cache hit substitutes a previously-computed action result (digest-keyed, so equivalent by construction).</p>
+    <p class="kr-line">producer <span class="k-mono">Bazel + rustc cross-compiling four target triples, with `bazel run :release` executing the generated copier script; exit code decided by the compiler and the filesystem</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>.pre-commit-config.yaml:31-64</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-      <li>.github/workflows/main.yml:13-23</li>
-      <li>scripts/update_readme_snippets.py:1-10</li>
+      <li>.github/workflows/build_release_artifacts.yaml:58-67</li>
+      <li>bazel/rust/multi_platform_rust_binaries.bzl:12-17</li>
+      <li>.bazelrc:22-25</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Build launcher</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:60 · ci_step</div>
+    <p class="k-argument">`cargo build -p aspect-launcher --target x86_64-unknown-linux-musl` (macOS runs native) puts the compiler outside the write boundary — a type error or a broken build.rs fails regardless of what the repo asserts about itself. LIMIT: compilability only; behavior is exercised by the six steps that follow, not by this one.</p>
+    <p class="kr-line">producer <span class="k-mono">cargo + rustc compiling the aspect-launcher crate; the compiler decides the exit code</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/launcher-integration-tests.yaml:60-61</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Test 1: Unpinned first run queries releases API</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:67 · ci_step</div>
+    <p class="k-argument">The causal path runs through GitHub&#39;s releases API and a real artifact download on a cold cache: if no stable vYYYY.WW.P release resolves, or the download fails, the `downloading aspect cli version v[0-9]` grep misses and the step exits 1. The expectations are fixed in the YAML before the run, and grep — not the launcher — decides pass/fail. LIMIT: the launcher&#39;s own exit status is discarded by `|| true`, so the oracle is entirely a match against ASPECT_DEBUG log lines the crate under test emits; a log line that lies about what the code did would pass. The API response content is also published by this same org, so only the transport and the service are truly third-party.</p>
+    <p class="kr-line">producer <span class="k-mono">a real aspect-launcher process making a live call to api.github.com&#39;s releases endpoint and downloading a published release, with bash+grep deciding the step&#39;s exit code against expectations written in the workflow file</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/launcher-integration-tests.yaml:67-77</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:26-30</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:150 · ci_step</div>
-    <p class="k-argument">This is the root-project pyright config, and pyright is actually executed on the merge path: the `pyright` local hook in .pre-commit-config.yaml runs `uv run --frozen pyright` with `pass_filenames: false`, and pre-commit runs `--all-files` inside the CI `pre-commit` job. `typeCheckingMode = &quot;strict&quot;` plus `include = [src, tests, docs_src, examples/...]` is what turns an inference failure in those trees into a non-zero exit, and that verdict is computed by the pinned pyright binary from the source text — an author cannot make an ill-typed file report clean by asserting anything. Documented limit: this table emits no signal itself, and the scope it declares is author-controlled (the `executionEnvironments` entries switch off reportUnusedFunction and reportPrivateUsage for tests/examples), so the execution axis is anchored while what gets enforced sits inside the write boundary.</p>
-    <p class="kr-line">producer <span class="k-mono">the pyright process exit code — a type checker parsing the checked-out source under this table&#39;s settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">Test 2: Warm cache skips API</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:82 · ci_step</div>
+    <p class="k-argument">Execution is genuine — the binary runs against filesystem state produced by a prior step and the shell decides the exit code against strings frozen in the workflow file. LIMIT, and it is a sharp one here: no external system participates, the process exit status is thrown away by `|| true`, and both the positive claim (`found in cache`) and the negative claim (`should not query API`) are read from the launcher&#39;s own ASPECT_DEBUG channel. Nothing independently observes that no network call occurred, so this verifies the log narrative, not the syscall.</p>
+    <p class="kr-line">producer <span class="k-mono">a real aspect-launcher process run against the cache directory Test 1 populated, with bash+grep evaluating hardcoded positive and negative expectations</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:150-189</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>.github/workflows/shared.yml:40-42</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:82-91</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.58</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
+    <div class="k-verdict__name k-mono">Test 3: Stale hint triggers API re-query</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:191 · ci_step</div>
-    <p class="k-argument">`line-length = 120` is the threshold ruff&#39;s pycodestyle E501 rule compares against, and `E` is in the selected rule set (pyproject.toml:195-207); `target-version = &quot;py310&quot;` is what the selected `UP` (pyupgrade) rules rewrite/report against. Ruff runs on the merge path via the `ruff` pre-commit hook (`ruff check --fix --exit-non-zero-on-fix`) inside the CI pre-commit job, so a 121-character line makes that job exit non-zero. The producer is the linter binary reading the committed file, not a claim the repo makes about itself. Documented limit: the number itself is author-editable, and the table on its own emits nothing — it parameterizes a check that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code, computed from the source text under this table&#39;s line-length and target-version settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:96 · ci_step</div>
+    <p class="k-argument">The stimulus is applied from outside the binary (the harness mutates cache mtimes) and the response involves a live releases-API call, so the fork point sits outside the crate. If the hint directory does not exist the python step raises and the step fails closed. LIMIT: `|| true` discards the launcher&#39;s exit status and both assertions (`querying releases API (hint is stale)` and the no-redownload negative) are matches against the launcher&#39;s self-emitted debug log.</p>
+    <p class="kr-line">producer <span class="k-mono">a python3 harness step that backdates the hint files&#39; mtime to epoch, then a real launcher process that re-queries api.github.com; grep decides the exit code</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:191-193</li>
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:96-113</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.72</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Test 4: API failure falls back to stale cached binary</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:118 · ci_step</div>
+    <p class="k-argument">The failure being tested is manufactured by a third party — GitHub rejects the bad credential — and the harness, not the binary, injects it. That is a genuine external fork point for the fallback path. LIMIT: the assertion is a grep for `API error, falling back to stale cached tag` on the launcher&#39;s own ASPECT_DEBUG output, and `|| true` discards the exit status, so the check confirms the message is printed rather than that a stale cached binary was actually executed.</p>
+    <p class="kr-line">producer <span class="k-mono">GitHub&#39;s API returning an auth failure for the injected `GITHUB_TOKEN=invalid`, observed through a real launcher process; grep decides the exit code</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/launcher-integration-tests.yaml:118-130</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.72</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Test 5: Pinned version downloads directly without API call</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:135 · ci_step</div>
+    <p class="k-argument">The pinned-version fixture is authored by the harness outside the binary, the binary genuinely parses it, and grep decides the step. LIMIT: apart from bash and grep there is no producer outside the crate — the entire oracle is the launcher&#39;s own debug lines, the exit status is discarded by `|| true`, and despite the step&#39;s name (&#39;downloads directly&#39;) no assertion checks that a download occurred; only the `pinned to tag ... skipping API` message and the absence of `querying releases` are checked.</p>
+    <p class="kr-line">producer <span class="k-mono">a real launcher process reading a version.axl fixture the harness wrote, with bash+grep evaluating pre-authored positive and negative expectations</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/launcher-integration-tests.yaml:135-147</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.58</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Test 6: Pinned version cache hit</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:152 · ci_step</div>
+    <p class="k-argument">Execution is real and the expectations are frozen in the workflow file, so the runtime and grep decide the outcome. LIMIT: like Test 2 this is a purely local step whose entire evidence is the binary&#39;s own ASPECT_DEBUG output (`found in cache`, absence of `^downloading `), with the process exit status discarded by `|| true`. Cache reuse is inferred from a self-report, never observed independently.</p>
+    <p class="kr-line">producer <span class="k-mono">a real launcher process run a second time against the pinned-version cache Test 5 created, with grep deciding the exit code</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/launcher-integration-tests.yaml:152-161</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.58</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
+</p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">Bootstrap</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:64 · ci_step</div>
+    <p class="k-argument">When it runs, the signal is a real compile of the PR&#39;s source with a deliberately non-circular builder: the script comments record that `bazel` here is the previous stable release specifically so a PR with a fatal startup bug cannot bootstrap itself green, and the copy of `bazel-out/k8-dbg/bin/.../aspect-cli` fails closed if the build produced nothing. LIMIT, and it is the important one: this step carries `if: inputs.prebuild_run_id == &#39;&#39;`, and the automated path always dispatches with a prebuild run id from ci-workflows.yaml — so on every CI-triggered run this edge is SKIPPED and only the mutually exclusive install-prebuilt step executes. It gates only manual dispatches. It is also a compile, not a test.</p>
+    <p class="kr-line">producer <span class="k-mono">`.aspect/bootstrap.sh` invoking vanilla Bazel (the previous stable aspect release on the Workflows runner) to build `//:cli` from source; rustc decides the exit code, and `set -eu` propagates it</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/ci-workflows-delivery.yaml:64-66</li>
+      <li>.aspect/bootstrap.sh:367-389</li>
+      <li>.github/workflows/ci-workflows.yaml:88-99</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
+    <div class="k-verdict__name k-mono">Delivery Task</div>
     <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:195 · ci_step</div>
-    <p class="k-argument">`select = [C4, C90, D212, E, F, I, PERF, UP, TID251]` is precisely the list of analyses that can fail the CI `pre-commit` job, which runs `uv run --frozen ruff check --fix --exit-non-zero-on-fix` over all files. An unused import (F401) or an unsorted import block (I001) is detected by ruff parsing the committed source, so an author cannot make a violating file report clean without editing the file or editing this list. Documented limit: editing this list is exactly the escape hatch — the rule set is inside the write boundary even though each verdict is produced outside it; and `ignore = [&quot;PERF203&quot;]` is a suppression this table also carries.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this table is the enabled rule set whose violations produce that non-zero exit</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:70 · ci_step</div>
+    <p class="k-argument">The causal path runs through Bazel and rustc building the deliverable set and through actually running those binaries, so a build failure or a panic in the delivery pipeline turns the step red no matter what the repo asserts about itself; `--force-target=//examples/deliverable:deliverable_with_digest` guarantees at least one target is delivered every run, so the edge is not vacuous. LIMITS to say out loud: (1) the oracle is the CLI&#39;s own determination that delivery succeeded — the artifact under test is also the judge, and the PR-visible check-run is posted by that same binary via GithubStatusChecks; (2) `--warn-not-runnable` and `--warn-unresolved-digest` convert two real failure classes into non-failing warnings; (3) this workflow is fire-and-forget dispatched by ci-workflows.yaml&#39;s `dispatch-delivery` job, which succeeds as soon as `gh workflow run` returns, so nothing in the triggering run blocks on this result and whether its check-run is required is branch protection this clone cannot show.</p>
+    <p class="kr-line">producer <span class="k-mono">the PR&#39;s freshly built aspect-cli binary executing a real delivery — a Bazel build of every `attr(tags, deliverable, //...)` target under `--config=release` plus execution of the resulting deliverable binaries — on a self-hosted Workflows runner; process exit code decides the step</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:209 · ci_step</div>
-    <p class="k-argument">`TID251` appears in `[tool.ruff.lint].select`, so this banned-api entry is live: ruff parses the import graph of the committed source and exits non-zero on any `pydantic.RootModel` reference outside the per-file exemption for generated validators. The producer is the linter executing over the file, and the check runs on the merge path through the pre-commit CI job. Documented limit: the ban list is author-editable and one directory is already exempted via per-file-ignores, so the scope of enforcement lives inside the boundary while each individual verdict does not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule TID251, which is in the selected rule set</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:209-211</li>
-      <li>pyproject.toml:195-207</li>
-      <li>pyproject.toml:216-221</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.mccabe])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:213 · ci_step</div>
-    <p class="k-argument">`C90` is in `select`, so this table&#39;s `max-complexity = 24` is the threshold ruff compares a computed cyclomatic-complexity number against; a function above it fails the CI pre-commit job. The complexity number is derived by the linter from the code&#39;s branch structure, not declared by the author. Documented limit, and it is a large one: the threshold was raised from the default 10 to 24, so the enforced bar is set inside the write boundary even though the measurement is not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule C901 (mccabe), computed by walking the AST of the committed source</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:213-214</li>
-      <li>pyproject.toml:195-207</li>
+      <li>.github/workflows/ci-workflows-delivery.yaml:70-80</li>
+      <li>.aspect/config.axl:197-199</li>
+      <li>.github/workflows/ci-workflows.yaml:79-99</li>
+      <li>examples/deliverable/BUILD.bazel:11-62</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
 
   </div>
+
+</section>
+
+<section class="kr-section">
+  <p class="k-eyebrow">not_a_check — 15</p>
+  <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:239 · test_target</div>
-    <p class="k-argument">This table is what makes the CI test run strict rather than advisory: `filterwarnings = [&quot;error&quot;]` promotes any warning emitted at runtime into a raised exception that fails the test, and `xfail_strict = true` fails the run when a test marked xfail unexpectedly passes. Both conditions are decided by the interpreter while the code actually executes in `coverage run -m pytest -n auto` (shared.yml:104), across the 3.10-3.14 x {ubuntu, windows} x {locked, lowest-direct} matrix, and that job gates the merge through `all-green`. An author cannot suppress a real DeprecationWarning by declaring anything; only by fixing the code or adding an explicit ignore entry here. Two documented limits: the four `ignore:` entries are exactly such author-authored suppressions, and the deeper oracle limit applies to the suite this configures — execution is anchored, but the assertions were written by the same people as the implementation.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest process exit code, produced by the CPython runtime executing the suite under these settings</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">Checkout repository</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/build_release_artifacts.yaml:33 · ci_step</div>
+    <p class="k-argument">Source acquisition, not verification: it materializes the tree at `inputs.ref` with full tag history so later steps can stamp a version. Nothing about the artifact&#39;s correctness can be false here — the only failure modes are git/network infrastructure, so the edge asserts nothing and is excluded from the ratio.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/checkout@v6 running on the GitHub runner (git fetch against github.com)</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:239-277</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-      <li>.github/workflows/main.yml:16-23</li>
+      <li>.github/workflows/build_release_artifacts.yaml:33-37</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.92</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.run])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:279 · ci_step</div>
-    <p class="k-argument">This table decides what the enforced 100% gate is measured over: `branch = true` adds branch arcs to the denominator, and `source = [src, src/mcp-types/mcp_types, tests]` puts the whole library and the test tree in scope, so an unexecuted line or an untaken branch arc anywhere in those trees drops the number below `fail_under = 100` and fails `coverage report` in shared.yml. The coverage figure is produced by the interpreter&#39;s trace callback while the code runs — an author cannot mark a line covered without executing it. Documented limits: the four-entry `omit` list is a suppression that shrinks the measured surface, and coverage measures REACH, not correctness; a fully-covered line can still be wrong.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s tracer, recording which lines and branch arcs the CPython interpreter actually executed during the CI pytest run</span> — actor can write to it: <span class="k-mono">no</span></p>
+    <div class="k-verdict__name k-mono">aspect-build/setup-aspect@2306377a61c45954ab2df7c7311698b109364352 # v2026.26.9</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/build_release_artifacts.yaml:38 · ci_step</div>
+    <p class="k-argument">Toolchain provisioning and remote-cache/disk-cache configuration; it makes later steps possible rather than asserting anything about them. The action is third-party and SHA-pinned, so the repo cannot rewrite what it does, but there is no falsifiable claim about aspect-cli&#39;s correctness on this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">aspect-build/setup-aspect composite action (pinned to commit 2306377a) installing the Aspect launcher and running `aspect auth login`</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:279-290</li>
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.report])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:292 · ci_step</div>
-    <p class="k-argument">`fail_under = 100` is the gate condition itself: `uv run coverage report` in the CI test job exits non-zero whenever the combined trace shows any measured line or branch arc that the interpreter did not execute, and that job reaches the merge through `checks` -&gt; `all-green`. The number is not a field anyone writes — it is derived by coverage.py from what actually ran, so the only way to raise it is to execute the code. Documented limits: (a) coverage measures REACH, not correctness — 100% says every line ran, never that any assertion about it was right; (b) `exclude_also` (and the `omit` list in [tool.coverage.run]) are author-controlled exclusions that shrink the denominator, which is why the repo pairs this with a `strict-no-cover` step that fails when a `# pragma: no cover` line IS executed.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s process exit code, computed from the line/branch execution trace collected by the interpreter during the test run</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-110</li>
-      <li>.github/workflows/main.yml:16-23</li>
-      <li>AGENTS.md: &quot;CI requires 100% (fail_under = 100, branch = true)&quot;</li>
+      <li>.github/workflows/build_release_artifacts.yaml:38-42</li>
 
     </ul>
     <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/examples/conftest.py · test_target</div>
-    <p class="k-argument">Unlike the other conftests in this sample, this one authors a failing condition of its own: `pytest.mark.xfail(strict=True, ...)` at line 102 makes an unexpectedly-PASSING leg fail the run, so a story listed as broken in `manifest.toml` that starts working red-lines CI until the manifest is updated. It also imports each story&#39;s server/client module for real (`importlib.import_module`) across the (variant x transport x era) expansion, so a signature break surfaces as a collection error decided by the interpreter, not by any claim in the repo. The whole expansion executes inside `coverage run -m pytest -n auto` in shared.yml, which gates the merge. Documented limits: the matrix itself (`manifest.toml` defaults, the `xfail` list) is authored inside the write boundary, and the oracle limit applies — execution is anchored, the assertions in the story bodies were written by the same authors as the SDK.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime executing the expanded story matrix — including the strict-xfail arcs this file attaches</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>tests/examples/conftest.py:95-105</li>
-      <li>tests/examples/conftest.py:60-93</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/interaction/conftest.py · test_target</div>
-    <p class="k-argument">This conftest does verify: `_assert_never_stamped` (line 88) asserts that a handshake-era result carries no `SERVER_INFO_META_KEY`, and the modern branch routes through `tests._stamp.unstamped`, whose contract is that the stamp MUST be present. Every interaction test that compares a full result runs one of those two assertions, and the failure is raised by the interpreter while the real client/server pair is exercised over the parametrized (transport, spec_version) cells that `pytest_generate_tests` computes from `REQUIREMENTS`. The run happens in `coverage run -m pytest` in shared.yml and gates the merge. Documented limits: the requirement manifest that drives the cells — including its declared xfails — is authored in-repo, and the oracle limit stands (execution decides, but the SDK authors wrote the expectation).</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime raising AssertionError from the era-aware stamp assertions this module installs into every interaction test</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>tests/interaction/conftest.py:80-91</li>
-      <li>tests/interaction/conftest.py:63-70</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:27 · ci_step</div>
-    <p class="k-argument">The CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` over the whole tree with `pass_filenames: false`, and ruff resolves settings hierarchically — for files under this directory the nearest pyproject.toml with a `[tool.ruff]` section wins. `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` therefore means an undefined name (F821) or an unsorted import block in this example fails the merge-gating job, with the verdict computed by the linter from the source text. Documented limits: the enforced set here is NARROWER than the root&#39;s (no C90/UP/TID251/PERF), so this table&#39;s net effect on this subtree is relaxation as much as enforcement; and confidence is moderate because it depends on ruff&#39;s hierarchical resolution rather than on an explicit per-example CI step.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — ruff resolves the closest config to each file, so this table is the live rule set for this example&#39;s sources during the repo-wide run</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207 (root select, superset)</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:31 · ci_step</div>
-    <p class="k-argument">`E` is selected in the sibling `[tool.ruff.lint]` table, so `line-length = 120` is the number ruff compares each line of this example against during the repo-wide `ruff check` in the CI pre-commit job; `target-version = &quot;py310&quot;` sets the syntax level the parser accepts. The failing condition is produced by the linter reading the file. Documented limits: the values duplicate the root config, so the marginal enforcement this table adds is nil; and it emits no signal itself — it parameterizes a run that happens elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501, whose threshold is this table&#39;s line-length, applied to this subtree by ruff&#39;s nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:31-33</li>
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:38 · ci_step</div>
-    <p class="k-argument">Ruff picks the closest `[tool.ruff]`-bearing config for each file, so `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` governs this example&#39;s sources when the CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` across the tree. A pyflakes error or an unsorted import in this package fails that job, and the verdict is the linter&#39;s reading of the source, not a claim the repo makes. Documented limits: this set is narrower than the root&#39;s, so the table also relaxes what would otherwise apply; and confidence is moderate because it depends on ruff&#39;s hierarchical config resolution rather than on a dedicated CI step for this package.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this is the rule set ruff resolves for this example&#39;s files during the repo-wide check</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:42 · ci_step</div>
-    <p class="k-argument">With `E` selected in the sibling lint table, `line-length = 120` is the threshold ruff enforces on this example&#39;s files during the merge-gating `ruff check` run, and `target-version = &quot;py310&quot;` fixes the syntax level. The failing condition is computed by the linter from the file&#39;s bytes. Documented limits: the values are identical to the root config so the table adds no enforcement the root would not already provide, and the table itself produces no signal — it configures a tool that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501 under this table&#39;s line-length, applied to this subtree by nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:42-44</li>
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-
-</section>
-
-<section class="kr-section">
-  <p class="k-eyebrow">not_a_check — 10</p>
-  <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.per-file-ignores])</div>
+    <div class="k-verdict__name k-mono">Attest build provenance</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:216 · ci_step</div>
-    <p class="k-argument">Every entry here is a suppression: F401 for `__init__.py`, six codes for the generated mcp-types validators, E501 and PLW0603 for two test modules. It can only prevent ruff from reporting a violation; there is no configuration of this table that causes a run to fail that would otherwise pass, so it emits no pass/fail signal of any kind. It is filed here rather than as a check because it asserts nothing about correctness — not because it was hard to trace; the enforced side of ruff is captured by the `select` table, which is judged separately, and mis-filing this as a check would put a pure escape hatch in the numerator.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the table only removes rule codes from consideration for four path globs</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/build_release_artifacts.yaml:68 · ci_step</div>
+    <p class="k-argument">This edge EMITS a signal rather than reading one: it binds the artifact digests to the builder identity and stores a signed statement. Nothing in this repository ever verifies an attestation (`grep attestation` finds only the three `attestations: write` permission grants), so inside the measured graph the edge makes no falsifiable claim about correctness — its only failure modes are OIDC/signing infrastructure and an empty subject glob. Recorded for the report: the signing material sits with Sigstore/GitHub, outside the org&#39;s write boundary, so a downstream `gh attestation verify` WOULD be an anchored consumer — there just isn&#39;t one here.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/attest-build-provenance calling GitHub&#39;s attestation API, which signs a provenance predicate via Sigstore/Fulcio using the workflow&#39;s OIDC identity</span> — actor can write to it: <span class="k-mono">no</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:216-221</li>
-      <li>pyproject.toml:195-207</li>
+      <li>.github/workflows/build_release_artifacts.yaml:68-71</li>
+      <li>grep -rn attestation .github/ -&gt; only `attestations: write` permission lines</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.62</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.pylint])</div>
+    <div class="k-verdict__name k-mono">Upload release artifacts</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:223 · ci_step</div>
-    <p class="k-argument">`select` at pyproject.toml:195-207 enables C4, C90, D212, E, F, I, PERF, UP and TID251. No `PL*` code is selected, so ruff never runs the pylint-family rules these values configure (`max-args`, `max-branches`, `max-returns`, `max-statements`, `allow-magic-value-types`). The table is inert on the CI path: no value in it can make `ruff check` exit non-zero, and raising or lowering any of these numbers changes no outcome. Recorded as not_a_check on that specific, checkable ground rather than as `unknown` — the fork point is fully traceable, and the honest statement is that there is no signal here at all.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — these settings parameterize ruff&#39;s `PL` rules, and `PL` is not in the selected rule set</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/build_release_artifacts.yaml:72 · ci_step</div>
+    <p class="k-argument">Pure transport between jobs. `if-no-files-found` is left at its default (`warn`), so an empty upload does not even fail — the step cannot produce a red signal about the artifacts it carries.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/upload-artifact@v7 writing `upload_root/` to GitHub&#39;s artifact store</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:223-228</li>
-      <li>pyproject.toml:195-207</li>
+      <li>.github/workflows/build_release_artifacts.yaml:72-76</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.93</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.paths])</div>
+    <div class="k-verdict__name k-mono">actions/checkout@v6</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:305 · ci_step</div>
-    <p class="k-argument">The three entries are the same tree seen from three machines (local `src/`, the Linux runner&#39;s `/home/runner/work/...`, the Windows runner&#39;s `D:\a\...`). It declares no threshold and enables no analysis; its only effect is that data files from different runners resolve to one set of files during `coverage combine`. There is no content for this table that fails a run on its own — the failing condition lives in `[tool.coverage.report].fail_under`, judged separately — so it asserts nothing about correctness.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the table maps runner-specific absolute paths onto the repo-relative `src/` prefix so `coverage combine` can merge data files</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:33 · ci_step</div>
+    <p class="k-argument">Source acquisition for the launcher integration-test job. It asserts nothing about the launcher; it only puts the tree on disk for the cargo build and the six behavioral steps that follow.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/checkout@v6 on the GitHub-hosted runner</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>pyproject.toml:305-310</li>
-      <li>.github/workflows/shared.yml:105</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:33</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.93</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Cache cargo registry and build artifacts</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/conftest.py · test_target</div>
-    <p class="k-argument">Read in full (68 lines, no `assert`, no `pytest.fail`, no `raise`), this file only supplies the suite&#39;s execution context: it pins the anyio backend to asyncio, holds a module-scoped runner lease to cap event-loop churn on Windows, and scopes the OTel tracer so span capture does not leak between tests. It emits no pass/fail verdict — the gating signal for this suite is the `coverage run -m pytest` step in shared.yml, which the gatherer surfaced as its own node (in the 121 gathered, outside this 25-node sample). Filing the fixture module as a check would double-count that same pytest exit code under a second node.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module sets one environment variable and defines three pytest fixtures (`anyio_backend`, `_module_runner_lease`, a `capfire` override)</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:35 · ci_step</div>
+    <p class="k-argument">A build-time optimization: restore-keys deliberately permit a stale `target/` from a different Cargo.lock, and cargo&#39;s own fingerprinting decides what to recompile. No correctness claim is made or capable of failing on this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/cache@v5 restoring `~/.cargo` and `target/` from GitHub&#39;s cache service</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/conftest.py:1-68</li>
-      <li>grep &#39;assert|raise|pytest.fail&#39; tests/conftest.py -&gt; only prose in docstrings</li>
-      <li>.github/workflows/shared.yml:96-106</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:35-44</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Install musl toolchain (Linux only)</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/transports/stdio/conftest.py · test_target</div>
-    <p class="k-argument">Both fixtures monkeypatch a seam and then call straight through to the real `_create_platform_compatible_process` / `_terminate_process_tree`, recording the calls into a list for tests to inspect; the file contains no assertion of its own (77 lines, zero `assert`). The verdicts about stdio lifecycle are produced by the test bodies that read those lists, running under the CI pytest step. `_kill_spawn_groups` is a reaper, not an oracle: it prevents orphaned subprocesses from a crashed test and cannot itself fail a run.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines two recording fixtures (`spawned_processes`, `terminate_calls`) and a teardown that SIGKILLs leaked process groups</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/launcher-integration-tests.yaml:53 · ci_step</div>
+    <p class="k-argument">Environment setup: installs musl-tools and the musl target so the launcher&#39;s baked-in LLVM_TRIPLE matches the production (Bazel-cross-compiled) value, then exports CARGO_TARGET_ARGS. It configures the later checks rather than asserting anything itself.</p>
+    <p class="kr-line">producer <span class="k-mono">apt-get and rustup on the Linux runner, plus a write to $GITHUB_ENV</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/transports/stdio/conftest.py:1-77</li>
-      <li>tests/transports/stdio/conftest.py:61-77</li>
+      <li>.github/workflows/launcher-integration-tests.yaml:53-58</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.9</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Download artifacts</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/server/conftest.py · test_target</div>
-    <p class="k-argument">`finished()` filters exported spans down to the `mcp-python-sdk` instrumentation scope and hands the list to the test; the fixture clears the exporter before and after each test. 46 lines, no assertion. It makes span assertions POSSIBLE but performs none, so no configuration of this file can turn a passing run red on its own — the pass/fail comes from the server tests that call `spans.finished()` inside the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpanCapture` adapter over logfire&#39;s in-memory `TestExporter` and one `spans` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/prerelease_build.yaml:34 · ci_step</div>
+    <p class="k-argument">Transport between jobs in the pre-release pipeline. It moves bytes the build job produced; it makes no claim about them that could be false.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/download-artifact@v4 pulling the build job&#39;s artifact from GitHub&#39;s artifact store</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/server/conftest.py:1-46</li>
+      <li>.github/workflows/prerelease_build.yaml:34-37</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.93</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Calculate checksums</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/shared/conftest.py · test_target</div>
-    <p class="k-argument">It determines WHAT runs — every contract test using `pair_factory` executes twice, once per implementation — but it verifies nothing itself: 61 lines, no assertion, no strict xfail. Widening a matrix is not a verdict; the verdicts are the assertions in the dispatcher contract tests, produced by the interpreter during the CI pytest run. Filing it as a check would credit the numerator for test scaffolding.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module builds two `Dispatcher` pairs (direct and JSONRPC-over-memory-streams) and exposes them as a parametrized `pair_factory` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/prerelease_build.yaml:39 · ci_step</div>
+    <p class="k-argument">This is the checksum trap: the step GENERATES SHASUM256.txt and never compares it to any reference, so there is no expectation it can contradict. Grep across the repo finds only generation sites (here and publish_release.yaml:37) and no verification site. The file is then published alongside the assets by the same run that built them, so a consumer checking against it gains integrity-in-transit but no independence from the builder.</p>
+    <p class="kr-line">producer <span class="k-mono">`shasum -a 256` computing digests over the downloaded assets</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/shared/conftest.py:1-61</li>
+      <li>.github/workflows/prerelease_build.yaml:39-42</li>
+      <li>.github/workflows/publish_release.yaml:36-37</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
+    <div class="k-verdict__name k-mono">Create pre-release</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/client/conftest.py · test_target</div>
-    <p class="k-argument">The spy forwards every message to the original stream and records it so tests can inspect what was sent; the two `assert` statements at lines 131-132 are internal plumbing guards (`client_spy was not initialized`) that fire only when the fixture is used out of order, and the `assert len(requests) == 1` at line 92 is inside a docstring example, not executed. Nothing here asserts anything about the SDK&#39;s behaviour — the client tests that read `spies.get_client_requests(...)` do, under the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpyMemoryObjectSendStream` wrapper and a `stream_spy` fixture that patches `create_client_server_memory_streams`</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/prerelease_build.yaml:44 · ci_step</div>
+    <p class="k-argument">A publish action, not a verification edge: it ships whatever the build produced. Its only falsifiable guard is the branch-name sanitization (`exit 1` on an empty sanitized name), and the preceding `gh release delete ... || true` deliberately swallows failure. Nothing here can go red because the artifact is wrong.</p>
+    <p class="kr-line">producer <span class="k-mono">the `gh` CLI calling GitHub&#39;s releases API to delete and recreate a `prerelease/&lt;branch&gt;` tag and upload assets</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>tests/client/conftest.py:1-135</li>
-      <li>tests/client/conftest.py:92</li>
-      <li>tests/client/conftest.py:131-132</li>
+      <li>.github/workflows/prerelease_build.yaml:44-96</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
+    <div class="k-verdict__name k-mono">actions/checkout@v6</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:22 · ci_step</div>
-    <p class="k-argument">Pyright reads its configuration from the project root it is executed in; it does not do per-directory config discovery the way ruff does. The only pyright invocation on the merge path is the pre-commit local hook `uv run --frozen pyright` with `pass_filenames: false`, which runs at the repo root and therefore uses the ROOT `[tool.pyright]` table (whose `include` already covers `examples/clients`). No workflow step changes directory into this example, and no per-example CI job exists (grep of .github/workflows for `examples` returns only a comment about a smoke-test env var). So `venvPath = &quot;.&quot;` / `venv = &quot;.venv&quot;` here describe a local editor/dev environment; no value in this table can make any CI job exit non-zero. Confidence is held down because this rests on pyright&#39;s config-resolution semantics rather than on a line I can point at in a workflow.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:55 · ci_step</div>
+    <p class="k-argument">Source acquisition for the delivery-task job. No assertion about the CLI is made or can fail on this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/checkout@v6 on the self-hosted Aspect Workflows runner</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:22-26</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
-      <li>grep -rn &#39;examples&#39; .github/workflows/ -&gt; shared.yml:99 (comment only)</li>
+      <li>.github/workflows/ci-workflows-delivery.yaml:55</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.93</span></p>
 
   </div>
   <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
+    <div class="k-verdict__name k-mono">./.github/actions/install-prebuilt-aspect-cli</div>
     <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:33 · ci_step</div>
-    <p class="k-argument">Same fork point as the sibling example package: the only merge-gating pyright run is the repo-root pre-commit hook `uv run --frozen pyright` (`pass_filenames: false`), which reads the ROOT `[tool.pyright]` table; pyright does not walk down into nested pyproject.toml files for configuration the way ruff does, and no workflow job cds into `examples/clients/*`. This table&#39;s `include`/`venvPath`/`venv` therefore describe a local per-example virtualenv for an editor or a manual run, and no value in it can change any CI outcome. Confidence held down because the claim rests on pyright&#39;s config-resolution behaviour rather than on an explicit workflow line.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:59 · ci_step</div>
+    <p class="k-argument">Installation of the CLI that later steps exercise — the binary here was already built by the upstream `pre-build` job, so this edge transports rather than verifies. Its `set -euo pipefail` body fails only if the artifact is missing, which is infrastructure, not a claim about the code.</p>
+    <p class="kr-line">producer <span class="k-mono">the local composite action `install-prebuilt-aspect-cli`, which runs actions/download-artifact against the upstream run id and moves the binary to `target/ci/aspect-cli` (or $HOME/.local/bin)</span> — actor can write to it: <span class="k-mono">not established</span></p>
     <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:33-36</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
+      <li>.github/workflows/ci-workflows-delivery.yaml:59-63</li>
+      <li>.github/actions/install-prebuilt-aspect-cli/action.yaml:43-70</li>
 
     </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">aspect-build/setup-aspect@2306377a61c45954ab2df7c7311698b109364352 # v2026.26.9</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:67 · ci_step</div>
+    <p class="k-argument">Authentication and remote-cache setup for the delivery job. It provisions credentials the next step needs; it asserts nothing about the CLI under test.</p>
+    <p class="kr-line">producer <span class="k-mono">aspect-build/setup-aspect composite action (SHA-pinned) performing `aspect auth login` against the Aspect API with ASPECT_API_TOKEN</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/ci-workflows-delivery.yaml:67-69</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">actions/checkout@v6</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:87 · ci_step</div>
+    <p class="k-argument">Source acquisition for the ASPECT_DEBUG=1 variant of the delivery job. Nothing about correctness is asserted on this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">actions/checkout@v6 on the self-hosted runner for the delivery-debug-task job</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/ci-workflows-delivery.yaml:87</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.93</span></p>
+
+  </div>
+  <div class="k-verdict">
+    <div class="k-verdict__name k-mono">./.github/actions/install-prebuilt-aspect-cli</div>
+    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
+    <div class="k-verdict__source k-mono">.github/workflows/ci-workflows-delivery.yaml:88 · ci_step</div>
+    <p class="k-argument">Same transport/setup shape as the delivery-task job&#39;s install step: it places an already-built binary where the runner&#39;s launcher resolves it. No falsifiable claim about the code lives on this edge.</p>
+    <p class="kr-line">producer <span class="k-mono">the local composite action `install-prebuilt-aspect-cli` downloading the upstream run&#39;s `aspect-cli` artifact and installing it for the debug delivery job</span> — actor can write to it: <span class="k-mono">not established</span></p>
+    <ul class="kr-ev">
+      <li>.github/workflows/ci-workflows-delivery.yaml:88-92</li>
+      <li>.github/actions/install-prebuilt-aspect-cli/action.yaml:52-70</li>
+
+    </ul>
+    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
 
   </div>
 
@@ -1470,32 +1434,32 @@ signal is sufficient.</p>
       <span>probe-decided share</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">25 / 121</span>
+      <span class="k-econ__value">25 / 187</span>
       <span>nodes judged / gathered</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">7,501</span>
+      <span class="k-econ__value">5,039</span>
       <span>estimated tokens in</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">7,309</span>
+      <span class="k-econ__value">5,709</span>
       <span>estimated tokens out</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">8m 24s</span>
+      <span class="k-econ__value">14m 08s</span>
       <span>wall clock</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">1</span>
+      <span class="k-econ__value">0</span>
       <span>probes minted</span>
     </div>
     <div class="k-econ__stat">
-      <span class="k-econ__value">13</span>
+      <span class="k-econ__value">2</span>
       <span>probe library size</span>
     </div>
 
   </div>
-  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 25 of 121 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently.</p>
+  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 25 of 187 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently.</p>
 </section>
 
 </main>

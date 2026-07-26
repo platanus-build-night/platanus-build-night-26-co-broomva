@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Keel — grounding report — mcp-python-sdk</title>
-<style>
-/* ═══════════════════════════════════════════════════════════════════════════
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keel — corpus grounding ratios</title>
+<style>/* ═══════════════════════════════════════════════════════════════════════════
    Keel — design tokens. THE canonical source. There is no second copy.
    ═══════════════════════════════════════════════════════════════════════════
 
@@ -601,599 +600,160 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: var(--k-fs-micro); color: var(--k-ink-2); }
 }
 
-
-/* ── renderer-local layout (kr-*), tokens only ── */
-.kr-split {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  gap: var(--k-space-12);
-  align-items: start;
-  margin: var(--k-space-12) 0 0;
-}
-@media (max-width: 760px) {
-  .kr-split { grid-template-columns: minmax(0, 1fr); gap: var(--k-space-8); }
-}
-.kr-section { margin: var(--k-space-16) 0 0; }
-.kr-line {
-  grid-column: 1 / -1;
-  margin: 0;
-  max-width: var(--k-measure-prose);
-  font-size: var(--k-fs-xs);
-  color: var(--k-ink-2);
-}
-.kr-ev {
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-width: var(--k-measure-prose);
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-xs);
-  color: var(--k-ink-2);
-  line-height: var(--k-lh-snug);
-}
-.kr-ev li { margin-top: var(--k-space-1); word-break: break-word; }
-.kr-ev li::before { content: "· "; color: var(--k-ink-3); }
-.kr-missing { color: var(--k-self-referential); }
-.kr-smell { color: var(--k-smell); }
-/* `.kr-line` is authored for the verdict grid, where `margin: 0` is right and
-   the row spacing comes from the grid. Inside the ε-audit card there is no
-   grid, so the coverage line would butt straight into the note beneath it. */
-.k-card .kr-line { margin: var(--k-space-3) 0 0; }
-.kr-audit__note {
-  margin: var(--k-space-5) 0 0;
-  max-width: var(--k-measure-prose);
-  line-height: var(--k-lh-snug);
-}
-.kr-audit__figure {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--k-space-3);
-  margin: var(--k-space-2) 0 var(--k-space-1);
-}
-.kr-audit__count {
-  font-size: var(--k-fs-h2);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: var(--k-track-tight);
-  color: var(--k-ink-0);
-}
-.kr-audit__rate {
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--k-ink-2);
-}
-.kr-audit__formula {
-  margin: 0 0 var(--k-space-3);
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-xs);
-  color: var(--k-ink-2);
-}
-.kr-audit-alert {
-  margin: var(--k-space-3) 0;
-  padding: var(--k-space-3) var(--k-space-4);
-  border-left: var(--k-space-1) solid var(--k-self-referential);
-  border-radius: 0 var(--k-r-md) var(--k-r-md) 0;
-  background: var(--k-self-referential-wash);
-  max-width: var(--k-measure-prose);
-  font-size: var(--k-fs-sm);
-  color: var(--k-ink-1);
-}
-.kr-audit-alert strong {
-  color: var(--k-self-referential);
-  font-weight: var(--k-fw-semibold);
-}
-.kr-curve { overflow-x: auto; }
-.kr-curve svg { max-width: 100%; height: auto; }
-
+/* Page-local layout only. Every component below is the frozen design system's;
+   nothing here re-declares a colour, a size, or a component. */
+.corpus-table td:first-child { max-width: 22em; }
+.corpus-table td:nth-child(2) { white-space: nowrap; }
+.k-ratio__value--inline { font-size: var(--k-fs-h1); line-height: 1; }
+/* "Weaker than it looks" — the same claim the data-smell marker makes about a
+   verdict, applied to a ratio standing on too few edges. Reuses the system's
+   own token rather than inventing a colour. */
+.k-ratio__value--thin { color: var(--k-smell); }
+.thin-note { font-size: var(--k-fs-xs); color: var(--k-smell); }
 </style>
 </head>
 <body>
 <main class="k-report">
 <header>
-  <p class="k-wordmark">Keel</p>
-  <h1 class="k-display">Grounding report<em>.</em></h1>
-  <p class="k-lede">Every verification edge in <span class="k-mono">mcp-python-sdk</span>,
-     classified by who produces the signal and whether the actor being verified
-     can write to that producer.</p>
-  <table class="k-table">
-    <tr><th>target</th><td class="k-mono">mcp-python-sdk</td></tr>
-    <tr><th>revision</th><td class="k-mono">00a70148bcd39b40ee0b0745e0b468eac0a44efb</td></tr>
-    <tr><th>generated</th><td class="k-mono">2026-07-25T02:55:11.583Z</td></tr>
-  </table>
+  <p class="k-eyebrow">Keel</p>
+  <h1 class="k-display">Corpus grounding ratios</h1>
+  <p class="k-lede">Every verification edge in each repository below was classified by who
+  produces the signal, and whether the actor being verified can write to that producer.</p>
+  <blockquote class="k-callout">A check is only a check if the signal it reads comes from
+  somewhere the thing being checked cannot write to.</blockquote>
+  <p class="k-meta k-mono">generated 2026-07-26T20:32:05.267Z ·
+  6 target(s) measured</p>
 </header>
 
-<div class="kr-split"><div class="k-ratio">
-  <span class="k-ratio__value">1.00</span>
-  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown) = 15 / 15</p>
+<h2 class="k-eyebrow">Pooled across the corpus</h2>
+<div class="k-ratio">
+  <span class="k-ratio__value">0.947</span>
+  <p class="k-ratio__formula">anchored / (anchored + self_referential + unknown)</p>
   <div class="k-meter">
-    <div class="k-meter__seg" data-class="anchored" style="width:100.0000%"></div>
-    <div class="k-meter__seg" data-class="self_referential" style="width:0.0000%"></div>
-    <div class="k-meter__seg" data-class="unknown" style="width:0.0000%"></div>
-
+    <div class="k-meter__seg" data-class="anchored" style="width:94.7%"></div>
+    <div class="k-meter__seg" data-class="self_referential" style="width:4.0%"></div>
+    <div class="k-meter__seg" data-class="unknown" style="width:1.3%"></div>
   </div>
   <div class="k-ratio__counts">
-    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 15</span>
-    <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 0</span>
-    <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 0</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="anchored">anchored</span> 71</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="self_referential">self_referential</span> 3</span>
+    <span class="k-ratio__count"><span class="k-class" data-class="unknown">unknown</span> 1</span>
     <span class="k-ratio__count k-ratio__count--excluded">
-      <span class="k-class" data-class="not_a_check">not_a_check</span> 10
+      <span class="k-class" data-class="not_a_check">not_a_check</span> 75
       <span class="k-meta">excluded from the denominator</span>
     </span>
-
   </div>
 </div>
-<div>
-  <p class="k-eyebrow">Coverage (judged)</p>
-  <table class="k-table k-table--num">
-    <thead><tr><th>node kind</th><th>judged</th></tr></thead>
-    <tbody>
-      <tr><td class="k-mono">ci_step</td><td>16</td></tr>
-      <tr><td class="k-mono">test_target</td><td>8</td></tr>
-      <tr><td class="k-mono">review_gate</td><td>1</td></tr>
 
-    </tbody>
-  </table>
-  <p class="k-meta">Nodes by kind, over the 25 node(s) carried in this
-     report. Surfaces the gatherer cannot read are absent here rather than
-     counted as <span class="k-mono">unknown</span>, which makes non-coverage
-     Keel's own shoppable class — so it is stated, not implied.</p>
-</div>
-</div>
-<div class="k-card kr-section">
-  <p class="k-eyebrow">ε-audit — not run</p>
-  <p>No verdict in this report carries a readable <span class="k-mono">audit</span>
-     block, so nothing was re-decided and there is no agreement rate to report.
-     This is not agreement, and it is not full agreement either: a rate over
-     zero comparisons would state a measurement that was never taken.
-     (&ldquo;Readable&rdquo; is load-bearing: a block can be present and state no
-     comparison, and this state covers that too — see below if so.)</p>
-  <p class="k-meta">This run carries <span class="k-mono">0</span>
-     probe-decided verdict(s), none of them contributing a readable comparison.
-     (&ldquo;Readable&rdquo; rather than &ldquo;audited&rdquo;, because a block
-     can arrive and state nothing — if any did, they are counted below.) Audit
-     coverage is itself shoppable — audit none of the library and no
-     disagreement can ever be found — so the absence is printed here rather
-     than left to be inferred from a missing section.</p>
+<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of verification, not its
+quality. A repo can be 100% anchored with terrible tests. Anchoring says the signal comes
+from outside; it does not say the signal is sufficient.</p>
 
-</div>
+<p class="k-meta">Across 6 repositories. The pooled figure weights each
+repository by how many edges it contributed, so it is not the mean of the column below.
+Both are printed because neither alone is honest: the mean hides size, the pooled figure
+hides spread. <strong>Mean of the 6 target(s) with a denominator:
+0.946</strong>.</p>
 
-<p class="k-callout">This run judged <span class="k-mono">25</span> of <span class="k-mono">121</span> gathered edges. Every number on this page describes that sample, not the whole surface — 96 gathered edges are absent from all of it. A cap is disclosed rather than smoothed: an undisclosed sample is how a ratio gets shopped.</p>
+<hr class="k-rule" />
 
-<p class="k-scope"><strong>Scope.</strong> Keel measures the shape of
-verification, not its quality. A repo can be 100% anchored with terrible
-tests. Anchoring says the signal comes from outside; it does not say the
-signal is sufficient.</p>
+<h2 class="k-eyebrow">By repository</h2>
+<p class="k-meta">The <strong>routes</strong> column is the constructive half. A grounding
+ratio on its own is a diagnosis nobody can act on; a route names, for each ungrounded
+check, an anchored producer <em>the repository already owns</em> and the change that would
+wire it in. Keel never invents an anchor — every proposed producer is a node already
+classified <span class="k-class" data-class="anchored">anchored</span> in that same report,
+and one that does not resolve is refused. Where no route exists the page says so and names
+the decision required instead, because a proposal that raises the number without grounding
+the claim is the failure this project exists to name. Every route is a
+<strong>proposal</strong>: the constructing loop emits, a human admits.</p>
+<table class="k-table k-table--num corpus-table">
+  <thead><tr>
+    <th>target</th><th>ratio</th><th>anchored</th>
+    <th>self_referential</th><th>unknown</th>
+    <th>not_a_check</th><th>coverage (judged)</th><th>routes</th>
+  </tr></thead>
+  <tbody>
+<tr>
+  <td><a href="karaoke-gen.html">karaoke-gen</a>
+      <div class="k-meta k-mono">c94abbf7f44c</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>11 of 11</td>
+  <td>0</td>
+  <td>0</td>
+  <td>14</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 280 — 9% of the surface</div><div><span class="k-tag">ci_step 8</span> <span class="k-tag">test_target 8</span> <span class="k-tag">script 8</span> <span class="k-tag">deploy_gate 1</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+<tr>
+  <td><a href="kody.html">kody</a>
+      <div class="k-meta k-mono">ca183641ebe6</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.846</span></td>
+  <td>11 of 13</td>
+  <td>2</td>
+  <td>0</td>
+  <td>12</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 122 — 20% of the surface</div><div><span class="k-tag">script 9</span> <span class="k-tag">deploy_gate 3</span> <span class="k-tag">test_target 3</span> <span class="k-tag">ci_step 10</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+<tr>
+  <td><a href="binius64.html">binius64</a>
+      <div class="k-meta k-mono">4891fc9b74ca</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.909</span></td>
+  <td>10 of 11</td>
+  <td>0</td>
+  <td>1</td>
+  <td>14</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 37 — 68% of the surface</div><div><span class="k-tag">review_gate 1</span> <span class="k-tag">ci_step 24</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+<tr>
+  <td><a href="xorq.html">xorq</a>
+      <div class="k-meta k-mono">22f03a65e678</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>17 of 17</td>
+  <td>0</td>
+  <td>0</td>
+  <td>8</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 240 — 10% of the surface</div><div><span class="k-tag">ci_step 12</span> <span class="k-tag">test_target 12</span> <span class="k-tag">review_gate 1</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+<tr>
+  <td><a href="aspect-cli.html">aspect-cli</a>
+      <div class="k-meta k-mono">2cb4fec13701</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">1.000</span></td>
+  <td>10 of 10</td>
+  <td>0</td>
+  <td>0</td>
+  <td>15</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 187 — 13% of the surface</div><div><span class="k-tag">ci_step 25</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+<tr>
+  <td><a href="wvlet.html">wvlet</a>
+      <div class="k-meta k-mono">90751f91a666</div></td>
+  <td><span class="k-ratio__value k-ratio__value--inline">0.923</span></td>
+  <td>12 of 13</td>
+  <td>1</td>
+  <td>0</td>
+  <td>12</td>
+  <td>25 judged <div class="k-meta">sampled 25 of 261 — 10% of the surface</div><div><span class="k-tag">script 11</span> <span class="k-tag">test_target 2</span> <span class="k-tag">ci_step 12</span></div></td>
+  <td><span class="k-meta">—</span></td>
+</tr>
+  </tbody>
+</table>
+<p class="k-meta"><code class="k-mono">not_a_check</code> is excluded from the ratio
+entirely, which makes it the one <em>shoppable</em> class: mis-filing a real check there
+shrinks the denominator and inflates the score. It is printed here for exactly that reason.
+<code class="k-mono">unknown</code> fails closed and counts against the ratio like
+<code class="k-mono">self_referential</code>.</p>
 
-<section class="kr-section">
-  <p class="k-eyebrow">Node graph — 25 node(s), in gather order</p>
-  <div class="k-graph">
-    <span class="k-mark" data-class="anchored" title="pre-commit hooks (.pre-commit-config.yaml) — .pre-commit-config.yaml — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.pyright]) — pyproject.toml:150 — anchored (confidence 0.8)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff]) — pyproject.toml:191 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint]) — pyproject.toml:195 — anchored (confidence 0.75)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api]) — pyproject.toml:209 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="linter/type-checker config ([tool.ruff.lint.mccabe]) — pyproject.toml:213 — anchored (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.per-file-ignores]) — pyproject.toml:216 — not_a_check (confidence 0.7)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.ruff.lint.pylint]) — pyproject.toml:223 — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config ([tool.pytest.ini_options]) — pyproject.toml:239 — anchored (confidence 0.7)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.run]) — pyproject.toml:279 — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="coverage config ([tool.coverage.report]) — pyproject.toml:292 — anchored (confidence 0.85)"></span>
-    <span class="k-mark" data-class="not_a_check" title="coverage config ([tool.coverage.paths]) — pyproject.toml:305 — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/transports/stdio/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/server/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/shared/conftest.py — not_a_check (confidence 0.65)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="pytest config (conftest.py) — tests/examples/conftest.py — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="pytest config (conftest.py) — tests/client/conftest.py — not_a_check (confidence 0.6)"></span>
-    <span class="k-mark" data-class="anchored" title="pytest config (conftest.py) — tests/interaction/conftest.py — anchored (confidence 0.6)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/sse-polling-client/pyproject.toml:22 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/sse-polling-client/pyproject.toml:27 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/sse-polling-client/pyproject.toml:31 — anchored (confidence 0.5)"></span>
-    <span class="k-mark" data-class="not_a_check" title="linter/type-checker config ([tool.pyright]) — examples/clients/simple-chatbot/pyproject.toml:33 — not_a_check (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff.lint]) — examples/clients/simple-chatbot/pyproject.toml:38 — anchored (confidence 0.55)"></span>
-    <span class="k-mark" data-class="anchored" data-smell title="linter/type-checker config ([tool.ruff]) — examples/clients/simple-chatbot/pyproject.toml:42 — anchored (confidence 0.5)"></span>
+<hr class="k-rule" />
 
-  </div>
-  <div class="k-legend">
-    <span class="k-legend__item"><span class="k-mark" data-class="anchored"></span> anchored 15</span>
-    <span class="k-legend__item"><span class="k-mark" data-class="not_a_check"></span> not_a_check 10</span>
-
-  </div>
-  <p class="k-meta">5 marks are ringed in the unknown hue: an anchored verdict asserted below confidence 0.6. The ring says the claim is closer to unknown than its colour suggests. Hover a mark for its node.</p>
-</section>
-
-<section class="kr-section">
-  <p class="k-eyebrow">anchored — 15</p>
-  <p class="k-meta">The producer sits outside the write boundary of the actor being verified.</p>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pre-commit hooks (.pre-commit-config.yaml)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">.pre-commit-config.yaml · review_gate</div>
-    <p class="k-argument">This manifest is not merely a client-side git hook here: shared.yml&#39;s `pre-commit` job runs `pre-commit/action` with `--all-files`, and that job feeds `checks` -&gt; `all-green` (main.yml:16-23), so its exit code is on the merge path and cannot be skipped with `git commit --no-verify`. The substantive local hooks execute pinned tools over the committed tree — `uv run --frozen pyright` returns non-zero when its own analysis of the source finds a type error, and `uv run --frozen ruff check --fix --exit-non-zero-on-fix` returns non-zero when the linter both rewrites and reports; `uv lock --check` recomputes the resolution from pyproject.toml and fails when uv.lock does not match it. None of those verdicts can be flipped by an author writing a status anywhere; only by changing the source or the pinned config. Two documented limits: (a) the `readme-snippets` hook runs `scripts/update_readme_snippets.py --check`, which only diffs README code blocks against `docs_src/*.py` — two artefacts the same authors write, so that sub-edge is self-referential paperwork-against-paperwork and would stay green if both drifted together; (b) the remote hooks (`pre-commit-hooks`, `mirrors-prettier`, `markdownlint-cli`) are pinned by mutable tag `rev:`, not by digest, so their implementations live outside this repo.</p>
-    <p class="kr-line">producer <span class="k-mono">the exit codes of the hook binaries pre-commit shells out to (ruff, pyright, uv), plus pre-commit&#39;s own detection that a hook modified a tracked file</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>.pre-commit-config.yaml:31-64</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-      <li>.github/workflows/main.yml:13-23</li>
-      <li>scripts/update_readme_snippets.py:1-10</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:150 · ci_step</div>
-    <p class="k-argument">This is the root-project pyright config, and pyright is actually executed on the merge path: the `pyright` local hook in .pre-commit-config.yaml runs `uv run --frozen pyright` with `pass_filenames: false`, and pre-commit runs `--all-files` inside the CI `pre-commit` job. `typeCheckingMode = &quot;strict&quot;` plus `include = [src, tests, docs_src, examples/...]` is what turns an inference failure in those trees into a non-zero exit, and that verdict is computed by the pinned pyright binary from the source text — an author cannot make an ill-typed file report clean by asserting anything. Documented limit: this table emits no signal itself, and the scope it declares is author-controlled (the `executionEnvironments` entries switch off reportUnusedFunction and reportPrivateUsage for tests/examples), so the execution axis is anchored while what gets enforced sits inside the write boundary.</p>
-    <p class="kr-line">producer <span class="k-mono">the pyright process exit code — a type checker parsing the checked-out source under this table&#39;s settings</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:150-189</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.8</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:191 · ci_step</div>
-    <p class="k-argument">`line-length = 120` is the threshold ruff&#39;s pycodestyle E501 rule compares against, and `E` is in the selected rule set (pyproject.toml:195-207); `target-version = &quot;py310&quot;` is what the selected `UP` (pyupgrade) rules rewrite/report against. Ruff runs on the merge path via the `ruff` pre-commit hook (`ruff check --fix --exit-non-zero-on-fix`) inside the CI pre-commit job, so a 121-character line makes that job exit non-zero. The producer is the linter binary reading the committed file, not a claim the repo makes about itself. Documented limit: the number itself is author-editable, and the table on its own emits nothing — it parameterizes a check that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code, computed from the source text under this table&#39;s line-length and target-version settings</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:191-193</li>
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:195 · ci_step</div>
-    <p class="k-argument">`select = [C4, C90, D212, E, F, I, PERF, UP, TID251]` is precisely the list of analyses that can fail the CI `pre-commit` job, which runs `uv run --frozen ruff check --fix --exit-non-zero-on-fix` over all files. An unused import (F401) or an unsorted import block (I001) is detected by ruff parsing the committed source, so an author cannot make a violating file report clean without editing the file or editing this list. Documented limit: editing this list is exactly the escape hatch — the rule set is inside the write boundary even though each verdict is produced outside it; and `ignore = [&quot;PERF203&quot;]` is a suppression this table also carries.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this table is the enabled rule set whose violations produce that non-zero exit</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:195-207</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>.github/workflows/shared.yml:40-42</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.75</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.flake8-tidy-imports.banned-api])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:209 · ci_step</div>
-    <p class="k-argument">`TID251` appears in `[tool.ruff.lint].select`, so this banned-api entry is live: ruff parses the import graph of the committed source and exits non-zero on any `pydantic.RootModel` reference outside the per-file exemption for generated validators. The producer is the linter executing over the file, and the check runs on the merge path through the pre-commit CI job. Documented limit: the ban list is author-editable and one directory is already exempted via per-file-ignores, so the scope of enforcement lives inside the boundary while each individual verdict does not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule TID251, which is in the selected rule set</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:209-211</li>
-      <li>pyproject.toml:195-207</li>
-      <li>pyproject.toml:216-221</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.mccabe])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:213 · ci_step</div>
-    <p class="k-argument">`C90` is in `select`, so this table&#39;s `max-complexity = 24` is the threshold ruff compares a computed cyclomatic-complexity number against; a function above it fails the CI pre-commit job. The complexity number is derived by the linter from the code&#39;s branch structure, not declared by the author. Documented limit, and it is a large one: the threshold was raised from the default 10 to 24, so the enforced bar is set inside the write boundary even though the measurement is not.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule C901 (mccabe), computed by walking the AST of the committed source</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:213-214</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config ([tool.pytest.ini_options])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:239 · test_target</div>
-    <p class="k-argument">This table is what makes the CI test run strict rather than advisory: `filterwarnings = [&quot;error&quot;]` promotes any warning emitted at runtime into a raised exception that fails the test, and `xfail_strict = true` fails the run when a test marked xfail unexpectedly passes. Both conditions are decided by the interpreter while the code actually executes in `coverage run -m pytest -n auto` (shared.yml:104), across the 3.10-3.14 x {ubuntu, windows} x {locked, lowest-direct} matrix, and that job gates the merge through `all-green`. An author cannot suppress a real DeprecationWarning by declaring anything; only by fixing the code or adding an explicit ignore entry here. Two documented limits: the four `ignore:` entries are exactly such author-authored suppressions, and the deeper oracle limit applies to the suite this configures — execution is anchored, but the assertions were written by the same people as the implementation.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest process exit code, produced by the CPython runtime executing the suite under these settings</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:239-277</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-      <li>.github/workflows/main.yml:16-23</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.run])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:279 · ci_step</div>
-    <p class="k-argument">This table decides what the enforced 100% gate is measured over: `branch = true` adds branch arcs to the denominator, and `source = [src, src/mcp-types/mcp_types, tests]` puts the whole library and the test tree in scope, so an unexecuted line or an untaken branch arc anywhere in those trees drops the number below `fail_under = 100` and fails `coverage report` in shared.yml. The coverage figure is produced by the interpreter&#39;s trace callback while the code runs — an author cannot mark a line covered without executing it. Documented limits: the four-entry `omit` list is a suppression that shrinks the measured surface, and coverage measures REACH, not correctness; a fully-covered line can still be wrong.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s tracer, recording which lines and branch arcs the CPython interpreter actually executed during the CI pytest run</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:279-290</li>
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.report])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:292 · ci_step</div>
-    <p class="k-argument">`fail_under = 100` is the gate condition itself: `uv run coverage report` in the CI test job exits non-zero whenever the combined trace shows any measured line or branch arc that the interpreter did not execute, and that job reaches the merge through `checks` -&gt; `all-green`. The number is not a field anyone writes — it is derived by coverage.py from what actually ran, so the only way to raise it is to execute the code. Documented limits: (a) coverage measures REACH, not correctness — 100% says every line ran, never that any assertion about it was right; (b) `exclude_also` (and the `omit` list in [tool.coverage.run]) are author-controlled exclusions that shrink the denominator, which is why the repo pairs this with a `strict-no-cover` step that fails when a `# pragma: no cover` line IS executed.</p>
-    <p class="kr-line">producer <span class="k-mono">coverage.py&#39;s process exit code, computed from the line/branch execution trace collected by the interpreter during the test run</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:292-303</li>
-      <li>.github/workflows/shared.yml:102-110</li>
-      <li>.github/workflows/main.yml:16-23</li>
-      <li>AGENTS.md: &quot;CI requires 100% (fail_under = 100, branch = true)&quot;</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.85</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/examples/conftest.py · test_target</div>
-    <p class="k-argument">Unlike the other conftests in this sample, this one authors a failing condition of its own: `pytest.mark.xfail(strict=True, ...)` at line 102 makes an unexpectedly-PASSING leg fail the run, so a story listed as broken in `manifest.toml` that starts working red-lines CI until the manifest is updated. It also imports each story&#39;s server/client module for real (`importlib.import_module`) across the (variant x transport x era) expansion, so a signature break surfaces as a collection error decided by the interpreter, not by any claim in the repo. The whole expansion executes inside `coverage run -m pytest -n auto` in shared.yml, which gates the merge. Documented limits: the matrix itself (`manifest.toml` defaults, the `xfail` list) is authored inside the write boundary, and the oracle limit applies — execution is anchored, the assertions in the story bodies were written by the same authors as the SDK.</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime executing the expanded story matrix — including the strict-xfail arcs this file attaches</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>tests/examples/conftest.py:95-105</li>
-      <li>tests/examples/conftest.py:60-93</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored">anchored</span></span>
-    <div class="k-verdict__source k-mono">tests/interaction/conftest.py · test_target</div>
-    <p class="k-argument">This conftest does verify: `_assert_never_stamped` (line 88) asserts that a handshake-era result carries no `SERVER_INFO_META_KEY`, and the modern branch routes through `tests._stamp.unstamped`, whose contract is that the stamp MUST be present. Every interaction test that compares a full result runs one of those two assertions, and the failure is raised by the interpreter while the real client/server pair is exercised over the parametrized (transport, spec_version) cells that `pytest_generate_tests` computes from `REQUIREMENTS`. The run happens in `coverage run -m pytest` in shared.yml and gates the merge. Documented limits: the requirement manifest that drives the cells — including its declared xfails — is authored in-repo, and the oracle limit stands (execution decides, but the SDK authors wrote the expectation).</p>
-    <p class="kr-line">producer <span class="k-mono">the pytest runtime raising AssertionError from the era-aware stamp assertions this module installs into every interaction test</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>tests/interaction/conftest.py:80-91</li>
-      <li>tests/interaction/conftest.py:63-70</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:27 · ci_step</div>
-    <p class="k-argument">The CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` over the whole tree with `pass_filenames: false`, and ruff resolves settings hierarchically — for files under this directory the nearest pyproject.toml with a `[tool.ruff]` section wins. `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` therefore means an undefined name (F821) or an unsorted import block in this example fails the merge-gating job, with the verdict computed by the linter from the source text. Documented limits: the enforced set here is NARROWER than the root&#39;s (no C90/UP/TID251/PERF), so this table&#39;s net effect on this subtree is relaxation as much as enforcement; and confidence is moderate because it depends on ruff&#39;s hierarchical resolution rather than on an explicit per-example CI step.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — ruff resolves the closest config to each file, so this table is the live rule set for this example&#39;s sources during the repo-wide run</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207 (root select, superset)</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:31 · ci_step</div>
-    <p class="k-argument">`E` is selected in the sibling `[tool.ruff.lint]` table, so `line-length = 120` is the number ruff compares each line of this example against during the repo-wide `ruff check` in the CI pre-commit job; `target-version = &quot;py310&quot;` sets the syntax level the parser accepts. The failing condition is produced by the linter reading the file. Documented limits: the values duplicate the root config, so the marginal enforcement this table adds is nil; and it emits no signal itself — it parameterizes a run that happens elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501, whose threshold is this table&#39;s line-length, applied to this subtree by ruff&#39;s nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:31-33</li>
-      <li>examples/clients/sse-polling-client/pyproject.toml:27-29</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:38 · ci_step</div>
-    <p class="k-argument">Ruff picks the closest `[tool.ruff]`-bearing config for each file, so `select = [&quot;E&quot;, &quot;F&quot;, &quot;I&quot;]` governs this example&#39;s sources when the CI pre-commit job runs `ruff check --fix --exit-non-zero-on-fix` across the tree. A pyflakes error or an unsorted import in this package fails that job, and the verdict is the linter&#39;s reading of the source, not a claim the repo makes. Documented limits: this set is narrower than the root&#39;s, so the table also relaxes what would otherwise apply; and confidence is moderate because it depends on ruff&#39;s hierarchical config resolution rather than on a dedicated CI step for this package.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code — this is the rule set ruff resolves for this example&#39;s files during the repo-wide check</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>.pre-commit-config.yaml:40-46</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="anchored" data-smell>anchored</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:42 · ci_step</div>
-    <p class="k-argument">With `E` selected in the sibling lint table, `line-length = 120` is the threshold ruff enforces on this example&#39;s files during the merge-gating `ruff check` run, and `target-version = &quot;py310&quot;` fixes the syntax level. The failing condition is computed by the linter from the file&#39;s bytes. Documented limits: the values are identical to the root config so the table adds no enforcement the root would not already provide, and the table itself produces no signal — it configures a tool that runs elsewhere.</p>
-    <p class="kr-line">producer <span class="k-mono">the ruff process exit code via rule E501 under this table&#39;s line-length, applied to this subtree by nearest-config resolution</span> — actor can write to it: <span class="k-mono">no</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:42-44</li>
-      <li>examples/clients/simple-chatbot/pyproject.toml:38-40</li>
-      <li>pyproject.toml:191-193</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.5</span> · <span class="kr-smell">confidence below 0.6 on an anchored verdict</span>
-</p>
-
-  </div>
-
-</section>
-
-<section class="kr-section">
-  <p class="k-eyebrow">not_a_check — 10</p>
-  <p class="k-meta">Asserts nothing about correctness, so it is excluded from the denominator. This is the one shoppable class: mis-filing a real check here shrinks the denominator and inflates the score, so each row carries the same burden of argument as any other verdict.</p>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.per-file-ignores])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:216 · ci_step</div>
-    <p class="k-argument">Every entry here is a suppression: F401 for `__init__.py`, six codes for the generated mcp-types validators, E501 and PLW0603 for two test modules. It can only prevent ruff from reporting a violation; there is no configuration of this table that causes a run to fail that would otherwise pass, so it emits no pass/fail signal of any kind. It is filed here rather than as a check because it asserts nothing about correctness — not because it was hard to trace; the enforced side of ruff is captured by the `select` table, which is judged separately, and mis-filing this as a check would put a pure escape hatch in the numerator.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the table only removes rule codes from consideration for four path globs</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:216-221</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.7</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.ruff.lint.pylint])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:223 · ci_step</div>
-    <p class="k-argument">`select` at pyproject.toml:195-207 enables C4, C90, D212, E, F, I, PERF, UP and TID251. No `PL*` code is selected, so ruff never runs the pylint-family rules these values configure (`max-args`, `max-branches`, `max-returns`, `max-statements`, `allow-magic-value-types`). The table is inert on the CI path: no value in it can make `ruff check` exit non-zero, and raising or lowering any of these numbers changes no outcome. Recorded as not_a_check on that specific, checkable ground rather than as `unknown` — the fork point is fully traceable, and the honest statement is that there is no signal here at all.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — these settings parameterize ruff&#39;s `PL` rules, and `PL` is not in the selected rule set</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:223-228</li>
-      <li>pyproject.toml:195-207</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">coverage config ([tool.coverage.paths])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">pyproject.toml:305 · ci_step</div>
-    <p class="k-argument">The three entries are the same tree seen from three machines (local `src/`, the Linux runner&#39;s `/home/runner/work/...`, the Windows runner&#39;s `D:\a\...`). It declares no threshold and enables no analysis; its only effect is that data files from different runners resolve to one set of files during `coverage combine`. There is no content for this table that fails a run on its own — the failing condition lives in `[tool.coverage.report].fail_under`, judged separately — so it asserts nothing about correctness.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the table maps runner-specific absolute paths onto the repo-relative `src/` prefix so `coverage combine` can merge data files</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>pyproject.toml:305-310</li>
-      <li>.github/workflows/shared.yml:105</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/conftest.py · test_target</div>
-    <p class="k-argument">Read in full (68 lines, no `assert`, no `pytest.fail`, no `raise`), this file only supplies the suite&#39;s execution context: it pins the anyio backend to asyncio, holds a module-scoped runner lease to cap event-loop churn on Windows, and scopes the OTel tracer so span capture does not leak between tests. It emits no pass/fail verdict — the gating signal for this suite is the `coverage run -m pytest` step in shared.yml, which the gatherer surfaced as its own node (in the 121 gathered, outside this 25-node sample). Filing the fixture module as a check would double-count that same pytest exit code under a second node.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module sets one environment variable and defines three pytest fixtures (`anyio_backend`, `_module_runner_lease`, a `capfire` override)</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/conftest.py:1-68</li>
-      <li>grep &#39;assert|raise|pytest.fail&#39; tests/conftest.py -&gt; only prose in docstrings</li>
-      <li>.github/workflows/shared.yml:96-106</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/transports/stdio/conftest.py · test_target</div>
-    <p class="k-argument">Both fixtures monkeypatch a seam and then call straight through to the real `_create_platform_compatible_process` / `_terminate_process_tree`, recording the calls into a list for tests to inspect; the file contains no assertion of its own (77 lines, zero `assert`). The verdicts about stdio lifecycle are produced by the test bodies that read those lists, running under the CI pytest step. `_kill_spawn_groups` is a reaper, not an oracle: it prevents orphaned subprocesses from a crashed test and cannot itself fail a run.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines two recording fixtures (`spawned_processes`, `terminate_calls`) and a teardown that SIGKILLs leaked process groups</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/transports/stdio/conftest.py:1-77</li>
-      <li>tests/transports/stdio/conftest.py:61-77</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/server/conftest.py · test_target</div>
-    <p class="k-argument">`finished()` filters exported spans down to the `mcp-python-sdk` instrumentation scope and hands the list to the test; the fixture clears the exporter before and after each test. 46 lines, no assertion. It makes span assertions POSSIBLE but performs none, so no configuration of this file can turn a passing run red on its own — the pass/fail comes from the server tests that call `spans.finished()` inside the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpanCapture` adapter over logfire&#39;s in-memory `TestExporter` and one `spans` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/server/conftest.py:1-46</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/shared/conftest.py · test_target</div>
-    <p class="k-argument">It determines WHAT runs — every contract test using `pair_factory` executes twice, once per implementation — but it verifies nothing itself: 61 lines, no assertion, no strict xfail. Widening a matrix is not a verdict; the verdicts are the assertions in the dispatcher contract tests, produced by the interpreter during the CI pytest run. Filing it as a check would credit the numerator for test scaffolding.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module builds two `Dispatcher` pairs (direct and JSONRPC-over-memory-streams) and exposes them as a parametrized `pair_factory` fixture</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/shared/conftest.py:1-61</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.65</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">pytest config (conftest.py)</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">tests/client/conftest.py · test_target</div>
-    <p class="k-argument">The spy forwards every message to the original stream and records it so tests can inspect what was sent; the two `assert` statements at lines 131-132 are internal plumbing guards (`client_spy was not initialized`) that fire only when the fixture is used out of order, and the `assert len(requests) == 1` at line 92 is inside a docstring example, not executed. Nothing here asserts anything about the SDK&#39;s behaviour — the client tests that read `spies.get_client_requests(...)` do, under the CI pytest step.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing — the module defines a `SpyMemoryObjectSendStream` wrapper and a `stream_spy` fixture that patches `create_client_server_memory_streams`</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>tests/client/conftest.py:1-135</li>
-      <li>tests/client/conftest.py:92</li>
-      <li>tests/client/conftest.py:131-132</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.6</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/sse-polling-client/pyproject.toml:22 · ci_step</div>
-    <p class="k-argument">Pyright reads its configuration from the project root it is executed in; it does not do per-directory config discovery the way ruff does. The only pyright invocation on the merge path is the pre-commit local hook `uv run --frozen pyright` with `pass_filenames: false`, which runs at the repo root and therefore uses the ROOT `[tool.pyright]` table (whose `include` already covers `examples/clients`). No workflow step changes directory into this example, and no per-example CI job exists (grep of .github/workflows for `examples` returns only a comment about a smoke-test env var). So `venvPath = &quot;.&quot;` / `venv = &quot;.venv&quot;` here describe a local editor/dev environment; no value in this table can make any CI job exit non-zero. Confidence is held down because this rests on pyright&#39;s config-resolution semantics rather than on a line I can point at in a workflow.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/sse-polling-client/pyproject.toml:22-26</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
-      <li>grep -rn &#39;examples&#39; .github/workflows/ -&gt; shared.yml:99 (comment only)</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
-
-  </div>
-  <div class="k-verdict">
-    <div class="k-verdict__name k-mono">linter/type-checker config ([tool.pyright])</div>
-    <span class="k-verdict__class"><span class="k-class" data-class="not_a_check">not_a_check</span></span>
-    <div class="k-verdict__source k-mono">examples/clients/simple-chatbot/pyproject.toml:33 · ci_step</div>
-    <p class="k-argument">Same fork point as the sibling example package: the only merge-gating pyright run is the repo-root pre-commit hook `uv run --frozen pyright` (`pass_filenames: false`), which reads the ROOT `[tool.pyright]` table; pyright does not walk down into nested pyproject.toml files for configuration the way ruff does, and no workflow job cds into `examples/clients/*`. This table&#39;s `include`/`venvPath`/`venv` therefore describe a local per-example virtualenv for an editor or a manual run, and no value in it can change any CI outcome. Confidence held down because the claim rests on pyright&#39;s config-resolution behaviour rather than on an explicit workflow line.</p>
-    <p class="kr-line">producer <span class="k-mono">nothing on the CI path — no pipeline step invokes pyright with this directory as its project root</span> — actor can write to it: <span class="k-mono">not established</span></p>
-    <ul class="kr-ev">
-      <li>examples/clients/simple-chatbot/pyproject.toml:33-36</li>
-      <li>.pre-commit-config.yaml:47-52</li>
-      <li>pyproject.toml:150-160</li>
-
-    </ul>
-    <p class="kr-line">decided by <span class="k-mono">agent</span> · confidence <span class="k-mono">0.55</span></p>
-
-  </div>
-
-</section>
-
-<section class="kr-section">
-  <!-- KEEL:CURVE -->
-  <p class="k-eyebrow">Crystallization curve</p>
-  <div class="kr-curve">
+<section><h2 class="k-eyebrow">Crystallization curve</h2>
+<p class="k-scope">Cost per node against corpus run index. The run order is part of the
+measurement — the curve is a claim about ordered probe accumulation, so a reshuffle
+changes it by design. If cost per node does not fall, that is published as-is.</p>
 <svg class="keel-curve" xmlns="http://www.w3.org/2000/svg" width="1080" height="1510" viewBox="0 0 1080 1510" role="img" aria-labelledby="keel-curve-title keel-curve-desc" style="max-width:100%;height:auto">
 <title id="keel-curve-title">Keel crystallization curve</title>
 <desc id="keel-curve-desc">Crystallization curve over 15 runs from &lt;repo&gt;/reports. falls — total fitted change -66.5% of the mean across 15 runs (R^2 0.28, so the line explains less than half the variance — read the raw squares)</desc>
@@ -1449,55 +1009,23 @@ signal is sufficient.</p>
 <text class="kc-scope" x="32" y="1466">Scope. Keel measures the shape of verification, not its quality. A repo can be 100% anchored with terrible tests. Anchoring says</text>
 <text class="kc-scope" x="32" y="1482">the signal comes from outside; it does not say the signal is sufficient.</text>
 </svg>
-
-  </div>
-
 </section>
 
-<section class="kr-section">
-  <p class="k-eyebrow">Run economics</p>
-  <div class="k-econ">
-    <div class="k-econ__stat">
-      <span class="k-econ__value">0</span>
-      <span>decided by probe</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">25</span>
-      <span>decided by agent</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">0%</span>
-      <span>probe-decided share</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">25 / 121</span>
-      <span>nodes judged / gathered</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">7,501</span>
-      <span>estimated tokens in</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">7,309</span>
-      <span>estimated tokens out</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">8m 24s</span>
-      <span>wall clock</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">1</span>
-      <span>probes minted</span>
-    </div>
-    <div class="k-econ__stat">
-      <span class="k-econ__value">13</span>
-      <span>probe library size</span>
-    </div>
 
-  </div>
-  <p class="k-meta">Token counts are estimated, and labelled so: a skill running inside an agent session has no API for its own usage, so the figure is ceil(chars/4) over the judgment payloads and responses. Wall clock and probe-decided share are measured directly. 25 of 121 gathered edges were judged — the cap is printed here and beside the ratio, never applied silently.</p>
+
+
+
+<section>
+  <h2 class="k-eyebrow">Reproducing this</h2>
+  <p class="k-scope">Every target is pinned to a revision (shown under its name). The corpus
+  ran sequentially in a recorded order, because the crystallization curve measures ordered
+  probe-library growth and a parallel run would destroy the signal being measured.</p>
+  <pre class="k-mono k-code">npx skills add broomva/keel</pre>
 </section>
 
+<footer class="k-meta">
+  <p class="k-scope">Run order: <span class="k-mono">karaoke-gen → kody → binius64 → xorq → aspect-cli → wvlet</span></p>
+</footer>
 </main>
 </body>
 </html>
