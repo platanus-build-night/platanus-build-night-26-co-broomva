@@ -741,7 +741,43 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
      counted as <span class="k-mono">unknown</span>, which makes non-coverage
      Keel's own shoppable class — so it is stated, not implied.</p>
 </div>
-</div>
+<div class="k-card">
+<p class="k-eyebrow">Unread surfaces — 1 unread, 1 read-but-silent, 35 unreadable</p>
+<p>1 surface was recognised by name and never opened — this gatherer has no parser for them. They contributed no node, no verdict and no denominator, so the ratio beside this card describes what could be read, not this target. A repo whose real verification lives in one of these scores like a repo with none.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>tool</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">.githooks/</td><td>git hooks</td></tr>
+    </tbody>
+</table>
+<p class="k-meta">1 CI definition was opened by a parser here and produced nothing. The file was read; the reader came back empty. That is a gap in this gatherer, not a fact about the target.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>reader</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">.github/workflows/security.yml</td><td class="k-mono">workflow-steps</td></tr>
+    </tbody>
+</table>
+<p>35 surfaces were attempted and could not be read — the walk could not enumerate a directory, or stopped at its depth limit, or a parser threw partway through a file. Whatever was inside is absent from every number on this page, and this run cannot say what it was. A read failure is not an empty tree, and it is the one confusion this card exists to prevent.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>attempted by</th><th>why it stopped</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/sk/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/pl/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/vi/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/sv/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/he/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/ms/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/app/jobs/local/instrumental</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/app/jobs/local/review</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/da/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/ja/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/el/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">karaoke_gen/nextjs_frontend/out/it/app/jobs/local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+    </tbody>
+</table>
+<p class="k-meta">23 further unreadable path(s) are not listed here. The full list is in the coverage record beside this report.</p>
+<p class="k-meta">From a gather of <span class="k-mono">/tmp/kc/karaoke-gen</span> (280 edges gathered).</p>
+</div></div>
 <div class="k-card kr-section">
   <p class="k-eyebrow">ε-audit — not run</p>
   <p>No verdict in this report carries a readable <span class="k-mono">audit</span>

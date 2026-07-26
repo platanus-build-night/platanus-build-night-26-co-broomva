@@ -740,7 +740,33 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
      counted as <span class="k-mono">unknown</span>, which makes non-coverage
      Keel's own shoppable class — so it is stated, not implied.</p>
 </div>
-</div>
+<div class="k-card">
+<p class="k-eyebrow">Unread surfaces — 2 unread, 9 unreadable</p>
+<p>2 surfaces were recognised by name and never opened — this gatherer has no parser for them. They contributed no node, no verdict and no denominator, so the ratio beside this card describes what could be read, not this target. A repo whose real verification lives in one of these scores like a repo with none.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>tool</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">justfile</td><td>Just</td></tr>
+      <tr><td class="k-mono">flake.nix</td><td>Nix flake</td></tr>
+    </tbody>
+</table>
+<p>9 surfaces were attempted and could not be read — the walk could not enumerate a directory, or stopped at its depth limit, or a parser threw partway through a file. Whatever was inside is absent from every number on this page, and this run cannot say what it was. A read failure is not an empty tree, and it is the one confusion this card exists to prevent.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>attempted by</th><th>why it stopped</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">python/xorq/backends/xorq_datafusion/tests/snapshots/test_cache</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/backends/sqlite/tests/snapshots/test_udf</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_packager/test_sdist_path_hexdigest</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_build_file_stability_https</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_generated_name_sanitization_memtable</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_build_file_stability_local</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_artifact_store_expr_hash</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_generated_name_sanitization_parquet</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">python/xorq/ibis_yaml/tests/snapshots/test_compiler/test_build_file_stability_and_relocatability</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+    </tbody>
+</table>
+<p class="k-meta">From a gather of <span class="k-mono">/tmp/kc/xorq</span> (240 edges gathered).</p>
+</div></div>
 <div class="k-card kr-section">
   <p class="k-eyebrow">ε-audit — not run</p>
   <p>No verdict in this report carries a readable <span class="k-mono">audit</span>

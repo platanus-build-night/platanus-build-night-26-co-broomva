@@ -82,7 +82,7 @@ import {
   type RunEconomics,
   type Verdict,
 } from '../schemas/keel.ts';
-import { gather } from './gather.ts';
+import { type GatherCoverage, gatherWithCoverage } from './gather.ts';
 
 // ---------------------------------------------------------------------------
 // Layout
@@ -184,6 +184,8 @@ interface PendingRun {
   nodesSampled: number;
   capped: boolean;
   coverageGathered: Record<string, number>;
+  /** surfaces recognised and not read — written beside the report at record time */
+  gatherCoverage?: GatherCoverage;
   nodes: Node[];
   probeDecided: Verdict[];
   probeWarnings: string[];
@@ -1122,7 +1124,13 @@ async function prepare(
   const cloneMs = Date.now() - t0;
 
   const t1 = Date.now();
-  const all = gather(clonePath);
+  // gatherWithCoverage, not gather: the coverage record is the ONLY statement a
+  // report makes about surfaces the gatherer recognised and could not read, and
+  // discarding it here is how a corpus number ends up describing the residue of
+  // a repo rather than the repo. aspect-cli is the worked example — its
+  // `.buildkite/pipeline.yaml` carries a gate the repo documents as existing
+  // nowhere else, and no verdict in its report can mention it.
+  const { nodes: all, coverage } = gatherWithCoverage(clonePath);
   const gatherMs = Date.now() - t1;
 
   const sampled = sampleNodes(all, cap);
@@ -1146,6 +1154,7 @@ async function prepare(
     nodesSampled: sampled.length,
     capped: all.length > sampled.length,
     coverageGathered: coverageByKind(all),
+    gatherCoverage: coverage,
     nodes: pendingNodes,
     probeDecided: probe.decided,
     probeWarnings: probe.warnings,
@@ -1592,6 +1601,14 @@ function cmdRecord(name: string, opts: RecordOpts): void {
   const reportWritten = verdicts.length > 0;
   if (reportWritten) {
     writeJson(reportPathFor(name, mode), report);
+    // The coverage sibling render.ts looks for with no --coverage flag:
+    // `<report>.coverage.json`. Written here rather than folded into the Report
+    // because `schemas/keel.ts` is frozen and has no field for it — the sibling
+    // is the same side-channel the standalone renderer already uses, so a
+    // corpus artifact and a hand-run one carry blindness identically.
+    if (pending.gatherCoverage) {
+      writeJson(reportPathFor(name, mode).replace(/\.json$/, '.coverage.json'), pending.gatherCoverage);
+    }
   } else {
     warnings.push(
       `no ${reportPathFor(name, mode)} was written ON PURPOSE: a Report must carry a grounding ratio, and the only ratio zero verdicts could produce is 0.000 — a claim about a surface nobody judged`,

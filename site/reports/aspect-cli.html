@@ -738,7 +738,44 @@ code, kbd, samp, pre { font-family: var(--k-font-mono); }
      counted as <span class="k-mono">unknown</span>, which makes non-coverage
      Keel's own shoppable class — so it is stated, not implied.</p>
 </div>
-</div>
+<div class="k-card">
+<p class="k-eyebrow">Unread surfaces — 43 unread, 1 read-but-silent, 2 unreadable</p>
+<p>43 surfaces were recognised by name and never opened — this gatherer has no parser for them. They contributed no node, no verdict and no denominator, so the ratio beside this card describes what could be read, not this target. A repo whose real verification lives in one of these scores like a repo with none.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>tool</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">.buildkite/</td><td>Buildkite</td></tr>
+      <tr><td class="k-mono">tools/lint/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">tools/gazelle/BUILD</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">tools/format/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">tools/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/starbuf-derive/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/axl-docgen/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/example-tui/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/build-event-stream/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/aspect-cli/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/basil/BUILD.bazel</td><td>Bazel</td></tr>
+      <tr><td class="k-mono">crates/aspect-telemetry/BUILD.bazel</td><td>Bazel</td></tr>
+    </tbody>
+</table>
+<p class="k-meta">31 further unread path(s) are not listed here. The full list is in the coverage record beside this report.</p>
+<p class="k-meta">1 CI definition was opened by a parser here and produced nothing. The file was read; the reader came back empty. That is a gap in this gatherer, not a fact about the target.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>reader</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">.gitlab-ci.yml</td><td class="k-mono">workflow-steps</td></tr>
+    </tbody>
+</table>
+<p>2 surfaces were attempted and could not be read — the walk could not enumerate a directory, or stopped at its depth limit, or a parser threw partway through a file. Whatever was inside is absent from every number on this page, and this run cannot say what it was. A read failure is not an empty tree, and it is the one confusion this card exists to prevent.</p>
+<table class="k-table">
+    <thead><tr><th>surface</th><th>attempted by</th><th>why it stopped</th></tr></thead>
+    <tbody>
+      <tr><td class="k-mono">crates/aspect-cli/src/builtins/aspect/private/lib</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+      <tr><td class="k-mono">crates/aspect-cli/src/builtins/aspect/private/feature</td><td class="k-mono">walk</td><td>walk depth limit (6) reached — nothing at or below this path was visited</td></tr>
+    </tbody>
+</table>
+<p class="k-meta">From a gather of <span class="k-mono">/tmp/kc/aspect-cli</span> (187 edges gathered).</p>
+</div></div>
 <div class="k-card kr-section">
   <p class="k-eyebrow">ε-audit — not run</p>
   <p>No verdict in this report carries a readable <span class="k-mono">audit</span>
