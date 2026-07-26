@@ -512,3 +512,84 @@ describe('corpus · the mixed-cap warning reaches entries written before entry.c
     expect(st.stdout).toContain('entries were recorded under different caps (2, 25)');
   }, 60_000);
 });
+
+/**
+ * ONE CORPUS FILE, ONE SUMMARY.
+ *
+ * `--corpus <path>` exists so a differently-constituted corpus can be run —
+ * agent-maintained targets against the human-maintained fifteen, which is the
+ * whole point of the flag. The summary path was a module CONSTANT, so the second
+ * run appended into the first one's artifact: two populations and two
+ * methodologies averaged into one pooled ratio that describes neither.
+ *
+ * It is the quietest possible corruption. The file stays valid JSON, every entry
+ * is individually true, and the only symptom is that a published number moves.
+ * The original corpus additionally depends on a recorded ORDER — the
+ * crystallization curve is a claim about cost falling as the probe library
+ * grows — so interleaving a second corpus's entries destroys a result that
+ * cannot be recovered from the merged file.
+ *
+ * Derivation is the fix rather than a flag, because a flag can be forgotten and
+ * a derivation cannot.
+ */
+describe('corpus · a second corpus file cannot write into the first summary', () => {
+  const workspace = tree({
+    'corpus.json': JSON.stringify({ nodeCap: 25, targets: [] }),
+    'corpus-agentic.json': JSON.stringify({ nodeCap: 25, targets: [] }),
+    // A summary in the shape the committed one has, belonging to corpus.json.
+    'reports/corpus-summary.json': JSON.stringify({
+      generatedAt: '2026-07-25T00:00:00.000Z',
+      corpusFile: '<repo>/corpus.json',
+      nodeCap: 25,
+      corpusOrder: ['alpha'],
+      runOrder: ['alpha'],
+      entries: [
+        {
+          name: 'alpha',
+          url: 'https://example.invalid/alpha.git',
+          revision: 'a'.repeat(40),
+          status: 'ok',
+          runIndex: 0,
+          ratio: 1,
+          anchored: 3,
+          selfReferential: 0,
+          unknown: 0,
+          notACheck: 1,
+          nodesTotal: 4,
+          nodesSampled: 4,
+          nodesJudged: 4,
+          capped: false,
+          cap: 25,
+        },
+      ],
+      totals: {},
+      notes: [],
+    }),
+  });
+  const env = { ...(process.env as Record<string, string>), KEEL_REPO_ROOT: workspace };
+
+  test('the second corpus starts empty instead of inheriting the first run order', async () => {
+    const r = await run([process.execPath, CORPUS_TS, 'status', '--corpus', 'corpus-agentic.json'], {
+      cwd: workspace,
+      env,
+    });
+    expect(r.code).toBe(0);
+    // The failure this guards: "run order so far: alpha".
+    expect(r.stdout).not.toContain('alpha');
+    expect(r.stdout).toContain('(none)');
+  }, 60_000);
+
+  test('the original corpus still reads its own summary, unmoved', async () => {
+    const r = await run([process.execPath, CORPUS_TS, 'status'], { cwd: workspace, env });
+    expect(r.code).toBe(0);
+    expect(r.stdout).toContain('alpha');
+  }, 60_000);
+
+  test('the derived path keeps the existing artifact exactly where it is', () => {
+    // corpus.json -> corpus-summary.json is the identity the repo already has on
+    // disk; if this mapping ever changes, reports/corpus-summary.json is orphaned
+    // and every published link to it breaks.
+    expect(existsSync(join(workspace, 'reports', 'corpus-summary.json'))).toBe(true);
+    expect(existsSync(join(workspace, 'reports', 'corpus-agentic-summary.json'))).toBe(false);
+  });
+});

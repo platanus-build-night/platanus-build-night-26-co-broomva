@@ -70,7 +70,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   coverageByKind,
@@ -120,7 +120,33 @@ const WORK_DIR = join(REPO_ROOT, '.keel-corpus');
 const CLONE_ROOT = join(WORK_DIR, 'clones');
 const RECORDED_DIR = join(WORK_DIR, 'recorded');
 const REPORTS_DIR = join(REPO_ROOT, 'reports');
-const SUMMARY_PATH = join(REPORTS_DIR, 'corpus-summary.json');
+
+/**
+ * One corpus file, one summary. DERIVED from the corpus path rather than fixed,
+ * because a constant here silently merges experiments.
+ *
+ * `--corpus <path>` exists so a second, differently-constituted corpus can be
+ * run — agent-maintained targets, say, against the human-maintained fifteen. With
+ * a single `corpus-summary.json` the second run APPENDS into the first one's
+ * artifact: two populations, two methodologies (the original was judged
+ * sequentially from an empty probe library, in a recorded order that the
+ * crystallization curve depends on) averaged into one pooled ratio that
+ * describes neither. The mistake is invisible, because the summary is valid JSON
+ * either way and the pooled number just moves.
+ *
+ * So the path is a function of the corpus file, and the naming keeps the
+ * existing artifact exactly where it is:
+ *
+ *   corpus.json          -> reports/corpus-summary.json      (unchanged)
+ *   corpus-agentic.json  -> reports/corpus-agentic-summary.json
+ *
+ * You now cannot write two corpora into one summary without renaming a file on
+ * purpose, which is the difference between a mistake and a decision.
+ */
+function summaryPathFor(corpusPath: string): string {
+  const stem = basename(corpusPath).replace(/\.json$/i, '');
+  return join(REPORTS_DIR, `${stem}-summary.json`);
+}
 
 const DEFAULT_CAP = 40;
 const DEFAULT_BATCH = 15;
@@ -864,9 +890,10 @@ function emptySummary(prov: Provenance): CorpusSummary {
  * happens to be invoking with right now.
  */
 function loadSummary(prov: Provenance): CorpusSummary {
-  if (!existsSync(SUMMARY_PATH)) return emptySummary(prov);
+  const summaryPath = summaryPathFor(prov.corpusFile);
+  if (!existsSync(summaryPath)) return emptySummary(prov);
   try {
-    const s = readJson<CorpusSummary>(SUMMARY_PATH);
+    const s = readJson<CorpusSummary>(summaryPath);
     s.entries ??= [];
     s.runOrder ??= [];
     s.repeatability ??= [];
@@ -1207,7 +1234,7 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         },
       ];
       recomputeTotals(summary, targets, prov);
-      writeJson(SUMMARY_PATH, summary);
+      writeJson(summaryPathFor(opts.corpusPath), summary);
       console.error('corpus: repeat recorded as failed; the target\'s own report is untouched.');
     }
     return;
@@ -1270,7 +1297,7 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         warnings: [`target failed at ${new Date().toISOString()}; excluded from every aggregate`],
       });
       recomputeTotals(summary, targets, prov);
-      writeJson(SUMMARY_PATH, summary);
+      writeJson(summaryPathFor(opts.corpusPath), summary);
       continue;
     }
 
@@ -1330,10 +1357,10 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         ],
       });
       recomputeTotals(summary, targets, prov);
-      writeJson(SUMMARY_PATH, summary);
+      writeJson(summaryPathFor(opts.corpusPath), summary);
       removeClone(pending.clonePath);
       rmSync(pendingPathFor(target.name, 'run'), { force: true });
-      console.log(`corpus: summary → ${SUMMARY_PATH}`);
+      console.log(`corpus: summary → ${summaryPathFor(opts.corpusPath)}`);
       continue;
     }
 
@@ -1348,9 +1375,9 @@ async function cmdNext(opts: NextOpts): Promise<void> {
   // header. Handing it `cap` here is how a bare `next` over a finished corpus
   // used to restore the very contradiction the effective-cap work removed.
   recomputeTotals(summary, targets, { ...prov, capEnforced: null });
-  writeJson(SUMMARY_PATH, summary);
+  writeJson(summaryPathFor(opts.corpusPath), summary);
   console.log(`corpus: nothing left to run — every target is recorded or has a recorded failure.`);
-  console.log(`corpus: summary → ${SUMMARY_PATH}`);
+  console.log(`corpus: summary → ${summaryPathFor(opts.corpusPath)}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -1640,7 +1667,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
     };
     summary.repeatability = [...summary.repeatability.filter((r) => r.name !== name), entry];
     recomputeTotals(summary, targets, prov);
-    writeJson(SUMMARY_PATH, summary);
+    writeJson(summaryPathFor(opts.corpusPath), summary);
     if (!opts.keepClone) removeClone(pending.clonePath);
     retireState(name, 'repeat');
     console.log(
@@ -1702,7 +1729,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
     warnings,
   });
   recomputeTotals(summary, targets, prov);
-  writeJson(SUMMARY_PATH, summary);
+  writeJson(summaryPathFor(opts.corpusPath), summary);
 
   if (!opts.keepClone) removeClone(pending.clonePath);
   // The stepper state is retired so it can never be replayed. A crash between
@@ -1716,7 +1743,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
       ? `corpus: report → ${reportPathFor(name, 'run')}`
       : 'corpus: NO report written — not one node carries a verdict, so there is no ratio to publish (recorded under totals.targetsUnjudged)',
   );
-  console.log(`corpus: summary → ${SUMMARY_PATH}`);
+  console.log(`corpus: summary → ${summaryPathFor(opts.corpusPath)}`);
   console.log('');
   console.log(`  ${name} @ ${target.revision.slice(0, 12)}`);
   console.log(
