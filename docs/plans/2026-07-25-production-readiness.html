@@ -318,6 +318,82 @@ ratio. The minted library inverts that property.</p>
 <p><strong>Decision taken: ship all 30, after narrowing.</strong> That raises the review bar
 rather than lowering it — every one of the 18 must earn its class before it ships.</p>
 
+<div class="callout bad">
+<p><strong>ATTEMPTED 2026-07-25, AND REVERTED. The premise did not survive contact.</strong>
+All 30 were promoted with a structural whole-body guard, fixtures and a bias test; adversarial
+review then found three defects, each reproduced by hand before this was written. The library
+is <strong>not shippable</strong> in its current state, and the guard as written made things
+worse. The archive at <code>docs/archive/2026-07-build-night/probes-as-minted/</code> is what
+landed instead.</p>
+</div>
+
+<h3>What the attempt established — start the next pass here</h3>
+
+<p><strong>B1 · Ten probes ship other repositories' file:line as <code>evidence</code>.</strong>
+<code>chat-webhook-notification</code> emits vercel-ai's
+<code>.github/workflows/slack-workflow-failure-notification.yml:20-29</code>; the conftest probe
+emits anthropic-quickstarts' path. <code>evidence</code> is rendered into the report
+(<code>render.ts:753</code>), so a user auditing their own repo gets citations to files they do
+not have. This is the same sin the probe headers sermonize about — kept out of the
+<em>tokens</em> by <code>rejectRepoLiterals()</code>, smuggled back in through the payload.
+<strong>Disqualifying on its own, and it is a defect in the minted library, not in the
+promotion.</strong></p>
+
+<p><strong>B2 · <code>curl</code> is a whole-body token.</strong>
+<code>chat-webhook-notification</code>'s <code>ASSERT_ANY</code> is
+<code>["curl","uses:","webhook"]</code>. A <code>curl --fail</code> healthcheck — the canonical
+<span class="anch">anchored</span> signal — therefore reads as "all provisioning" and can be
+filed <code>not_a_check</code>. Two steps with byte-identical <code>run:</code> bodies got
+different verdicts based on the step's <em>name</em>.</p>
+
+<p><strong>B3 · The guard is a category error on <code>uses:</code> steps.</strong> It splits a
+body on <code>&amp;&amp;</code>/<code>;</code>/<code>||</code> and requires every part to match
+the probe's tokens — but <code>gather.ts</code> emits YAML <code>with:</code> keys, TOML table
+rows and Rakefile bodies inside <code>raw</code>. Measured:
+<code>actions/setup-python@v5</code> carrying two <code>with:</code> keys went from
+<code>not_a_check</code> (correct) to abstaining. <code>ci-provisioning-action</code> alone lost
+14 decisions.</p>
+
+<p><strong>The corpus A/B, over 327 nodes:</strong> decisions <strong>145 → 121</strong>;
+<code>not_a_check</code> <strong>120 → 93</strong>. Twenty-seven fewer shoppable-class
+decisions, bought by breaking provisioning detection. Abstention is the safe direction and the
+trade might still be worth making — but not with B3 as the mechanism.</p>
+
+<p><strong>B4 · The bias test measured the wrong thing.</strong> It counted probe <em>files</em>
+(18/10/2). Decision-weighted over the corpus, the shipped set is
+<strong>108 <code>not_a_check</code> / 29 <code>anchored</code> / 3
+<code>self_referential</code> — 77% of all probe decisions leave the denominator</strong>, and
+<code>ci-provisioning-action</code> is 56 of them on its own. A file count cannot see that, and
+it is the number that actually describes the bias.</p>
+
+<p><strong>B5 · Dispatch is first-match-wins in load order</strong>
+(<code>probe-sandbox.ts:551</code>) with no specificity tie-break, so a broad
+<code>not_a_check</code> probe gets first refusal on nodes an <code>anchored</code> probe would
+have claimed. Ordering, not judgment, decides.</p>
+
+<h3>Revised sequence</h3>
+
+<ol>
+<li><strong>Strip the payload literals first</strong> (B1) — mechanical, and it blocks
+everything else.</li>
+<li><strong>Re-derive the guard from <code>run:</code> bodies only</strong> (B3): apply it when
+the step has a shell chain, never to a <code>uses:</code> step or a config-file node. Then re-run
+the 327-node A/B and require decisions not to fall.</li>
+<li><strong>Audit the token sets for assertion-surface commands</strong> (B2) — <code>curl</code>,
+<code>make</code>, <code>bash</code>, any bare script invocation may not serve as a whole-body
+provisioning token.</li>
+<li><strong>Make the bias test decision-weighted</strong> (B4) over a committed corpus node set,
+and add per-probe fire counts.</li>
+<li><strong>Then</strong> promote, in a reviewed subset, smallest-blast-radius first.</li>
+<li><strong>One shared guard helper, not 17 copies.</strong> Fixing a copy-pasted guard means 17
+new versioned files.</li>
+</ol>
+
+<p><strong>And the ε-audit (U19) should land before the library grows, not after.</strong>
+Promoting 18 probes into the shoppable class while the counter-metric that would detect their
+drift exists only as prose is the wrong order — the corpus run already demonstrated that a
+cheap wrong verdict is invisible precisely because it is cheap.</p>
+
 <h3>U13 · Fixture harness first</h3>
 
 <p>No mechanism currently tests a probe. CONTRIBUTING calls a probe "the highest-value
