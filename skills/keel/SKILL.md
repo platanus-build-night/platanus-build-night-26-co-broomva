@@ -2,9 +2,12 @@
 name: keel
 description: >
   Measure whether a codebase's verification actually touches the world, or
-  whether it is checking itself. Keel gathers every verification edge in a
-  target (CI steps, test targets, review gates, deploy conditions, integration
-  signals), classifies each one as anchored, self-referential, or unknown by
+  whether it is checking itself. Keel gathers the verification edges it can
+  read in a target (GitHub Actions, CircleCI, GitLab CI, Travis, package
+  scripts, Makefile, Rakefile, pyproject and a dozen tool configs) — and
+  reports the surfaces it recognised but could not parse, so blindness never
+  passes for absence. It classifies each edge as anchored, self-referential, or
+  unknown by
   asking whether the actor being verified can write to the signal's producer,
   and reports a grounding ratio. Novel cases are judged by the agent and then
   crystallized into probes — small reviewable scripts — so repeat shapes get
@@ -68,12 +71,54 @@ Grounding ratio = `anchored / (anchored + self_referential + unknown)`.
 Run these in order. Stages 3 and 4 are optional — stage 2 alone produces a
 complete, honest report.
 
+## Run it
+
+The scripts are plumbing — they locate, merge, validate, render and sandbox.
+**Every judgment in the run is yours.** Paths are relative to the installed
+skill; substitute wherever your harness put it.
+
+```sh
+# 1. locate the surfaces (mechanical, no model call)
+bun <skill>/scripts/gather.ts <target> --json > nodes.json \
+    --coverage coverage.json          # what it recognised but could not read
+
+# 2. try the probe cache; everything it cannot decide comes back to you
+bun <skill>/scripts/classify.ts nodes.json --json > classified.json
+bun <skill>/scripts/classify.ts nodes.json --batches   # the same nodes, batched for judging
+
+# 3. YOU judge every pending node over its `raw`, and write Verdict[] to verdicts.json
+
+# 4. merge and validate — refuses on an unjudged node, a naked argument, a bad class
+bun <skill>/scripts/assemble.ts nodes.json classified.json verdicts.json \
+    --dir <target> --probes <skill>/probes -o report.json
+
+# 5. the artifact
+bun <skill>/scripts/render.ts report.json -o report.html
+
+# optional
+bun <skill>/scripts/route.ts report.json --dispatch      # then author RouteProposal[]
+bun <skill>/scripts/route.ts report.json --proposals p.json -o bindings.json
+bun <skill>/scripts/audit.ts report.json --sample 0.1    # the ε-audit; see §4
+```
+
+`assemble` is the step that keeps the arithmetic honest: it recomputes the
+grounding ratio from the verdicts rather than trusting any block you hand it,
+and it **refuses** rather than quietly computing a ratio over the nodes that
+happen to have verdicts. A report silently computed over a subset is the exact
+failure this tool exists to detect.
+
 ### 1. Gather (mechanical)
 
 Find candidate verification edges. This step *locates surfaces*; it does not
 judge them. Look at CI workflow definitions, package/task/make scripts, test
 configuration, review and branch-protection requirements, deploy and promotion
 conditions, and any wired integrations. Emit `Node[]` per `schemas/keel.ts`.
+
+`gather` reads what it knows how to read. Pass `--coverage <file>` and it also
+records the surfaces it **recognised and could not parse** — a `Jenkinsfile`, a
+`.buildkite/`, a `build.gradle`. Carry that into the report: a ratio computed
+over the residue of a repo whose real CI is Jenkins is not a measurement of that
+repo, and non-coverage that goes unreported is Keel's own shoppable class.
 
 Carry the **literal snippet** into `raw`. Downstream reasoning happens over the
 real text, never over a summary you wrote — a summary is already a judgment.
@@ -156,9 +201,27 @@ re-decide them agentically **with the cached verdict hidden from you.** Record
 the comparison in `verdict.audit`. On disagreement, narrow the probe's `match`
 or retire it.
 
-The probe library's agreement rate is Keel's own counter-metric. Report it. A
-system that measures groundedness while refusing to measure its own is telling
-you something.
+`audit.ts` is a stepper, for the same reason `corpus.ts` is: it cannot re-decide
+anything, because deciding is yours.
+
+```sh
+bun <skill>/scripts/audit.ts report.json --sample 0.1 --seed 1 -o pending.json
+# it prints the sampled nodes WITHOUT their cached class, probe, confidence or
+# argument — you judge them cold, and write Verdict[] to redecided.json
+bun <skill>/scripts/audit.ts record pending.json redecided.json --report report.json
+```
+
+The blindness is the whole mechanism. If you can see the cached verdict while
+re-judging, the audit measures your agreement with yourself and nothing else.
+
+The probe library's agreement rate is Keel's own counter-metric. Report it
+**with its denominator** — "1.00 over 10 compared nodes" — because a rate over
+three nodes and a rate over three hundred are different claims. A system that
+measures groundedness while refusing to measure its own is telling you
+something.
+
+`record` reports disagreement and names the probe. It does not retire anything:
+retiring a probe is a judgment about the world, and that stays with a human.
 
 ## Output
 
@@ -183,7 +246,7 @@ Keel is one skill with modes, not a family of skills.
 |---|---|---|
 | `keel measure` | a target | `Report` — the four stages above |
 | `keel route` | a `Report` | `Binding[]` — a route from each ungrounded check to an anchored signal already in the graph |
-| `keel audit` | a `Report` | the probe library's agreement rate |
+| `keel audit` | a `Report` | the probe library's agreement rate, with its denominator |
 | `keel construct` | `Binding[]` | counter-metric pairings, arbitration, audit loops — **not yet built** |
 | `keel apply` | `Binding[]` | a diff or PR — gated, **never completed by an agent** |
 

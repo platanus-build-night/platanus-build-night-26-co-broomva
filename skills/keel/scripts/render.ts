@@ -35,6 +35,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { GroundingClass, Node, Report, Verdict } from '../schemas/keel.ts';
 import { coverageByKind, groundingRatio } from '../schemas/keel.ts';
+import type { GatherCoverage } from './gather.ts';
 
 // ---------------------------------------------------------------------------
 // Constants that encode a ruling, each with the ruling attached.
@@ -281,6 +282,21 @@ export interface RenderOptions {
   curveSvg?: string;
   /** Shown when a curve was found but refused for referencing something off-origin. */
   curveRejectedPath?: string;
+  /**
+   * The gatherer's coverage record, read from a sibling of `report.json`.
+   *
+   * A SIDE-CHANNEL, deliberately: `Report` is the frozen contract, this unit
+   * does not get to add a field to it, and a renderer that invented one would
+   * have every consumer reading a shape the schema does not describe. So the
+   * record travels beside the report the way `reports/curve.svg` already does.
+   * The cost is real and is stated rather than hidden: a report handed on
+   * without its sibling renders with no blindness card at all, and the reader
+   * cannot tell that from a run that had nothing to report. Only a schema field
+   * closes that, and only the orchestrator can open the schema.
+   */
+  coverage?: GatherCoverage;
+  /** Shown when a coverage sibling was found but is not a record we can read. */
+  coverageRejectedPath?: string;
   /** Overrides the on-disk template + stylesheets (tests). */
   template?: Template;
   styles?: string;
@@ -406,6 +422,179 @@ export function auditTally(verdicts: Verdict[]): AuditTally {
   };
 }
 
+/**
+ * How many unread paths are printed before the list is elided.
+ *
+ * A Bazel monorepo has a `BUILD` file per package and would otherwise push the
+ * ratio off the screen with a thousand rows. The elision is stated in the same
+ * breath — an undisclosed truncation on the one card whose subject is undisclosed
+ * absence would be a joke at this tool's expense.
+ */
+const MAX_UNREAD_ROWS = 12;
+
+/**
+ * The blindness card — what the gatherer recognised and did not read.
+ *
+ * It renders BESIDE the ratio, in the same block, and not in a footer. That is
+ * a claim about meaning, not layout: "we could not read your Jenkinsfile"
+ * changes how the number above should be read, and a reader who forms an
+ * impression of the ratio and then meets the caveat two screens later has
+ * already formed the wrong impression. The ε-audit card is placed by the same
+ * argument.
+ *
+ * The empty state prints too, and this is the important half. A card that
+ * appears only when something is missing leaves absence unreadable — "no card"
+ * would mean both "nothing was left unread" and "nobody checked", which is
+ * precisely the ambiguity between an empty repo and a blind gatherer that this
+ * whole feature exists to break. What is NOT printed is a card when there is no
+ * coverage record at all: with no record we know nothing, and rendering
+ * "nothing unread" from silence would be defaulting to clean — the same fail-open
+ * move as defaulting a node to `anchored`.
+ *
+ * Markup is assembled here rather than in `templates/report.html` because that
+ * file is not this unit's to edit; every class used is an existing design-system
+ * class and no new CSS is introduced. A template block is proposed in the PR body.
+ */
+function renderBlindness(cov: GatherCoverage): string {
+  const parts: string[] = [];
+  const blind = cov.blind ?? [];
+  const total = cov.unread.length + cov.silent.length + blind.length;
+
+  // The counts are labelled separately in the heading rather than summed into
+  // one figure. They are different facts — one surface was never opened, one
+  // was opened and gave nothing back, one could not be opened at all — and a
+  // single total invites the reader to check it against lists that do not add
+  // up to it.
+  const heading =
+    total === 0
+      ? 'none'
+      : [
+          cov.unread.length > 0 ? `${num(cov.unread.length)} unread` : '',
+          cov.silent.length > 0 ? `${num(cov.silent.length)} read-but-silent` : '',
+          blind.length > 0 ? `${num(blind.length)} unreadable` : '',
+        ]
+          .filter(Boolean)
+          .join(', ');
+  parts.push(`<p class="k-eyebrow">Unread surfaces — ${heading}</p>`);
+
+  if (total === 0) {
+    // Reachable only when the walk itself came back whole. `blind` is inside
+    // `total` precisely so this sentence cannot print over a directory the
+    // gatherer could not open: "it also read" is a claim about the tree, and a
+    // walk that failed has no standing to make it.
+    parts.push(
+      '<p>Every verification surface this gatherer recognises in the target, it also read. ' +
+        'The coverage above therefore describes the surface that exists, not the part of it ' +
+        'that happened to be parseable.</p>',
+      '<p class="k-meta">Recognition is by filename. A CI provider this gatherer has never ' +
+        'heard of is still invisible, and no run can say otherwise — this line means ' +
+        '"nothing known was missed", not "nothing was missed".</p>',
+    );
+  } else {
+    if (cov.unread.length > 0) {
+      const shown = cov.unread.slice(0, MAX_UNREAD_ROWS);
+      const rows = shown
+        .map(
+          (u) =>
+            `      <tr><td class="k-mono">${esc(u.path)}${u.kind === 'dir' ? '/' : ''}</td><td>${esc(u.tool)}</td></tr>`,
+        )
+        .join('\n');
+      parts.push(
+        `<p>${plural(cov.unread.length, 'surface was', 'surfaces were')} recognised by name and ` +
+          'never opened — this gatherer has no parser for them. They contributed no node, no ' +
+          'verdict and no denominator, so the ratio beside this card describes what could be ' +
+          'read, not this target. A repo whose real verification lives in one of these scores ' +
+          'like a repo with none.</p>',
+        '<table class="k-table">',
+        '    <thead><tr><th>surface</th><th>tool</th></tr></thead>',
+        `    <tbody>\n${rows}\n    </tbody>`,
+        '</table>',
+      );
+      if (cov.unread.length > shown.length) {
+        parts.push(
+          `<p class="k-meta">${num(cov.unread.length - shown.length)} further unread ` +
+            `path(s) are not listed here. The full list is in the coverage record beside ` +
+            `this report.</p>`,
+        );
+      }
+    }
+
+    if (cov.silent.length > 0) {
+      const rows = cov.silent
+        .slice(0, MAX_UNREAD_ROWS)
+        .map(
+          (s) =>
+            `      <tr><td class="k-mono">${esc(s.path)}</td><td class="k-mono">${esc(s.parser)}</td></tr>`,
+        )
+        .join('\n');
+      parts.push(
+        `<p class="k-meta">${plural(cov.silent.length, 'CI definition was', 'CI definitions were')} ` +
+          'opened by a parser here and produced nothing. The file was read; the reader came ' +
+          'back empty. That is a gap in this gatherer, not a fact about the target.</p>',
+        '<table class="k-table">',
+        '    <thead><tr><th>surface</th><th>reader</th></tr></thead>',
+        `    <tbody>\n${rows}\n    </tbody>`,
+        '</table>',
+      );
+    }
+
+    if (blind.length > 0) {
+      const rows = blind
+        .slice(0, MAX_UNREAD_ROWS)
+        .map(
+          (b) =>
+            `      <tr><td class="k-mono">${esc(b.path)}</td><td class="k-mono">${esc(b.by)}</td><td>${esc(b.reason)}</td></tr>`,
+        )
+        .join('\n');
+      parts.push(
+        `<p>${plural(blind.length, 'surface was', 'surfaces were')} attempted and could ` +
+          'not be read — the walk could not enumerate a directory, or stopped at its depth ' +
+          'limit, or a parser threw partway through a file. Whatever was inside is absent ' +
+          'from every number on this page, and this run cannot say what it was. A read ' +
+          'failure is not an empty tree, and it is the one confusion this card exists to ' +
+          'prevent.</p>',
+        '<table class="k-table">',
+        '    <thead><tr><th>surface</th><th>attempted by</th><th>why it stopped</th></tr></thead>',
+        `    <tbody>\n${rows}\n    </tbody>`,
+        '</table>',
+      );
+      if (blind.length > MAX_UNREAD_ROWS) {
+        parts.push(
+          `<p class="k-meta">${num(blind.length - MAX_UNREAD_ROWS)} further unreadable ` +
+            'path(s) are not listed here. The full list is in the coverage record beside ' +
+            'this report.</p>',
+        );
+      }
+    }
+  }
+
+  // The record names the tree it walked. Printed rather than compared against
+  // `report.target`: a corpus run gathers a clone under /tmp and files the
+  // report under the repo's name, so the two legitimately differ and a mismatch
+  // alarm would fire on every honest run. Showing both lets a reader pair them.
+  parts.push(
+    `<p class="k-meta">From a gather of <span class="k-mono">${esc(cov.target)}</span> ` +
+      `(${plural(cov.nodesGathered, 'edge', 'edges')} gathered).</p>`,
+  );
+
+  return `<div class="k-card">\n${parts.join('\n')}\n</div>`;
+}
+
+/** Shown in place of the card when a sibling was found but could not be read. */
+function renderBlindnessRejected(path: string): string {
+  return (
+    '<div class="k-card">\n' +
+    '<p class="k-eyebrow">Unread surfaces — unavailable</p>\n' +
+    `<p>A coverage record was found at <span class="k-mono">${esc(path)}</span> and is not ` +
+    'a <span class="k-mono">keel.gather-coverage.v1</span> record, so nothing is claimed from it. ' +
+    'This report cannot say which surfaces the gatherer failed to read.</p>\n' +
+    '<p class="k-meta">Regenerate it with <span class="k-mono">gather.ts --coverage</span> ' +
+    'against the same tree, or read the ratio as covering only the surfaces named under ' +
+    'coverage.</p>\n' +
+    '</div>'
+  );
+}
+
 export function render(report: Report, opts: RenderOptions = {}): string {
   const t = opts.template ?? loadTemplate();
   const styles = opts.styles ?? loadStyles();
@@ -444,13 +633,23 @@ export function render(report: Report, opts: RenderOptions = {}): string {
     JUDGED: num(nodes.length),
   });
 
+  // Empty when no coverage record travelled with the report — see RenderOptions.
+  const blindness = opts.coverage
+    ? renderBlindness(opts.coverage)
+    : opts.coverageRejectedPath
+      ? renderBlindnessRejected(opts.coverageRejectedPath)
+      : '';
+
   if (nodes.length === 0 && verdicts.length === 0) {
+    // The state where blindness matters most: "nothing gathered" and "nothing
+    // readable" print the same sentence otherwise, and they are opposite facts.
     body.push(t['nothing-gathered'] as string);
+    if (blindness) body.push(`<div class="kr-section">${blindness}</div>`);
   } else if (denominator === 0) {
     body.push(
       `<div class="kr-split">${fill(t['no-denominator'] as string, {
         JUDGED: num(verdicts.length),
-      })}${coverageBlock}</div>`,
+      })}${coverageBlock}${blindness}</div>`,
     );
   } else {
     const meter = DENOMINATOR_CLASSES.map((c) =>
@@ -473,7 +672,9 @@ export function render(report: Report, opts: RenderOptions = {}): string {
       METER: meter,
       COUNTS: counts,
     });
-    body.push(`<div class="kr-split">${ratioBlock}${coverageBlock}</div>`);
+    body.push(
+      `<div class="kr-split">${ratioBlock}${coverageBlock}${blindness}</div>`,
+    );
   }
 
   // ── Keel's own counter-metric, beside Keel's own number ──────────────────
@@ -969,6 +1170,64 @@ export function loadStyles(dir = join(HERE, '..', 'design')): string {
   return `${tokens}\n${keel}`;
 }
 
+/**
+ * Read a gather-coverage sibling.
+ *
+ * Validated on arrival rather than trusted: this file is written by a producer
+ * the report does not vouch for, and the one thing worse than no blindness card
+ * is a blindness card asserting a shape nobody checked. `schema` is required —
+ * an unlabelled JSON blob next to a report is not evidence about coverage — and
+ * every list must be an array of the entries the card will read. Anything else
+ * comes back `rejected` and is disclosed on the page, never dropped.
+ *
+ * Each list gets its OWN predicate, checking every field the card dereferences.
+ * A single shared "has a string `path`" test was the whole validation, and it
+ * accepted an unread entry with no `tool` and no `kind` — which the card then
+ * printed as the literal text `undefined` in the tool column of a table whose
+ * subject is what this run could not see. Validation that advertises a shape and
+ * checks one field of it is the ungrounded check this tool is named after,
+ * committed here.
+ */
+export function loadCoverage(
+  path: string,
+): { coverage: GatherCoverage } | { rejected: string } | null {
+  if (!existsSync(path)) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return { rejected: path };
+  }
+  const c = parsed as Partial<GatherCoverage> | null;
+  const str = (v: unknown): boolean => typeof v === 'string';
+  const listOf = (
+    list: unknown,
+    ok: (e: Record<string, unknown>) => boolean,
+  ): boolean =>
+    Array.isArray(list) &&
+    list.every(
+      (e) =>
+        e !== null && typeof e === 'object' && !Array.isArray(e) && ok(e as Record<string, unknown>),
+    );
+  if (
+    c === null ||
+    typeof c !== 'object' ||
+    Array.isArray(c) ||
+    c.schema !== 'keel.gather-coverage.v1' ||
+    typeof c.target !== 'string' ||
+    typeof c.nodesGathered !== 'number' ||
+    !listOf(
+      c.unread,
+      (e) => str(e.path) && str(e.tool) && (e.kind === 'file' || e.kind === 'dir'),
+    ) ||
+    !listOf(c.silent, (e) => str(e.path) && str(e.parser)) ||
+    !listOf(c.blind, (e) => str(e.path) && str(e.by) && str(e.reason))
+  ) {
+    return { rejected: path };
+  }
+  return { coverage: c as GatherCoverage };
+}
+
 /** Read a curve fragment, refusing it if inlining would break the invariant. */
 export function loadCurve(
   path: string,
@@ -983,16 +1242,23 @@ export function loadCurve(
 // CLI
 // ---------------------------------------------------------------------------
 
-const USAGE = `usage: bun scripts/render.ts <report.json> [-o <out.html>] [--curve <curve.svg>] [--no-curve]
+const USAGE = `usage: bun scripts/render.ts <report.json> [-o <out.html>] [--curve <curve.svg>] [--no-curve] [--coverage <coverage.json>] [--no-coverage]
 
   <report.json>   a Report (see schemas/keel.ts)
   -o, --out       write here instead of stdout
   --curve         inline this SVG fragment at the KEEL:CURVE marker
   --no-curve      do not look for reports/curve.svg
+  --coverage      the gather-coverage record for this run (gather.ts --coverage)
+  --no-coverage   do not look for the sibling coverage record
 
 With no --curve, reports/curve.svg is used if it exists (relative to the
 current directory, then to the repo root). The KEEL:CURVE marker is emitted
-either way.`;
+either way.
+
+With no --coverage, <report>.coverage.json beside the report is used if it
+exists. Without one, the report cannot say which surfaces the gatherer failed
+to read, and no blindness card is drawn — absence of the record is not a claim
+that nothing was missed.`;
 
 function main(argv: string[]): number {
   const args = argv.slice(2);
@@ -1005,10 +1271,12 @@ function main(argv: string[]): number {
   let out = '';
   let curvePath = '';
   let noCurve = false;
+  let coveragePath = '';
+  let noCoverage = false;
 
   for (let i = 0; i < args.length; i++) {
     const a = args[i] as string;
-    if (a === '-o' || a === '--out' || a === '--curve') {
+    if (a === '-o' || a === '--out' || a === '--curve' || a === '--coverage') {
       // A flag whose value is missing, empty, or another flag is an error, not
       // a default. `-o "$OUT"` with an unset $OUT used to fall through to
       // stdout and exit 0: no file written, 87KB on the caller's terminal, and
@@ -1022,8 +1290,10 @@ function main(argv: string[]): number {
       }
       i++;
       if (a === '--curve') curvePath = value;
+      else if (a === '--coverage') coveragePath = value;
       else out = value;
     } else if (a === '--no-curve') noCurve = true;
+    else if (a === '--no-coverage') noCoverage = true;
     else if (a.startsWith('-')) {
       console.error(`render: unknown flag ${a}\n\n${USAGE}`);
       return 1;
@@ -1085,6 +1355,30 @@ function main(argv: string[]): number {
     }
     if (curvePath && !opts.curveSvg && !opts.curveRejectedPath) {
       console.error(`render: ${curvePath}: no such file — rendering the marker alone`);
+    }
+  }
+
+  if (!noCoverage) {
+    // Sibling of the report, the way the curve is a sibling of the run. The
+    // default name is derived from the report's own path so that a directory of
+    // reports pairs unambiguously — a single `coverage.json` per directory
+    // would silently attach one target's blind spots to another's number.
+    const sibling = coveragePath || `${input.replace(/\.json$/, '')}.coverage.json`;
+    const found = loadCoverage(sibling);
+    if (found && 'coverage' in found) {
+      opts.coverage = found.coverage;
+    } else if (found) {
+      opts.coverageRejectedPath = found.rejected;
+      console.error(
+        `render: ${found.rejected} is not a keel.gather-coverage.v1 record — not used`,
+      );
+    } else if (coveragePath) {
+      console.error(`render: ${coveragePath}: no such file`);
+      return 1;
+    } else {
+      console.error(
+        `render: no coverage record at ${sibling} — this report cannot state which surfaces the gatherer could not read (bun scripts/gather.ts <target> --coverage ${sibling})`,
+      );
     }
   }
 

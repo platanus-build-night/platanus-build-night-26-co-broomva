@@ -204,6 +204,17 @@ interface CorpusEntry {
   partial: boolean;
   /** nodesJudged / nodesSampled. 0 means nothing was measured at all. */
   judgedFraction: number | null;
+  /**
+   * The cap ACTUALLY IN FORCE when this target ran — `--cap` when it was
+   * passed, else the corpus file's nodeCap. Per-entry because entries
+   * accumulate across runs (see notes) and a later run invoked with a different
+   * `--cap` must not retroactively re-describe an earlier measurement: the
+   * summary header can only ever name one cap, so the entry is the authority
+   * for its own sample size — and, via entryCapEvidence, the source the header
+   * itself is derived from. null when the target never reached sampling at all,
+   * which is also how an entry says it proves no cap.
+   */
+  cap: number | null;
   capped: boolean;
   coverageGathered: Record<string, number> | null;
   /** coverage of JUDGED nodes — not of the gathered surface. See coverageGathered. */
@@ -261,7 +272,31 @@ interface RepeatabilityEntry {
 interface CorpusSummary {
   generatedAt: string;
   corpusFile: string;
+  /**
+   * The cap ACTUALLY IN FORCE for the most recently recorded entry — DERIVED
+   * FROM THE ENTRIES (see entryCapEvidence), never from the invocation that
+   * happened to write the file.
+   *
+   * It used to be the DECLARED value on the `record` and `status` paths, so a
+   * corpus run driven with `--cap 25` published a summary reading nodeCap 40
+   * above fifteen entries that had each sampled exactly 25. The script header
+   * promises NO SILENT ANYTHING, and a provenance field that contradicts every
+   * measurement beneath it is the loudest silence in the file.
+   *
+   * Taking it from the invocation instead was only half a fix: a later `bun
+   * corpus.ts next` over an already-finished corpus enforces nothing and would
+   * have stamped 40 straight back over the same fifteen entries. Deriving it
+   * closes that, and covers the entries that predate `cap` for free.
+   */
   nodeCap: number;
+  /**
+   * What the corpus file declares — kept BESIDE the effective cap rather than
+   * replaced by it. A reader reconstructing the run needs to know an override
+   * happened; "the file says 40, the entries were drawn at 25" is two facts,
+   * and collapsing them to one loses the fact that a human chose to deviate.
+   * Equal to nodeCap whenever nothing overrode the declaration.
+   */
+  nodeCapDeclared: number;
   corpusOrder: string[];
   /** the order targets were ACTUALLY recorded in — probe growth is ordered. */
   runOrder: string[];
@@ -698,11 +733,103 @@ function loadCorpus(path: string): { targets: Target[]; nodeCap: number } {
   return { targets, nodeCap: cap };
 }
 
-function emptySummary(corpusPath: string, cap: number): CorpusSummary {
+/**
+ * What the run actually did, as opposed to what the corpus file asked for.
+ *
+ * Every command computes this once and hands it to loadSummary/recomputeTotals,
+ * which is what keeps the two from drifting apart again: there is no longer a
+ * call site that can reach for `nodeCap` (declared) where `cap` (effective) is
+ * meant, because the declared value never travels alone.
+ */
+interface Provenance {
+  corpusFile: string;
+  /** corpus.json's nodeCap (or DEFAULT_CAP). */
+  capDeclared: number;
+  /**
+   * What this invocation ENFORCED on a sample, or null when it enforced nothing
+   * on anything.
+   *
+   * Null is the important value. `status` reads and never samples; a `next` that
+   * finds every target already recorded walks off the end of its loop having
+   * bound no node at all. Both used to hand their *declared* cap to
+   * recomputeTotals, so a plain `bun corpus.ts next` over a finished corpus
+   * would stamp the header back to 40 above entries that had each sampled 25 —
+   * the original defect, restored by a command that measured nothing. A
+   * command that sampled nothing does not get to speak for the header, and
+   * this field is how it says so.
+   */
+  capEnforced: number | null;
+}
+
+/**
+ * The cap a RECORDED ENTRY proves was in force, or null when the entry proves
+ * nothing about it.
+ *
+ * This is the load-bearing inversion. The effective cap is a fact about what
+ * was written, not about how the writer was invoked, so it is recovered from
+ * the entries: `cap` when the entry carries one, and otherwise from the pair
+ * every entry has always carried. A truncated sample is its own witness —
+ * sampleNodes stops at exactly the cap, so `capped: true` makes `nodesSampled`
+ * the cap. An untruncated sample proves only that the cap was at least that
+ * large, which is not a value, so it abstains.
+ *
+ * Abstaining matters: the entries written before `cap` existed are precisely
+ * the ones a header contradicts, and a recovery that only looked at `cap` would
+ * skip all fifteen of them.
+ */
+function entryCapEvidence(e: CorpusEntry | undefined): number | null {
+  if (!e) return null;
+  if (typeof e.cap === 'number') return e.cap;
+  if (e.capped === true && typeof e.nodesSampled === 'number' && e.nodesSampled > 0) {
+    return e.nodesSampled;
+  }
+  return null;
+}
+
+interface CapDisclosure {
+  /** every distinct cap the entries prove, ascending. */
+  proven: number[];
+  /** the cap in force for the most recently recorded entry that proves one. */
+  latest: number | null;
+  /** entries that prove no cap — untruncated samples, and targets that failed before sampling. */
+  indeterminate: number;
+}
+
+/**
+ * Read the caps out of the entries. Nothing here consults the current
+ * invocation: this is what the artifact says about itself.
+ */
+function capDisclosure(s: CorpusSummary): CapDisclosure {
+  const entries = s.entries ?? [];
+  const proven = [
+    ...new Set(entries.map(entryCapEvidence).filter((c): c is number => c !== null)),
+  ].sort((a, b) => a - b);
+  const indeterminate = entries.filter((e) => entryCapEvidence(e) === null).length;
+
+  // runOrder is append-on-record, so its tail is the most recent measurement.
+  const byName = new Map(entries.map((e) => [e.name, e]));
+  let latest: number | null = null;
+  const order = s.runOrder ?? [];
+  for (let i = order.length - 1; i >= 0 && latest === null; i--) {
+    latest = entryCapEvidence(byName.get(order[i]));
+  }
+  if (latest === null) {
+    // No runOrder, or none of it proves a cap (a summary rebuilt from entries,
+    // or a tail of untruncated targets). Fall back to recordedAt.
+    const dated = entries
+      .filter((e) => entryCapEvidence(e) !== null)
+      .sort((a, b) => String(a.recordedAt ?? '').localeCompare(String(b.recordedAt ?? '')));
+    latest = dated.length ? entryCapEvidence(dated[dated.length - 1]) : null;
+  }
+  return { proven, latest, indeterminate };
+}
+
+function emptySummary(prov: Provenance): CorpusSummary {
   return {
     generatedAt: new Date().toISOString(),
-    corpusFile: corpusPath,
-    nodeCap: cap,
+    corpusFile: prov.corpusFile,
+    nodeCap: prov.capEnforced ?? prov.capDeclared,
+    nodeCapDeclared: prov.capDeclared,
     corpusOrder: [],
     runOrder: [],
     entries: [],
@@ -729,20 +856,47 @@ function emptySummary(corpusPath: string, cap: number): CorpusSummary {
   };
 }
 
-function loadSummary(corpusPath: string, cap: number): CorpusSummary {
-  if (!existsSync(SUMMARY_PATH)) return emptySummary(corpusPath, cap);
+/**
+ * Note what this does NOT do: it does not stamp the provenance onto a summary
+ * that already exists. `prov` reaches an existing file only through
+ * recomputeTotals, i.e. only on a write. `status` therefore reports the cap
+ * that was in force when the numbers were produced, not the one the reader
+ * happens to be invoking with right now.
+ */
+function loadSummary(prov: Provenance): CorpusSummary {
+  if (!existsSync(SUMMARY_PATH)) return emptySummary(prov);
   try {
     const s = readJson<CorpusSummary>(SUMMARY_PATH);
     s.entries ??= [];
     s.runOrder ??= [];
     s.repeatability ??= [];
+    // Written before the effective/declared split existed: the single recorded
+    // number was the declared one, so that is what it is reported as.
+    s.nodeCapDeclared ??= s.nodeCap;
     return s;
   } catch {
-    return emptySummary(corpusPath, cap);
+    return emptySummary(prov);
   }
 }
 
-function recomputeTotals(s: CorpusSummary, targets: Target[]): void {
+function recomputeTotals(s: CorpusSummary, targets: Target[], prov: Provenance): void {
+  // Provenance is stamped HERE — on the single path every summary write passes
+  // through — rather than at each call site, because a call site that forgot is
+  // exactly the bug this replaces.
+  //
+  // The header cap is DERIVED FROM THE ENTRIES, not from this invocation. The
+  // invocation is only a fallback for a summary that has no entry proving
+  // anything yet, and when it enforced nothing it is not even that. That is the
+  // difference between "the cap this file was written under" (a fact about the
+  // measurements, which is what a reader needs) and "the cap the last process
+  // to touch this file happened to be holding" (a fact about a shell).
+  const priorCorpusFile = typeof s.corpusFile === 'string' ? s.corpusFile : null;
+  const disc = capDisclosure(s);
+  const priorHeader = typeof s.nodeCap === 'number' ? s.nodeCap : null;
+  s.corpusFile = prov.corpusFile;
+  s.nodeCap = disc.latest ?? prov.capEnforced ?? priorHeader ?? prov.capDeclared;
+  s.nodeCapDeclared = prov.capDeclared;
+
   const ok = s.entries.filter((e) => e.status === 'ok');
   // "Measured" means at least one node actually carries a verdict. A recorded
   // target where the agent judged nothing produced no measurement, and counting
@@ -797,7 +951,35 @@ function recomputeTotals(s: CorpusSummary, targets: Target[]): void {
     'tokensEstimated is true everywhere: a skill inside an agent session has no API for its own usage. Estimate = ceil(chars/4) over the printed judgment payload and the verdicts file.',
     'COST CAVEAT, read before plotting anything. economics.wallClockMs and timing.judgmentMs span `next` -> `record`, which is agent-and-operator wall time: they include coffee breaks, context switches and anything else that happened between the two commands, so they are an UPPER BOUND on machine cost and not a measurement of it. Only timing.{cloneMs,gatherMs,probeMs,recordMs} are directly measured. tokensIn likewise counts only the printed payload — the payload invites the agent to read the clone for context, and those reads are uncounted and systematically larger on probe-poor early targets, a bias pointing the same way as any crystallization effect. For a cost-vs-library-size curve, prefer decidedByProbe/nodesJudged (probe share) and tokensIn as the y-axis; use wall clock only as a loose ceiling, and never as the headline.',
     'repeatability.agreement is AGENT-ONLY by construction: probes are deterministic scripts that reproduce their own verdicts exactly, so counting them as "independent re-judgment" inflates the number toward 1.0 as the library grows, for reasons unrelated to judgment stability. probeAgreement / mixedAgreement / pooledAgreement are reported beside it for audit, and pooledAgreement is NOT the stability claim.',
+    'nodeCap is DERIVED FROM THE ENTRIES — the cap in force for the most recently recorded one — not from the command that last wrote this file. An entry proves its cap either by carrying it or, for entries written before that field existed, by being truncated: a capped sample is exactly as large as the cap that capped it. An untruncated sample proves only that the cap was at least that large, so it says nothing. nodeCapDeclared is what the corpus file asked for, and each entry carries the cap its own sample was drawn under.',
+    'corpusFile and nodeCapDeclared describe the corpus file THIS WRITE used. Entries accumulate across runs and across corpus files, so an entry may have been recorded from a file other than the one named here; corpusOrder is the current file\'s target list, and any entry outside it came from an earlier one.',
   ];
+
+  // An override is disclosed IN the artifact, not left for a reader to infer by
+  // noticing that nodesSampled never reaches the cap. These notes fire only
+  // when there is something to disclose, so a plain run stays quiet.
+  if (s.nodeCap !== prov.capDeclared) {
+    s.notes.push(
+      disc.latest !== null
+        ? `THE ENTRIES OVERRODE THE DECLARED CAP: they were drawn under a cap of ${s.nodeCap}, while ${prov.corpusFile} declares ${prov.capDeclared}. nodeCap reports what the samples prove, not what any invocation asked for.`
+        : `THIS INVOCATION OVERRODE THE DECLARED CAP: ${s.nodeCap} was enforced while ${prov.corpusFile} declares ${prov.capDeclared}. No entry here proves a cap yet, so this is the only provenance available.`,
+    );
+  }
+  if (disc.proven.length > 1) {
+    s.notes.push(
+      `ENTRIES WERE NOT ALL RECORDED UNDER THE SAME CAP (${disc.proven.join(', ')}). The header nodeCap describes the most recently recorded entry only — read entry.cap for any individual target, and do not compare nodesSampled across targets as if one cap had applied.`,
+    );
+  }
+  if (disc.indeterminate > 0) {
+    s.notes.push(
+      `${disc.indeterminate} of ${s.entries.length} entries do not state the cap they were drawn under and were not truncated by one, so no cap can be recovered from them: their nodesSampled is the whole gathered surface, not a cap. (Targets that failed before sampling are counted here too — no cap ever bound them.)`,
+    );
+  }
+  if (priorCorpusFile !== null && priorCorpusFile !== prov.corpusFile) {
+    s.notes.push(
+      `THIS WRITE REPOINTED corpusFile: it was ${priorCorpusFile} and is now ${prov.corpusFile}. Entries recorded under the previous file are still here — running a SUBSET corpus adds to this summary rather than replacing it, so corpusFile names the last file written from and not the source of every entry below.`,
+    );
+  }
 }
 
 function upsertEntry(s: CorpusSummary, entry: CorpusEntry): void {
@@ -966,7 +1148,15 @@ async function prepare(
 async function cmdNext(opts: NextOpts): Promise<void> {
   const { targets, nodeCap } = loadCorpus(opts.corpusPath);
   const cap = opts.cap ?? nodeCap;
-  const summary = loadSummary(opts.corpusPath, cap);
+  // `cap` is what this invocation WOULD enforce. It becomes provenance only on
+  // a write that follows an actual sample; the tail of the loop below rewrites
+  // it to null, because by then this command has bound nothing.
+  const prov: Provenance = {
+    corpusFile: opts.corpusPath,
+    capDeclared: nodeCap,
+    capEnforced: cap,
+  };
+  const summary = loadSummary(prov);
   mkdirSync(WORK_DIR, { recursive: true });
   mkdirSync(REPORTS_DIR, { recursive: true });
 
@@ -1016,7 +1206,7 @@ async function cmdNext(opts: NextOpts): Promise<void> {
           error: msg,
         },
       ];
-      recomputeTotals(summary, targets);
+      recomputeTotals(summary, targets, prov);
       writeJson(SUMMARY_PATH, summary);
       console.error('corpus: repeat recorded as failed; the target\'s own report is untouched.');
     }
@@ -1067,6 +1257,11 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         nodesUnjudged: null,
         partial: false,
         judgedFraction: null,
+        // null, not `cap`: the attempt died before a single node was sampled,
+        // so no cap ever bound anything here. Recording the number that WOULD
+        // have applied would put a measurement-shaped value on a row that
+        // measured nothing.
+        cap: null,
         capped: false,
         coverageGathered: null,
         coverageJudged: null,
@@ -1074,7 +1269,7 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         economics: null,
         warnings: [`target failed at ${new Date().toISOString()}; excluded from every aggregate`],
       });
-      recomputeTotals(summary, targets);
+      recomputeTotals(summary, targets, prov);
       writeJson(SUMMARY_PATH, summary);
       continue;
     }
@@ -1122,6 +1317,8 @@ async function cmdNext(opts: NextOpts): Promise<void> {
         nodesUnjudged: 0,
         partial: false,
         judgedFraction: null,
+        // The cap was in force; the gathered surface simply never reached it.
+        cap: pending.cap,
         capped: false,
         coverageGathered: {},
         coverageJudged: {},
@@ -1132,7 +1329,7 @@ async function cmdNext(opts: NextOpts): Promise<void> {
           'no reports/<name>.json exists for this target ON PURPOSE: every ratio a Report could carry here would be a claim nobody can defend',
         ],
       });
-      recomputeTotals(summary, targets);
+      recomputeTotals(summary, targets, prov);
       writeJson(SUMMARY_PATH, summary);
       removeClone(pending.clonePath);
       rmSync(pendingPathFor(target.name, 'run'), { force: true });
@@ -1145,7 +1342,12 @@ async function cmdNext(opts: NextOpts): Promise<void> {
     return;
   }
 
-  recomputeTotals(summary, targets);
+  // Every target was already recorded: this command cloned nothing, sampled
+  // nothing and bound no node to any cap. It therefore writes NO cap of its
+  // own — `capEnforced: null` sends recomputeTotals to the entries for the
+  // header. Handing it `cap` here is how a bare `next` over a finished corpus
+  // used to restore the very contradiction the effective-cap work removed.
+  recomputeTotals(summary, targets, { ...prov, capEnforced: null });
   writeJson(SUMMARY_PATH, summary);
   console.log(`corpus: nothing left to run — every target is recorded or has a recorded failure.`);
   console.log(`corpus: summary → ${SUMMARY_PATH}`);
@@ -1243,6 +1445,20 @@ function cmdRecord(name: string, opts: RecordOpts): void {
   if (!existsSync(pendingPath)) die(`no pending run at ${pendingPath} — run \`next\` first`);
   const pending = readJson<PendingRun & { sampledNodes?: Node[] }>(pendingPath);
   const sampled = pending.sampledNodes ?? pending.nodes;
+
+  // The effective cap comes from the PENDING FILE, not from the corpus file and
+  // not from this process's flags. `record` runs in a later invocation than the
+  // `next` that sampled — usually a later shell, often a later day — so
+  // corpus.json's nodeCap here is a statement about intent, while pending.cap
+  // is the number that actually decided how many nodes the agent was shown.
+  // Reading the declared one was the whole bug: fifteen entries at 25 sampled
+  // nodes under a header reading 40.
+  const capEffective = typeof pending.cap === 'number' ? pending.cap : nodeCap;
+  const prov: Provenance = {
+    corpusFile: opts.corpusPath,
+    capDeclared: nodeCap,
+    capEnforced: capEffective,
+  };
 
   // A verdicts file is required, with exactly one exception: the probe layer
   // decided every sampled node, so `next` printed no batch and the agent has
@@ -1355,7 +1571,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
     );
   }
 
-  const summary = loadSummary(opts.corpusPath, nodeCap);
+  const summary = loadSummary(prov);
 
   if (mode === 'repeat') {
     // Agreement is partitioned by PROVENANCE, and the headline is agent-vs-agent.
@@ -1423,7 +1639,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
       disagreements,
     };
     summary.repeatability = [...summary.repeatability.filter((r) => r.name !== name), entry];
-    recomputeTotals(summary, targets);
+    recomputeTotals(summary, targets, prov);
     writeJson(SUMMARY_PATH, summary);
     if (!opts.keepClone) removeClone(pending.clonePath);
     retireState(name, 'repeat');
@@ -1476,6 +1692,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
     nodesUnjudged: unjudged,
     partial: unjudged > 0,
     judgedFraction,
+    cap: capEffective,
     capped: pending.capped,
     coverageGathered: pending.coverageGathered,
     coverageJudged: coverageByKind(judgedNodes),
@@ -1484,7 +1701,7 @@ function cmdRecord(name: string, opts: RecordOpts): void {
     timing,
     warnings,
   });
-  recomputeTotals(summary, targets);
+  recomputeTotals(summary, targets, prov);
   writeJson(SUMMARY_PATH, summary);
 
   if (!opts.keepClone) removeClone(pending.clonePath);
@@ -1527,9 +1744,27 @@ function cmdRecord(name: string, opts: RecordOpts): void {
 
 function cmdStatus(corpusPath: string): void {
   const { targets, nodeCap } = loadCorpus(corpusPath);
-  const summary = loadSummary(corpusPath, nodeCap);
+  // `status` enforces nothing, so it has NO cap of its own — capEnforced is
+  // null and only ever reaches a summary that does not exist yet. status must
+  // describe the runs that happened, not the invocation reading about them.
+  const summary = loadSummary({
+    corpusFile: corpusPath,
+    capDeclared: nodeCap,
+    capEnforced: null,
+  });
   const byName = new Map(summary.entries.map((e) => [e.name, e]));
-  console.log(`corpus: ${corpusPath} · ${targets.length} targets · node cap ${nodeCap}`);
+  // Derived here too, and derived FIRST: a summary written before the header
+  // was derived still carries a stale nodeCap, and status is a read — it can
+  // recover the truth from the entries without waiting for the next write.
+  const disc = capDisclosure(summary);
+  const capInForce = disc.latest ?? (typeof summary.nodeCap === 'number' ? summary.nodeCap : nodeCap);
+  console.log(
+    `corpus: ${corpusPath} · ${targets.length} targets · node cap ${
+      capInForce === nodeCap
+        ? String(nodeCap)
+        : `${capInForce} in force at the last recorded run (${corpusPath} declares ${nodeCap})`
+    }`,
+  );
   console.log(`run order so far: ${summary.runOrder.length ? summary.runOrder.join(' → ') : '(none)'}`);
   console.log('');
   targets.forEach((t, i) => {
@@ -1560,6 +1795,23 @@ function cmdStatus(corpusPath: string): void {
     console.log(
       `  nodes gathered ${tot.nodesTotal ?? 0} · sampled ${tot.nodesSampled ?? 0} · judged ${tot.nodesJudged ?? 0} · unjudged ${tot.nodesUnjudged ?? 0}`,
     );
+    // Sampled counts drawn under different caps are not comparable, and the
+    // header can only name one of them. Say so rather than let the reader
+    // assume a single cap produced the column. The caps come from
+    // capDisclosure, so an entry that predates `cap` still gets counted —
+    // filtering on `typeof e.cap === 'number'` here dropped exactly the legacy
+    // rows a mixed-cap warning exists to warn about, and the first new record
+    // over such a summary printed no warning at all.
+    if (disc.proven.length > 1) {
+      console.log(
+        `  ! entries were recorded under different caps (${disc.proven.join(', ')}) — read entry.cap per target; sampled counts are not comparable across them`,
+      );
+    }
+    if (disc.indeterminate > 0) {
+      console.log(
+        `  ! ${disc.indeterminate} of ${summary.entries.length} entries prove no cap (untruncated sample, or failed before sampling) — their sampled count is the whole gathered surface`,
+      );
+    }
   }
   if (summary.repeatability.length) {
     console.log('');
@@ -1589,7 +1841,11 @@ const USAGE = `keel corpus — agent-driven corpus stepper
 
 options
   --corpus <path>      corpus file (default <repo>/corpus.json)
-  --cap <n>            max nodes judged per target (default from corpus file, else ${DEFAULT_CAP})
+  --cap <n>            max nodes judged per target (default from corpus file, else ${DEFAULT_CAP}).
+                       \`next\` only — \`record\` rejects it, because the cap that bound
+                       a sample was fixed when the sample was drawn. The summary's
+                       nodeCap is then DERIVED from the recorded entries, with the
+                       corpus file's own figure kept beside it as nodeCapDeclared
   --batch <n>          nodes per printed batch (default ${DEFAULT_BATCH})
   --classify           dispatch probes via scripts/classify.ts; without it every node is pending
   --probe-dir <dir>    REPLACES the default probe dirs (repeatable, order preserved)
@@ -1686,6 +1942,14 @@ if (import.meta.main) {
     });
   } else if (a.cmd === 'record') {
     if (!a.arg) die('record needs a target name');
+    // `record` cannot honour a cap and must not pretend to. The sample it is
+    // recording was drawn by an earlier `next` and is already on disk; a cap
+    // passed here could only re-describe a measurement that already happened.
+    // Parsing the flag and dropping it silently was the one unacceptable
+    // option: the operator who typed it believes it did something.
+    if (a.cap !== null) {
+      die('record does not take --cap — the cap that bound this sample was fixed by the `next` that drew it and is read back from the pending file. Pass --cap to `next` instead.');
+    }
     cmdRecord(a.arg, {
       corpusPath: a.corpusPath,
       repeat: a.repeatFlag,

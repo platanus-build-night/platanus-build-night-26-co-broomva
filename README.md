@@ -60,11 +60,18 @@ falls through to the agent, so a lazy probe degrades to "ask" rather than to
 
 ## And it audits itself
 
-Probes drift. Keel re-decides a sampled fraction of probe-classified nodes
-agentically, with the cached verdict hidden, and retires probes that disagree.
-The library's agreement rate is Keel's own counter-metric — a tool that
-measures groundedness while refusing to measure its own would be making the
-exact mistake it exists to find.
+Probes drift. `keel audit` samples probe-classified nodes and hands them back to
+the agent to re-decide **with the cached verdict hidden** — the blindness is the
+mechanism, because an audit you can see the answer to measures your agreement
+with yourself. It then reports the agreement rate **with its denominator**, and
+names the probes that disagreed.
+
+It does not retire them. Retiring a probe is a judgment about the world, and
+that stays with a human.
+
+The library's agreement rate is Keel's own counter-metric — a tool that measures
+groundedness while refusing to measure its own would be making the exact mistake
+it exists to find.
 
 ## From a number to a path
 
